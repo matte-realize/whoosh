@@ -1,8 +1,8 @@
 # Whoosh — Privacy & Permissions Boundaries
 
-Whoosh handles two highly sensitive data types: **precise location** and, in the future,
-**camera video**. These rules are non-negotiable and apply to all code, copy, and the web
-dashboard.
+Whoosh handles two highly sensitive data types: **precise location** and **camera video**
+(rear-mounted recording, opt-in; see `.kiro/specs/rear-camera/`). These rules are non-negotiable
+and apply to all code, copy, and the web dashboard.
 
 ## Data Handling
 
@@ -11,7 +11,8 @@ dashboard.
 - **Cloud sync is opt-in.** Uploading rides to Supabase (for the web dashboard) is off by
   default and enabled by an explicit user toggle with a plain explanation of what is sent.
 - **What may be uploaded:** finished-ride summaries, the (privacy-trimmed) route, and later
-  near-miss events. Never raw camera video or frames. Separately, and only under the independent
+  near-miss **events** (time, coordinate, kind, confidence, position hint; never a clip id,
+  thumbnail, or any footage reference). Never raw camera video or frames. Separately, and only under the independent
   crash-alert consent, the transient request needed to send a crash alert or test message (see
   "Emergency contacts and crash alerts").
 - **Privacy zones.** Before upload, trim the first and last stretch of the route (default
@@ -38,6 +39,41 @@ dashboard.
   reads from an explicit, reviewed view (e.g., aggregated or trimmed routes), never from raw
   tables with RLS bypassed.
 
+## Rear camera footage (opt-in; added October 24, 2026)
+
+Applies to rear-mounted recording (`.kiro/specs/rear-camera/`). It is **off by default**. This
+section replaces the earlier "no camera permission in the MVP" rule: the MVP as shipped never asks
+for the camera, and the camera is now requested **only when the rider turns on "Record rear
+camera"**.
+
+| Data | Where | Rules |
+| ---- | ----- | ----- |
+| Rolling segments (the ring buffer, ~10 min by default) | **Device only**, app storage, excluded from backups, protection class that allows writing while locked after first unlock | Bounded by minutes and bytes; oldest deleted first; **deleted when the ride ends** unless pinned; orphans purged on launch |
+| Saved clips (pinned: manual, detection event, crash event) and thumbnails | **Device only**, same protections | Attached to the ride; the rider can view and delete one, all for a ride, or all clips; deleting a ride deletes its clips; auto-expire after a retention period (default 30 days, open decision O-CAM4) |
+| Test recording from Mount & frame | Device temp storage | Deleted right after playback |
+| Near-miss event records | Device (SwiftData) with the ride | Event fields only; an optional **local** clip id that never leaves the device |
+| Audio | **Off by default** | Microphone permission only if the rider enables audio; conversations may be captured, so guidance is shown |
+
+Rules:
+
+- **Never automatic upload or sharing.** Footage is not synced, not attached to crash messages, not
+  linked by URL, not written to logs or crash reports, not placed in shared containers. Network-layer
+  code (`Services/Sync`, `Services/Notification`) must not reference camera, clip, or footage types
+  (enforced by the privacy script).
+- **Export is explicit.** Saving a clip to Photos happens only on a per-clip rider action, copies
+  (never moves), and asks for **add-only** Photos access at that moment.
+- **Other people are in the footage.** Faces and license plates of other road users and pedestrians
+  can appear. The enable screen and Settings say so, retention is short, deletion is easy, and no
+  clip is shared by the app. Recording and audio-recording laws vary by place; copy mentions this
+  as information only, never as legal advice.
+- **Role C's database receives near-miss events only, never video** or anything derived from it
+  (no thumbnails, frames, or clip ids).
+- **No hiding.** Ride mode dims the screen to save power; the red recording dot stays visible and
+  system camera/location indicators are never hidden or imitated.
+- **Silent degradation is not allowed for recording.** With the phone out of the rider's sight, any
+  camera stop, interruption, heat/storage/battery reduction, or permission loss is announced on the
+  eyes-free surface (watch/audio) and noted in the ride summary.
+
 ## Emergency contacts and crash alerts
 
 Applies to the opt-in crash-response feature (`.kiro/specs/crash-response/`, backend contract
@@ -51,7 +87,7 @@ ride sync. These rules are non-negotiable.
 | Emergency contact names and phone numbers (E.164) | **Device only**, in the Keychain (`AfterFirstUnlockThisDeviceOnly`) | Never in SwiftData, `UserDefaults`, logs, iCloud, or backups that leave the device. Orphaned Keychain items are purged on a fresh install. Max 3 contacts, US/CA numbers in v1. |
 | Consent record (version, timestamp, acknowledgement), rider label, feature toggle | Device (`UserDefaults`) | No contact data. |
 | Crash alert records (event id, time, location snapshot, countdown outcome, per-contact status, masked numbers = last 2 digits) | Device (SwiftData) | Deletable one by one or all; real deletion. Full phone numbers are not stored here. |
-| Pre-crash footage (future) | **Device only** | Never uploaded, never linked or attached in a message, deletable from the crash log. |
+| Pre-crash footage (a pinned clip from the rear-camera ring buffer; real once rear camera recording ships) | **Device only** | Never uploaded, never linked or attached in a message, deletable from the crash log (deleting the record's footage deletes the clip). |
 | Backend audit rows (hashed recipient, last 2 digits, status, error code, timestamps, template/consent version, location *status* only) | Supabase, RLS own-rows | **Retained 30 days**, then purged; the rider can delete earlier. The backend does **not** persist plaintext numbers, message bodies, or coordinates. |
 | Rate-limit counters | Supabase | No PII beyond a keyed recipient hash; purged after 48 hours. |
 
@@ -103,7 +139,11 @@ Request the minimum permission, as late as possible, with honest usage strings.
 | -------------------- | -------------------------------------- | ---------------------------------------------- |
 | Location (WhenInUse) | First time the user starts a ride      | `NSLocationWhenInUseUsageDescription`          |
 | Location (Always)    | Only if/when background tracking ships | `NSLocationAlwaysAndWhenInUseUsageDescription` |
-| Camera               | Only when the user enables detection   | `NSCameraUsageDescription`                     |
+| Camera               | Only when the rider first enables **Record rear camera** (after an in-app explanation) | `NSCameraUsageDescription` |
+| Microphone           | Only if the rider enables optional audio recording (off by default) | `NSMicrophoneUsageDescription` |
+| Photos (add-only)    | Only at the first explicit "Save to Photos" export of a clip | `NSPhotoLibraryAddUsageDescription` |
+| Background location mode | Declared now (open decision O-CAM2) so the route survives a lock; used only while a ride is active, with the background-location indicator; **When-In-Use** authorization, no Always prompt | `UIBackgroundModes` = `location` |
+| Notifications (camera paused) | Lazily, after rear camera recording is enabled, with an in-app explanation; denial only removes this notice channel | runtime authorization |
 | Notifications (time-sensitive) | When the rider enables crash alerts, after an in-app explanation (backup prompt only) | runtime authorization; Time Sensitive capability |
 | Contacts             | **Never requested.** Contacts are chosen with the system picker or typed in. | — |
 | Motion               | Not expected for the experimental raw-accelerometer detector (verify) | — |
@@ -111,8 +151,12 @@ Request the minimum permission, as late as possible, with honest usage strings.
 Usage description strings must plainly state the purpose, e.g.:
 
 - Location: "Whoosh uses your location to record your cycling route and show your ride map."
-- Camera: "Whoosh uses the rear camera to experimentally detect approaching vehicles. Video
-  is processed on your device and is not uploaded."
+- Camera: "Whoosh uses the rear camera to record video of the road behind you during rides.
+  Video is saved on your device and is not uploaded."
+- Microphone (only if audio is enabled): "Whoosh can record sound with your ride video. Audio is
+  saved on your device and is not uploaded."
+- Photos (add-only): "Whoosh saves a ride clip to your photo library only when you choose to
+  export it."
 
 ## Degradation Rules
 
@@ -121,8 +165,12 @@ down:
 
 - **Location denied:** Show a clear explanation and a button to open Settings. The app still
   opens and shows ride history. No crash, no dead-end.
-- **Camera denied or unavailable:** Detection features disable themselves silently. Ride
-  recording is unaffected.
+- **Camera denied or unavailable:** Recording and detection do not run, and the state is **visible
+  and calm** (Settings and Mount & frame explain it; mid-ride loss is announced on the eyes-free
+  surface), never silent. Ride recording is unaffected.
+- **Camera interrupted, hot, low on storage or battery:** reduce or stop the camera, tell the rider,
+  keep GPS recording, and note the gap in the summary. A locked or backgrounded phone cannot keep
+  recording video (iOS interrupts it); GPS continues through the `location` background mode.
 - **GPS signal lost mid-ride:** The ride continues; the tracker enters a "signal lost" state,
   surfaces it in the UI, and resumes when signal returns. No data corruption.
 - **Offline / Supabase unreachable:** Rides save locally and are marked pending; sync retries
@@ -137,6 +185,8 @@ down:
 
 - Do not describe detection as able to "prevent" or "predict" collisions. Use language like
   "experimental vehicle detection" until performance is measured.
+- Recording is for the rider's own records. Do not call footage "evidence", do not promise that
+  any incident will be captured, and do not describe ride mode as hiding the camera.
 - Do not imply data leaves the device when it does not, and vice versa. The sync toggle says
   exactly what is uploaded.
 - Whoosh is **not a guaranteed emergency-response service**: it may fail to detect a crash, may
