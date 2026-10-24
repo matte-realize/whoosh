@@ -50,3 +50,14 @@ export interface IncidentCell {
   first_month: string;
   last_month: string;
 }
+
+/** The single row of the `public_stats` view. SI units. */
+export interface PublicStats {
+  shared_rides: number;
+  total_distance_m: number;
+  total_active_duration_s: number;
+  /** Null when fewer than 3 riders have shared rides (the view hides small counts). */
+  riders: number | null;
+  mapped_incidents: number;
+  incident_cells: number;
+}

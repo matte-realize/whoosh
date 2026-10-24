@@ -194,12 +194,29 @@ button:focus-visible,
   padding-left: 20px;
 }
 
-.incidents {
+.stats-panel {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.stats-panel .stats {
+  margin: 0;
+}
+
+.community,
+.rides-section {
   margin-top: 40px;
 }
 
-.incidents .note {
+.community .note {
   margin-bottom: 12px;
+}
+
+.community-map {
+  height: 480px;
 }
 
 .incident-list {

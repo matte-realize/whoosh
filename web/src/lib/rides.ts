@@ -168,11 +168,28 @@ async function loadFromSupabase(): Promise<LoadRidesResult> {
   }
 }
 
+let cachedRides: Promise<LoadRidesResult> | null = null;
+
 /**
- * Loads rides from the source chosen by NEXT_PUBLIC_DATA_SOURCE ("fixtures" by default).
+ * Loads rides once per page load and shares the result, so the ride list, the community map,
+ * and the stats panel make one request between them. A failed load is not cached, so a later
+ * caller can retry.
+ */
+export function loadRides(): Promise<LoadRidesResult> {
+  if (cachedRides === null) {
+    cachedRides = fetchRides().then((result) => {
+      if (!result.ok) cachedRides = null;
+      return result;
+    });
+  }
+  return cachedRides;
+}
+
+/**
+ * Fetches rides from the source chosen by NEXT_PUBLIC_DATA_SOURCE ("fixtures" by default).
  * Never throws; failures come back as `{ ok: false, message }` with a user-friendly message.
  */
-export async function loadRides(): Promise<LoadRidesResult> {
+async function fetchRides(): Promise<LoadRidesResult> {
   const source = process.env.NEXT_PUBLIC_DATA_SOURCE || "fixtures";
 
   try {

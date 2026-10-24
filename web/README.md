@@ -38,13 +38,19 @@ share at least one ride, put the URL and publishable key in `.env.local`, and se
 Never put the secret or `service_role` key in `web/`. `NEXT_PUBLIC_` values are sent to every
 browser.
 
-## Incident map
+## Page layout
 
-Below the rides, the page shows an incident map from the `public_incident_cells` view (or
-`fixtures/incident_cells.json` in fixtures mode, labeled as sample data). Each circle is a
-grid cell of about 100 m that has at least 3 reports from at least 2 riders, delayed by a day.
-Individual incidents are never sent to the browser. With only a few real riders, expect the
-live map to be empty.
+1. **Totals** from the `public_stats` view: shared rides, distance, riding time, riders (shown
+   only when at least 3 riders have shared rides), and mapped incident reports. In fixtures mode
+   the same totals are computed from the sample files, with the rider count unknown.
+2. **Community map:** every shared route (blue lines, thinned to 300 points each for drawing)
+   and the incident cells from `public_incident_cells` (orange circles), each as a layer you can
+   turn off with the control at the top right. Each cell is about 100 m with at least 3 reports
+   from at least 2 riders, delayed by a day. Individual incidents are never sent to the browser.
+   With only a few real riders, expect the live incident layer to be empty.
+3. **Shared rides:** the list and the selected ride's full route.
+
+The rides and incident cells are each fetched once per page load and shared by all three parts.
 
 ## Data and privacy
 

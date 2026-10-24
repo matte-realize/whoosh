@@ -70,11 +70,24 @@ function parseCells(raw: unknown): IncidentCell[] {
   return cells;
 }
 
+let cachedCells: Promise<LoadIncidentsResult> | null = null;
+
+/** Loads incident cells once per page load and shares the result. Failures are not cached. */
+export function loadIncidentCells(): Promise<LoadIncidentsResult> {
+  if (cachedCells === null) {
+    cachedCells = fetchIncidentCells().then((result) => {
+      if (!result.ok) cachedCells = null;
+      return result;
+    });
+  }
+  return cachedCells;
+}
+
 /**
- * Loads incident cells from the source chosen by NEXT_PUBLIC_DATA_SOURCE ("fixtures" by default).
+ * Fetches incident cells from the source chosen by NEXT_PUBLIC_DATA_SOURCE ("fixtures" by default).
  * Never throws; failures come back as `{ ok: false, message }`.
  */
-export async function loadIncidentCells(): Promise<LoadIncidentsResult> {
+async function fetchIncidentCells(): Promise<LoadIncidentsResult> {
   const source = process.env.NEXT_PUBLIC_DATA_SOURCE || "fixtures";
   const failure: LoadIncidentsResult = {
     ok: false,
