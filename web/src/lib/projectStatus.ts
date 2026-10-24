@@ -1,6 +1,6 @@
 /**
  * What the home page says is available. Written for riders, not engineers, and kept truthful:
- * a feature is "Preview online" only if a visitor can try it on this website today. Update this
+ * a feature is "Try it now" only if a visitor can try it on this website today. Update this
  * file, and only this file, as things ship.
  */
 
@@ -8,7 +8,7 @@ export type Status = "preview" | "testing" | "development";
 
 export const STATUS_LABEL: Record<Status, string> = {
   preview: "Try it now",
-  testing: "Testing prototypes",
+  testing: "Being tested",
   development: "In development",
 };
 
@@ -26,16 +26,22 @@ export interface Feature {
   statusNote: string;
 }
 
-/** Last time someone checked every status below. */
+/** Last time someone checked every status below against the repo. */
 export const STATUS_CHECKED_ON = "October 24, 2026";
 
 export const FEATURES: Feature[] = [
+  {
+    name: "Ride tracking that works offline",
+    summary: "Your route, distance, time and speed, saved on your phone. No signal needed.",
+    status: "testing",
+    statusNote: "Recording, the live map, ride summaries and history are built in the iPhone app and being tested.",
+  },
   {
     name: "A heads-up for traffic behind you",
     summary:
       "Your phone's back camera watches the road behind your bike and lets you know when a car is coming up.",
     status: "development",
-    statusNote: "Experimental, and not measured yet. Being built and tested now.",
+    statusNote: "The vehicle detector finds cars in test footage. It isn't connected to the app yet, and it hasn't been measured.",
   },
   {
     name: "Feel it or hear it",
@@ -44,16 +50,17 @@ export const FEATURES: Feature[] = [
     statusNote: "We are trying a watch tap, phone vibration, and sound.",
   },
   {
-    name: "Ride tracking that works offline",
-    summary: "Your route, distance, time and speed, saved on your phone. No signal needed.",
+    name: "Crash alerts to your contacts",
+    summary:
+      "If your phone detects a possible crash and you don't cancel, Whoosh texts your emergency contacts where you are.",
     status: "development",
-    statusNote: "The iPhone app is being built.",
+    statusNote: "The texting service is built; the app side is being built. It is not an emergency service.",
   },
   {
     name: "Private by default",
     summary: "No account. Your rides stay on your phone unless you choose to back them up or share them.",
     status: "development",
-    statusNote: "The secure storage behind it is built and tested; the app side is being built.",
+    statusNote: "The secure storage behind backup is built and tested; turning it on in the app comes next.",
   },
   {
     name: "Ride map",
