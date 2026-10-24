@@ -71,6 +71,46 @@ enum PreviewSeed {
             )
         )
     }
+
+    // MARK: - Active-ride & summary previews
+
+    /// A `RideSessionViewModel` driven into the given live state via a
+    /// `FakeLocationTracker`, for `ActiveRideView` previews. Not used by the
+    /// shipping app (the composition root injects the real tracker/clock).
+    static func activeRideViewModel(state: RideState) -> RideSessionViewModel {
+        let now = Date(timeIntervalSince1970: 1_729_784_400)
+        let tracker = FakeLocationTracker(authorizationStatus: .authorizedWhenInUse)
+        let vm = RideSessionViewModel(
+            tracker: tracker,
+            clock: FixedClock(fixed: now),
+            repository: InMemoryRideRepository()
+        )
+        vm.start()
+        // Feed a short sample route so the map and metrics render.
+        tracker.emitPoints(samplePoints(from: now))
+        if state == .paused {
+            vm.pause()
+        }
+        return vm
+    }
+
+    /// A finished `Ride` for `RideSummaryView` previews.
+    static func summaryRide() -> Ride {
+        let now = Date(timeIntervalSince1970: 1_729_784_400)
+        return makeRide(start: now, distance: 8_561, duration: 1_458, avgSpeed: 5.87)
+    }
+
+    private static func samplePoints(from start: Date) -> [RoutePoint] {
+        (0..<8).map { i in
+            RoutePoint(
+                latitude: 42.36 + Double(i) * 0.0011,
+                longitude: -71.09 + Double(i) * 0.0013,
+                timestamp: start.addingTimeInterval(Double(i) * 10),
+                speedMetersPerSecond: 5.8,
+                horizontalAccuracyMeters: 5
+            )
+        }
+    }
 }
 
 /// A trivial `Clock` returning a fixed `now`, for deterministic previews.

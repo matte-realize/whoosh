@@ -6,7 +6,7 @@ import Foundation
 /// meters/second. `activeDuration` excludes paused intervals (see the
 /// active-duration definition in the design / Requirement 3.8). Pure value type
 /// so `RideMetrics` can produce it without any framework dependency.
-struct RideSummary: Equatable, Codable, Sendable {
+struct RideSummary: Equatable, Hashable, Codable, Sendable {
     let distanceMeters: Double
     /// Active (moving) time in seconds; excludes paused spans.
     let activeDuration: TimeInterval

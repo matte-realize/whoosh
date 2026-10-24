@@ -16,10 +16,22 @@ final class SystemClock: Clock {
         after interval: TimeInterval,
         _ work: @escaping () -> Void
     ) -> Cancellable {
+        // The clock is consumed on the main actor (default isolation). Wrap the
+        // non-Sendable `work` so the `@Sendable` timer closure can call it back
+        // on the main actor without a data-race warning.
+        let box = WorkBox(work)
         let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { _ in
-            work()
+            MainActor.assumeIsolated { box.work() }
         }
         return TimerCancellable(timer: timer)
+    }
+
+    /// A main-actor-isolated holder for the scheduled work, letting the
+    /// `@Sendable` timer closure defer execution to the main actor. Marked
+    /// `@unchecked Sendable` because it is only ever touched on the main actor.
+    private final class WorkBox: @unchecked Sendable {
+        let work: () -> Void
+        init(_ work: @escaping () -> Void) { self.work = work }
     }
 
     /// Wraps a `Timer` so cancelling invalidates it.

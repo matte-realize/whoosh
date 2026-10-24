@@ -6,7 +6,7 @@ import Foundation
 /// SwiftData) so view models and metrics operate on cheap, framework-free value
 /// types; storage concerns never leak upward. Mapping happens only at the
 /// repository boundary.
-struct Ride: Identifiable, Equatable, Codable, Sendable {
+struct Ride: Identifiable, Equatable, Hashable, Codable, Sendable {
     let id: UUID
     let startedAt: Date
     var endedAt: Date?

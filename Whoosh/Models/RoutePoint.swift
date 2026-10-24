@@ -9,7 +9,7 @@ import Foundation
 ///
 /// A pure value type with no framework dependency so metrics and tests can
 /// construct fixtures cheaply (layering table: Models import Foundation only).
-struct RoutePoint: Equatable, Codable, Sendable {
+struct RoutePoint: Equatable, Hashable, Codable, Sendable {
     let latitude: Double
     let longitude: Double
     let timestamp: Date

@@ -260,7 +260,7 @@ Conventions:
     rendering, real auto-follow, and manual-pan tolerance are verified on device by the
     orchestrator.
 
-- [ ] 18. Active ride screen with live map, metrics, and hold-to-stop
+- [x] 18. Active ride screen with live map, metrics, and hold-to-stop
   - Build `ActiveRideView` as a non-dismissible full-screen cover using `RouteMapView` and the
     dark theme: live route, at most three numbers (ride time large, distance, speed) via
     formatters, a state chip (Recording/Paused, icon+text), a non-functional "Rear detection
@@ -273,8 +273,25 @@ Conventions:
     stall.
   - _Requirements: 1.5, 3.2, 3.3, 3.4, 3.9, 5.1, 5.2, 5.3, 5.4, 5.5, 5.7, 8.7, 10.3, 10.5_
   - _Depends on: 2, 10, 12, 17_
+  - _Pending device check:_ `ActiveRideView` (Features/Ride) built per mockups 2/3 and
+    `HoldToStopButton` (Support/Components) built; `build-for-testing` succeeds with no
+    first-party warnings and `scripts/privacy-check.sh` passes. The screen is always dark
+    (`preferredColorScheme(.dark)` + ride tokens), shows `RouteMapView` in `.live` mode (its
+    built-in recenter handles manual-pan), a top-left Recording/Paused `StateChip`, a bottom-left
+    inert "Rear detection off" chip, and a bottom sheet with a `TimelineView`-driven RIDE TIME
+    (ticks every second off the pure `activeDuration(at:)`, which freezes while paused),
+    DISTANCE/SPEED via `Formatters`, a lime Pause/Resume pill, and the red `HoldToStopButton`.
+    Hold-to-stop is a ~1s `LongPressGesture` with a rising progress fill, a light impact haptic
+    on start and a success haptic on completion, early-release cancel (no state change), a brief
+    "Hold to stop" tap hint, an `accessibilityAction(named: "Stop ride")`, and the label "Stop
+    ride, press and hold"; all drive the single `RideSessionViewModel.stop()`. The amber
+    signal-lost / permission-revoked banner renders when `banner` is set, and
+    `isIdleTimerDisabled` is toggled on appear/disappear. The real press-and-hold gesture
+    (progress + accidental-tap rejection), the VoiceOver custom action, live map auto-follow,
+    the non-swipeable cover, screen-awake behavior, and real haptics are verified on device by
+    the orchestrator.
 
-- [ ] 19. Ride summary screen
+- [x] 19. Ride summary screen
   - Build `RideSummaryView` (full-route `RouteMapView` + distance/duration/avg speed via
     formatters) with a sync-status row (icon+text: On device / Pending / Synced), dismissed
     with "Done" after a ride and reused for history detail. (The "trimmed for privacy" note
@@ -283,8 +300,19 @@ Conventions:
     renders sensibly; "Done" returns to Home; sync-status shows "On device".
   - _Requirements: 6.1, 6.3, 6.5, 6.6, 10.1, 1.4_
   - _Depends on: 2, 4, 12, 17_
+  - _Pending device check:_ `RideSummaryView` (Features/Summary) built per mockup 4 with a
+    `Presentation` enum (`justFinished` → "Ride complete" title + lime "Done"; `historyDetail`
+    → the ride's date title, dismissed via the nav back control). Renders a static
+    `RouteMapView`, a big DISTANCE tile, RIDE TIME + AVG SPEED tiles (all via `Formatters`), and
+    a sync-status row (icon + text) driven by a new `SyncStatus` model enum
+    (`localOnly`/`pending`/`synced`; everything is `.localOnly` → "On device" for now). 0/1-point
+    rides show a friendly "No route recorded" placeholder instead of an empty map and never
+    produce NaN (numbers come from the finalized, zeroed summary). `build-for-testing` succeeds
+    with no first-party warnings; privacy-check passes. The live "Done" → Home dismissal and the
+    reused history-detail push are wired by task 23; visual rendering is verified on device by
+    the orchestrator.
 
-- [ ] 20. History list and deletion
+- [x] 20. History list and deletion
   - Build `HistoryView` + `HistoryViewModel`: rides grouped by month under a header (month ride
     count + total miles), rows showing date/distance/duration and a sync-status indicator
     (icon+text; "On device" until sync exists), swipe-to-delete with a Delete button, tap-
@@ -293,6 +321,19 @@ Conventions:
     miles; swipe-to-delete is permanent after relaunch.
   - _Requirements: 7.2, 7.3, 7.4, 7.7, 1.2_
   - _Depends on: 8, 19_
+  - _Pending device check:_ `HistoryViewModel` (Features/History, `@Observable @MainActor`)
+    loads finished rides (`endedAt != nil`) and groups them into `MonthSection`s via a pure,
+    unit-tested `static group(rides:calendar:)` — newest month first, rides newest-first, each
+    section carrying its ride count + total distance ("4 rides · 18.7 mi") and an uppercased
+    "OCTOBER 2026" title from an injected `Calendar`. `delete(_:)` removes permanently via the
+    repository and reloads. `HistoryView` (mockup 5) uses a `List` with per-month sections,
+    `RideRow(showSpeed: false)`, trailing `swipeActions` Delete behind a confirmation dialog,
+    an `onSelectRide` push to `RideSummaryView`, a friendly empty state, and a Synced/Pending/On
+    device legend footer; corrupt records are skipped by the repository. Grouping, counts,
+    totals, ordering, permanent delete (incl. dropping an emptied section), empty, and
+    finished-only are unit-tested in `HistoryViewModelTests`; `build-for-testing` + privacy-check
+    pass. Relaunch persistence and the live swipe-to-delete gesture are verified on device by
+    the orchestrator.
 
 - [x] 21. Mid-ride persistence safeguard
   - Persist collected points incrementally and/or on background/termination lifecycle events
@@ -328,7 +369,7 @@ Conventions:
     (privacy-check passes). Composition-root injection of the no-ops is task 23; the inert UI
     placeholders are tasks 14/16/18.
 
-- [ ] 23. Composition root and dependency injection
+- [x] 23. Composition root and dependency injection
   - Wire concrete services (`CoreLocationTracker`, `SwiftDataRideRepository`, `SystemClock`,
     `NoopDetector`, `StubAlertManager`) at the App entry inside the `NavigationStack`; feed the
     persisted GPS accuracy into `RideTuning`; present the active ride as a full-screen cover and
@@ -338,6 +379,32 @@ Conventions:
     accuracy + delete-all).
   - _Requirements: all (integration)_
   - _Depends on: 14, 16, 18, 19, 20, 21, 22_
+  - _Pending device check:_ `AppEnvironment` (App) is the composition root: `live()` builds a
+    `SwiftDataRideRepository` over a `ModelContainer(for: RideRecord.self)` (falling back to an
+    in-memory store so the app still launches), plus `CoreLocationTracker`s, `SystemClock`,
+    `NoopDetector`, and `StubAlertManager`; `preview(seeded:)` builds the same shape over
+    `InMemoryRideRepository` + `FakeLocationTracker` for previews/tests. It exposes
+    `homeViewModel`, `settingsViewModel`, `makeHistoryViewModel()`, and `makeRideSession()` —
+    the latter copies the persisted `SettingsViewModel.trackingAccuracy` into `RideTuning` so
+    the GPS-accuracy setting applies to the next ride (Home and the ride session get separate
+    trackers so their single `onAuthorizationChange` callbacks don't clobber each other).
+    `WhooshApp` owns a `NavigationStack` rooted at `HomeView`, pushes History/Settings (back
+    label "Home") and a history-detail `RideSummaryView`, and presents the ride as a
+    non-dismissible `fullScreenCover` whose content is chosen by the pure, unit-tested
+    `RideFlowCoordinator` (`.activeRide` while recording/paused/signalLost, `.summary` when
+    finished); "Done" clears the session and reloads Home. `scenePhase` leaving `.active` calls
+    `persistSnapshot()`, and launch runs `recoverInterruptedRide()` → a "Finish your interrupted
+    ride?" alert (Save → `finalizeRecoveredRide`; Discard → delete). Start Ride with
+    `notDetermined` location requests When-In-Use then starts (handled inside
+    `RideSessionViewModel.start()`). All wiring lives in `App/`; views use only view models and
+    `RouteMapView`. `RideFlowCoordinatorTests` cover the cover-presentation logic;
+    `build-for-testing` succeeds with no first-party warnings and privacy-check passes. The full
+    end-to-end flow and the live full-screen-cover / scenePhase / recovery behavior are verified
+    on device by the orchestrator (who also runs the full `xcodebuild test` suite).
+  - _Assumption:_ `Ride`/`RoutePoint`/`RideSummary` were made `Hashable` (pure, Foundation-only)
+    so the `NavigationStack` path can carry `.summary(Ride)`. A pre-existing non-Sendable
+    capture warning in `Support/SystemClock.swift` was fixed minimally (a `@unchecked Sendable`
+    box + `MainActor.assumeIsolated`) so the first-party build is warning-clean.
 
 - [ ] 24. Resilience pass
   - Verify/implement: permission revoked mid-ride (stop & save), low-power behavior doesn't
