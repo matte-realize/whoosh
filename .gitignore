@@ -35,3 +35,13 @@ Secrets.xcconfig
 
 # Kiro CLI auto-generated language-server config (not project settings)
 .kiro/settings/lsp.json
+
+# CV (cv/): venv, local test clips/output, downloadable weights. The exported .tflite IS committed.
+cv/.venv/
+cv/.venv-coreml/
+cv/models/*.mlpackage/
+cv/.smoke/
+cv/out/
+cv/clips/
+cv/models/*.pt
+__pycache__/
