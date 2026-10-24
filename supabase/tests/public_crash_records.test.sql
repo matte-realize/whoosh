@@ -41,6 +41,10 @@ select ok(
 -- Known state for the rest of the file
 -- ---------------------------------------------------------------------------
 
+-- Every table that references data_sources has to be emptied before it.
+delete from public.bike_count_days;
+delete from public.bike_count_locations;
+delete from public.bike_facilities;
 delete from public.public_crash_records;
 delete from public.data_sources;
 delete from public.rides;
