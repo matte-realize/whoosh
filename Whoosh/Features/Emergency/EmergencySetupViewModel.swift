@@ -38,6 +38,11 @@ final class EmergencySetupViewModel {
     /// Opens the crash alert log (task 22).
     @ObservationIgnored var onOpenLog: () -> Void = {}
 
+    /// Triggers a simulated crash through the real workflow (task 23). Wired by
+    /// the composition root to the `DebugCrashSimulator`; a no-op until wired so
+    /// the hub does not depend on the detector.
+    @ObservationIgnored var onSimulateCrash: () -> Void = {}
+
     /// The current contacts, most relevant first (insertion order from the store).
     private(set) var contacts: [EmergencyContact] = []
     /// The rider label used in messages (first name or nickname).
@@ -46,6 +51,13 @@ final class EmergencySetupViewModel {
     }
     /// Whether the feature is enabled. Off by default (Requirement 1.4).
     private(set) var isEnabled: Bool
+
+    /// Whether the "Developer / demo tools" section is revealed, gating the
+    /// "Simulate crash" control (Requirement 19.9). Persisted in settings; off
+    /// by default. A demo-mode integration (separate branch) may also drive it.
+    var developerToolsEnabled: Bool {
+        didSet { persistDeveloperTools() }
+    }
 
     init(
         contactStore: EmergencyContactStore,
@@ -58,6 +70,7 @@ final class EmergencySetupViewModel {
         let settings = settingsStore.current()
         self.riderLabel = settings.riderLabel ?? ""
         self.isEnabled = settings.enabled
+        self.developerToolsEnabled = settings.developerToolsEnabled
         reload()
     }
 
@@ -100,6 +113,11 @@ final class EmergencySetupViewModel {
         contacts = contactStore.contactsOrEmpty()
         let settings = settingsStore.current()
         isEnabled = settings.enabled
+        // Adopt the stored developer-tools flag without re-triggering a write
+        // (the values match, so the didSet persist is a harmless no-op).
+        if developerToolsEnabled != settings.developerToolsEnabled {
+            developerToolsEnabled = settings.developerToolsEnabled
+        }
         // Adopt the stored label only when the field is empty (first load or an
         // external change), so reloading does not clobber active typing with the
         // sanitized value written by `persistRiderLabel`.
@@ -118,6 +136,14 @@ final class EmergencySetupViewModel {
         onEditContact(contact)
     }
 
+    /// Trigger a simulated crash through the real workflow (demo path, task 23).
+    /// Only meaningful while the developer-tools section is revealed; the view
+    /// shows the control only then, and this guards it defensively.
+    func simulateCrash() {
+        guard developerToolsEnabled else { return }
+        onSimulateCrash()
+    }
+
     // MARK: - Persistence
 
     private func persistRiderLabel() {
@@ -127,6 +153,12 @@ final class EmergencySetupViewModel {
         // message can carry (Requirement 2.9 / 10.3).
         let sanitized = GSM7Sanitizer.riderLabel(trimmed)
         settings.riderLabel = sanitized.isEmpty ? nil : sanitized
+        settingsStore.save(settings)
+    }
+
+    private func persistDeveloperTools() {
+        var settings = settingsStore.current()
+        settings.developerToolsEnabled = developerToolsEnabled
         settingsStore.save(settings)
     }
 }
