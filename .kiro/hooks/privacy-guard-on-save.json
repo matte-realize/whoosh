@@ -3,7 +3,7 @@
   "hooks": [
     {
       "name": "privacy-guard-on-save",
-      "description": "On every saved Swift file, enforce privacy.md and the layering table: network only in Services/Sync, no analytics SDKs, no secrets, honest copy, Models/Metrics import Foundation only, Views never import CoreLocation/SwiftData, camera only in Services/Detection.",
+      "description": "On every saved Swift file, enforce privacy.md and the layering tables: network only in Services/Sync or Services/Notification, no analytics SDKs, no secrets, no SMS-provider credentials anywhere, honest copy (no collision prevention/prediction claims, no 'emergency services notified' or 'help is on the way'), Models/Metrics import Foundation only, Views never import CoreLocation/SwiftData, camera only in Services/Detection, tel:/telprompt: only in Features/Emergency, MessageUI only in Support/Representables, CoreMotion only in Services/Crash, Keychain SecItem only in Services/Contacts, AVAudioSession only in Services/Alerts.",
       "trigger": "PostFileSave",
       "matcher": "\\.swift$",
       "action": {
