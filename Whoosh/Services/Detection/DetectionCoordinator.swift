@@ -237,12 +237,14 @@ final class DetectionCoordinator {
         }
 
         let coordinate = routeCoordinate(detection.timestamp)
+        let demoFlag = isDemoMode()
         var event = NearMissPolicy.makeEvent(
             id: makeEventId(),
             rideId: rideId,
             detection: detection,
             latitude: coordinate?.latitude,
-            longitude: coordinate?.longitude
+            longitude: coordinate?.longitude,
+            isDemo: demoFlag
         )
         // Link the local clip id (never uploaded) when a pin succeeded.
         if let localClipId {
@@ -255,6 +257,8 @@ final class DetectionCoordinator {
                 kind: event.kind,
                 confidence: event.confidence,
                 positionHint: event.positionHint,
+                source: event.source,
+                isDemo: event.isDemo,
                 localClipId: localClipId
             )
         }

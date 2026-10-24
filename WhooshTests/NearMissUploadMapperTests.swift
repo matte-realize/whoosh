@@ -2,39 +2,46 @@ import Foundation
 import Testing
 @testable import Whoosh
 
-/// Test UP-1 for the pure `NearMissUploadMapper` (rear-camera task 10,
-/// Requirement 15.3, design "Detection events and near-miss records"). Written
-/// test-first.
+/// Tests for the pure `NearMissUploadMapper` (rear-camera task 10/28,
+/// Requirement 15.3; schema `20261024120100_near_misses.sql` +
+/// `20261024130000_incident_mapping_and_indexes.sql`). Golden-JSON based so the
+/// exact `near_misses` contract shape (column names, nullable confidence,
+/// `source`, `share_publicly`) is pinned and drift is caught.
 ///
-/// The mapper turns a local `NearMissEvent` into the exact `near_misses`
-/// contract shape (`.kiro/team/supabase-contract.md`): ride id, occurred-at,
-/// latitude, longitude, kind, confidence, position hint — and **nothing else**.
-/// The local clip id and anything that could reference footage are dropped. A
-/// unit test asserts that no footage-related field can survive the mapping
-/// (Role C receives events only, never video).
+/// Role C receives events only, never video: the mapped value carries no
+/// footage-referencing field by construction, and the local clip id is dropped.
 struct NearMissUploadMapperTests {
     private let now = Date(timeIntervalSince1970: 1_700_000_000)
 
-    private func event(localClipId: UUID?) -> NearMissEvent {
+    private func event(
+        localClipId: UUID? = nil,
+        source: NearMissSource = .detected,
+        latitude: Double? = 42.3601,
+        longitude: Double? = -71.0589,
+        isDemo: Bool = false
+    ) -> NearMissEvent {
         NearMissEvent(
             id: UUID(),
             rideId: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
             occurredAt: now,
-            latitude: 42.3601,
-            longitude: -71.0589,
+            latitude: latitude,
+            longitude: longitude,
             kind: "vehicle",
             confidence: 0.82,
             positionHint: "left",
+            source: source,
+            isDemo: isDemo,
             localClipId: localClipId
         )
     }
 
     // UP-1: the mapped value carries only the contract fields; the local clip id
-    // is dropped even when present, and no footage field exists on the mapped
-    // type at all.
-    @Test func mapsOnlyContractFieldsAndDropsClipId() {
+    // is dropped even when present, and no footage field exists on the type.
+    @Test func mapsOnlyContractFieldsAndDropsClipId() throws {
         let source = event(localClipId: UUID())
-        let mapped = NearMissUploadMapper.map(source)
+        let mapped = try #require(
+            NearMissUploadMapper.mapIfUploadable(source, sharePublicly: true)
+        )
 
         #expect(mapped.rideId == source.rideId)
         #expect(mapped.occurredAt == source.occurredAt)
@@ -43,47 +50,74 @@ struct NearMissUploadMapperTests {
         #expect(mapped.kind == source.kind)
         #expect(mapped.confidence == source.confidence)
         #expect(mapped.positionHint == source.positionHint)
+        #expect(mapped.source == "detected")
+        #expect(mapped.sharePublicly == true)
 
         // The encoded JSON must not contain a clip id, video, thumbnail, or
         // footage reference — the whole point of "events only".
-        let data = try! JSONEncoder().encode(mapped)
+        let data = try JSONEncoder().encode(mapped)
         let json = String(decoding: data, as: UTF8.self).lowercased()
         #expect(!json.contains("clip"))
         #expect(!json.contains("video"))
         #expect(!json.contains("thumbnail"))
         #expect(!json.contains("footage"))
         #expect(!json.contains("segment"))
-        // ...and the clip id value itself must not leak under any key.
+        #expect(!json.contains("isdemo"))
         #expect(!json.contains(source.localClipId!.uuidString.lowercased()))
+    }
+
+    // Golden JSON: pins the exact contract column names, `[lat]/[lon]` values,
+    // ISO-8601 time, `source`, and `share_publicly`.
+    @Test func goldenJSON() throws {
+        let mapped = try #require(
+            NearMissUploadMapper.mapIfUploadable(event(), sharePublicly: false)
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(mapped)
+        let json = String(decoding: data, as: UTF8.self)
+
+        let expected = """
+        {"confidence":0.82,"kind":"vehicle","latitude":42.3601,"longitude":-71.0589,\
+        "occurred_at":"2023-11-14T22:13:20Z","position_hint":"left","ride_id":\
+        "11111111-1111-1111-1111-111111111111","share_publicly":false,"source":"detected"}
+        """
+        #expect(json == expected)
+    }
+
+    // A rider-reported event has no score: confidence maps to JSON null, and
+    // `source` is the contract value `rider_reported`.
+    @Test func riderReportedDropsConfidenceToNull() throws {
+        let mapped = try #require(
+            NearMissUploadMapper.mapIfUploadable(event(source: .riderReported), sharePublicly: false)
+        )
+        #expect(mapped.source == "rider_reported")
+        #expect(mapped.confidence == nil)
+
+        let data = try JSONEncoder().encode(mapped)
+        let json = String(decoding: data, as: UTF8.self)
+        #expect(json.contains("\"confidence\":null"))
     }
 
     // An event inside the privacy-trim zone (no accepted coordinate) is dropped
     // from upload entirely: the mapper returns nil so a home/work-exposing event
     // never leaves the device.
     @Test func dropsEventWithoutCoordinate() {
-        let trimmed = NearMissEvent(
-            id: UUID(),
-            rideId: UUID(),
-            occurredAt: now,
-            latitude: nil,
-            longitude: nil,
-            kind: "vehicle",
-            confidence: 0.9,
-            positionHint: nil,
-            localClipId: nil
-        )
-        #expect(NearMissUploadMapper.mapIfUploadable(trimmed) == nil)
+        let trimmed = event(latitude: nil, longitude: nil)
+        #expect(NearMissUploadMapper.mapIfUploadable(trimmed, sharePublicly: true) == nil)
     }
 
     @Test func keepsEventWithCoordinate() {
-        let mapped = NearMissUploadMapper.mapIfUploadable(event(localClipId: nil))
-        #expect(mapped != nil)
+        #expect(NearMissUploadMapper.mapIfUploadable(event(), sharePublicly: false) != nil)
     }
 
-    // The contract field names match the agreed column names exactly, so the
-    // JSON Role C ingests lines up with the migration/contract.
-    @Test func usesContractColumnNames() {
-        let data = try! JSONEncoder().encode(NearMissUploadMapper.map(event(localClipId: nil)))
+    // The contract field names match the agreed column names exactly.
+    @Test func usesContractColumnNames() throws {
+        let mapped = try #require(
+            NearMissUploadMapper.mapIfUploadable(event(), sharePublicly: false)
+        )
+        let data = try JSONEncoder().encode(mapped)
         let json = String(decoding: data, as: UTF8.self)
         #expect(json.contains("ride_id"))
         #expect(json.contains("occurred_at"))
@@ -92,5 +126,7 @@ struct NearMissUploadMapperTests {
         #expect(json.contains("kind"))
         #expect(json.contains("confidence"))
         #expect(json.contains("position_hint"))
+        #expect(json.contains("source"))
+        #expect(json.contains("share_publicly"))
     }
 }

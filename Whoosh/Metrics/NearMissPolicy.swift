@@ -102,13 +102,16 @@ enum NearMissPolicy {
     /// Build a `NearMissEvent` from a detection and the ride context. The nearest
     /// accepted route coordinate (looked up by the caller) may be absent; the
     /// local clip id is linked later only when a pin actually succeeds, so it is
-    /// `nil` here.
+    /// `nil` here. A detector always produces `source == .detected`; `isDemo`
+    /// flags events from a demo-mode detector so they are stored locally but
+    /// never uploaded.
     static func makeEvent(
         id: UUID,
         rideId: UUID,
         detection: HazardDetection,
         latitude: Double?,
-        longitude: Double?
+        longitude: Double?,
+        isDemo: Bool = false
     ) -> NearMissEvent {
         NearMissEvent(
             id: id,
@@ -119,6 +122,8 @@ enum NearMissPolicy {
             kind: detection.kind,
             confidence: detection.confidence,
             positionHint: detection.relativePositionHint,
+            source: .detected,
+            isDemo: isDemo,
             localClipId: nil
         )
     }
