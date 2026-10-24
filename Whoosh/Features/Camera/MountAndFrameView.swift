@@ -26,7 +26,11 @@ struct MountAndFrameView: View {
             }
         }
         .onAppear { viewModel.startLevel() }
-        .onDisappear { viewModel.stopLevel() }
+        .task { await viewModel.startPreview() }
+        .onDisappear {
+            viewModel.stopLevel()
+            viewModel.stopPreviewIfNeeded()
+        }
     }
 
     // MARK: - Preview
@@ -35,6 +39,26 @@ struct MountAndFrameView: View {
         ZStack {
             CameraPreviewView(host: viewModel.host)
                 .ignoresSafeArea(edges: .top)
+
+            if viewModel.permissionStatus == .denied || viewModel.permissionStatus == .restricted {
+                VStack(spacing: 8) {
+                    Image(systemName: "video.slash")
+                        .font(.system(size: 32))
+                    Text("Camera access is off")
+                        .font(.headline)
+                    Text("Allow Camera for Whoosh in Settings to record and detect vehicles behind you.")
+                        .font(.footnote)
+                        .multilineTextAlignment(.center)
+                    Button("Open Settings") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .foregroundStyle(.white)
+                .padding(24)
+            }
 
             // Framing guide: the road behind should fill the lower two-thirds.
             VStack {

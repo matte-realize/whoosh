@@ -39,12 +39,25 @@ final class MountAndFrameViewModel {
     /// The latest level reading, or `nil` until the first sample arrives.
     private(set) var level: LevelCalculator.Reading?
 
+    @ObservationIgnored private let capture: CameraCapturing?
+    @ObservationIgnored private let permission: CameraPermission?
+    /// Whether this screen started the capture session for its preview.
+    @ObservationIgnored private var startedPreview = false
+    /// Set once the ride takes over the running session (do not stop it).
+    @ObservationIgnored private var handedOff = false
+    /// Camera authorization as seen by this screen (drives the "allow camera" note).
+    private(set) var permissionStatus: CameraPermissionStatus = .notDetermined
+
     init(
         previewHost: CameraPreviewHost,
         levelSensor: MountLevelSensing,
         settingsStore: RearCameraSettingsStore,
-        clock: Clock
+        clock: Clock,
+        capture: CameraCapturing? = nil,
+        permission: CameraPermission? = nil
     ) {
+        self.capture = capture
+        self.permission = permission
         self.previewHost = previewHost
         self.levelSensor = levelSensor
         self.settingsStore = settingsStore
@@ -100,17 +113,41 @@ final class MountAndFrameViewModel {
         settingsStore.save(settings)
     }
 
+    // MARK: - Live preview
+
+    /// Ask for camera access if needed (rear camera is on by default, so the
+    /// Settings toggle may never have asked), then start the capture session so
+    /// the preview is live while the rider aims. The ride reuses the session.
+    func startPreview() async {
+        guard let permission, let capture else { return }
+        var status = permission.status
+        if status == .notDetermined { status = await permission.request() }
+        permissionStatus = status
+        guard status == .authorized, !startedPreview else { return }
+        capture.start(profile: .standard, orientation: .portrait, audioEnabled: false)
+        startedPreview = true
+    }
+
+    /// Stop the preview session unless the ride has taken it over.
+    func stopPreviewIfNeeded() {
+        guard startedPreview, !handedOff else { return }
+        capture?.stop()
+        startedPreview = false
+    }
+
     // MARK: - Actions
 
     /// Start the ride with the camera.
     func startWithCamera() {
         stopLevel()
+        handedOff = true
         onStartWithCamera?()
     }
 
     /// Skip the camera and start a normal ride.
     func skipCamera() {
         stopLevel()
+        stopPreviewIfNeeded()
         onSkipCamera?()
     }
 }

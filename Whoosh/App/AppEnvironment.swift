@@ -41,6 +41,8 @@ final class AppEnvironment {
     /// network) here. With crash alerts off, nothing in it touches the network,
     /// so the app behaves exactly as the MVP (Requirement 1.5).
     let crash: CrashResponseEnvironment
+    /// Camera authorization (asked when a ride first needs the camera).
+    private let cameraPermission: CameraPermission
 
     /// A calm, non-fatal notice to show the user when local storage had to fall
     /// back to a non-persistent store (Requirement 11.4). `nil` in the normal
@@ -136,6 +138,7 @@ final class AppEnvironment {
         self.makeRideTracker = makeRideTracker
         self.clipRepository = clipRepository
         self.cameraServices = cameraServices
+        self.cameraPermission = cameraPermission
         let settings = SettingsViewModel(repository: repository, defaults: defaults)
         self.settingsViewModel = settings
         self.rearCameraSettingsViewModel = RearCameraSettingsViewModel(
@@ -462,7 +465,9 @@ final class AppEnvironment {
             previewHost: services.previewHost,
             levelSensor: services.makeLevelSensor(),
             settingsStore: services.settingsStore,
-            clock: clock
+            clock: clock,
+            capture: services.capture,
+            permission: cameraPermission
         )
     }
 
