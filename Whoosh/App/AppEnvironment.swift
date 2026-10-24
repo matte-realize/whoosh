@@ -355,12 +355,19 @@ final class AppEnvironment {
         let (repository, crashRepository, clipRepository, nearMissRepository, storageNotice) = Self.makeLiveRepositories()
         let clock = SystemClock()
 
+        // The single Supabase client provider, shared by opt-in ride sync and
+        // opt-in crash alerts. When no secrets are present `isConfigured` is
+        // false and both features stay offline (Noop notifier / Noop sync).
+        let supabaseProvider = SupabaseClientProvider()
+        let appVersion = Self.appVersion()
+
         // Crash-response stores (device-local only; no network). Contacts live
         // only in the Keychain; orphaned items are purged on a fresh install.
         let markerStore = UserDefaultsFreshInstallMarkerStore()
         let contactStore = KeychainEmergencyContactStore(markerStore: markerStore)
         try? contactStore.purgeOrphansIfFreshInstall()
         let settingsStore = UserDefaultsCrashAlertSettingsStore()
+        let consentStore = UserDefaultsConsentStore()
 
         // Detector source. The experimental `MotionCrashDetector` is the LIVE
         // detector whenever crash alerts are enabled (the hackathon default is
@@ -395,20 +402,40 @@ final class AppEnvironment {
             detector = NoopCrashDetector()
         }
 
+        // Notifier: Tier 1 `SupabaseCrashNotifier` when a Supabase client is
+        // configured (auto-send on the rider's behalf — the owner's "if it's
+        // bad the user won't be able to click send" requirement); otherwise the
+        // Tier 0 Noop (no network), so the composer fallback and local
+        // notification remain. Only `Services/Notification` touches the network.
+        let notifier: CrashNotifier
+        let messagingConnected: Bool
+        if let client = supabaseProvider.client {
+            let transport = SupabaseFunctionsCrashTransport(client: client)
+            notifier = SupabaseCrashNotifier(
+                transport: transport,
+                appVersion: appVersion
+            )
+            messagingConnected = true
+        } else {
+            notifier = NoopCrashNotifier()           // Tier 0: no network
+            messagingConnected = false
+        }
+
         let crash = CrashResponseEnvironment(
             contactStore: contactStore,
-            consentStore: UserDefaultsConsentStore(),
+            consentStore: consentStore,
             settingsStore: settingsStore,
             repository: crashRepository,
             connectivity: NWPathConnectivityMonitor(),
             scheduler: UserNotificationsCrashNotificationScheduler(),
-            notifier: NoopCrashNotifier(),           // Tier 0: no network (task 25 blocked)
+            notifier: notifier,
             feedback: SystemCountdownFeedback(),
             footageBuffer: NoopFootageBuffer(),
             detector: detector,
             simulator: simulator,
             clock: clock,
-            speedSnapshot: speedSnapshot
+            speedSnapshot: speedSnapshot,
+            isMessagingConnected: messagingConnected
         )
 
         // Rear-camera service stack (rear-camera task 19/22). The capture
@@ -449,8 +476,8 @@ final class AppEnvironment {
             calendar: .current,
             defaults: .standard,
             storageNotice: storageNotice,
-            supabaseProvider: SupabaseClientProvider(),
-            appVersion: Self.appVersion(),
+            supabaseProvider: supabaseProvider,
+            appVersion: appVersion,
             pendingDeletes: UserDefaultsPendingRemoteDeleteStore(),
             cameraPermission: AVCameraPermission(),
             rearCameraStore: rearCameraStore,

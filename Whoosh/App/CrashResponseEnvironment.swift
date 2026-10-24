@@ -38,12 +38,14 @@ final class CrashResponseEnvironment {
     private let feedback: CountdownFeedback
 
     /// The notifier used by the test/intro flow in the setup hub. In Tier 0 this
-    /// is the `NoopCrashNotifier` (no network); the test flow shows the honest
-    /// "not connected" fallback because `isMessagingConnected` is `false`.
+    /// is the `NoopCrashNotifier` (no network); in Tier 1 it is the
+    /// `SupabaseCrashNotifier`. The test flow shows the honest "not connected"
+    /// fallback only when `isMessagingConnected` is `false`.
     var noopNotifier: CrashNotifier { notifier }
     private let footageBuffer: FootageBuffer
     private let detector: CrashDetector
     private let clock: Clock
+    private let messagingConnected: Bool
 
     /// Shared with the live `MotionCrashDetector` (when present) so the detector
     /// can read the ride's current GPS speed. The ride bridge publishes into it.
@@ -76,7 +78,8 @@ final class CrashResponseEnvironment {
         detector: CrashDetector,
         simulator: DebugCrashSimulator?,
         clock: Clock,
-        speedSnapshot: RideSpeedSnapshot = RideSpeedSnapshot()
+        speedSnapshot: RideSpeedSnapshot = RideSpeedSnapshot(),
+        isMessagingConnected: Bool = false
     ) {
         self.contactStore = contactStore
         self.consentStore = consentStore
@@ -91,6 +94,7 @@ final class CrashResponseEnvironment {
         self.simulator = simulator
         self.clock = clock
         self.speedSnapshot = speedSnapshot
+        self.messagingConnected = isMessagingConnected
 
         let relay = RelayRideContext()
         self.relayContext = relay
@@ -114,10 +118,11 @@ final class CrashResponseEnvironment {
         connectivity.start()
     }
 
-    /// Whether the feature is wired to a real messaging backend. Always `false`
-    /// in Tier 0 (the Noop notifier), so the test flow shows the honest "not
+    /// Whether the feature is wired to a real messaging backend. `true` in
+    /// Tier 1 (a `SupabaseCrashNotifier` over a configured client); `false` in
+    /// Tier 0 (the Noop notifier), where the test flow shows the honest "not
     /// connected" fallback instead of pretending to send.
-    var isMessagingConnected: Bool { false }
+    var isMessagingConnected: Bool { messagingConnected }
 
     /// The on/off state for the Home / ride-screen chip and arming inputs.
     var isFeatureOn: Bool { settingsStore.current().enabled }
