@@ -17,6 +17,9 @@ import SwiftUI
 ///   calls `SettingsViewModel.deleteAllRides()` and surfaces any error message.
 struct SettingsView: View {
     @Bindable var viewModel: SettingsViewModel
+    /// Demo mode's controller, so Settings can show the off-by-default "Demo
+    /// mode" section and its tools (demo-mode Requirement 1.1).
+    var demo: DemoModeController
     @State private var showDeleteConfirmation = false
 
     var body: some View {
@@ -25,6 +28,7 @@ struct SettingsView: View {
                 cloudSyncSection
                 rideSection
                 safetySection
+                DemoModeSection(controller: demo)
                 deleteAllButton
             }
             .padding(Theme.Spacing.lg)
@@ -222,7 +226,8 @@ private extension View {
 }
 
 #Preview("Settings") {
-    NavigationStack {
-        SettingsView(viewModel: SettingsViewModel(repository: InMemoryRideRepository()))
+    let env = AppEnvironment.preview()
+    return NavigationStack {
+        SettingsView(viewModel: env.settingsViewModel, demo: env.demo)
     }
 }
