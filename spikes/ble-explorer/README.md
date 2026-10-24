@@ -72,7 +72,9 @@ many times it worked. Note the device model, firmware if shown, iOS version, and
   writable characteristic besides ones for other purposes, that agrees. Do not write to
   unidentified WHOOP characteristics hoping to find the haptic: that is a way to confuse the
   strap's firmware, and it is outside what the vendor supports.
-- The model is still unknown. Record it in B3 or from the WHOOP app.
+- The team's band is a **WHOOP 5.0**. Turn on Heart Rate Broadcast in the WHOOP app (Device
+  Settings) before test B1, or the band may not show up. Recording what it exposes (B2) is fine;
+  leave its other characteristics alone (see above).
 
 ## Reading the results
 

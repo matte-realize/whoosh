@@ -81,7 +81,8 @@ battery percent. Turn Do Not Disturb and Focus off.
 
 - Starting the watch app's workout from the phone automatically (`HKHealthStore.startWatchApp`).
 - Heart rate or any health data. The spike reads none and saves no workout to Health.
-- Anything about WHOOP. The WHOOP model is still unknown.
+- Anything about WHOOP. The team's WHOOP 5.0 is covered in `spikes/ble-explorer/` and
+  `.kiro/team/vibration-alert-proposal.md`.
 - Production concerns: pairing flow, permissions copy, cooldown, fallbacks. Those go through
   the app owner and the `AlertManager` seam.
 

@@ -14,8 +14,16 @@ The team planned to use a WHOOP for this. A WHOOP band cannot do it:
   recovery, sleep and workout data from their cloud, not for commanding the strap.
 - The one thing WHOOP exposes to other apps over standard Bluetooth is heart rate broadcast.
   That has no vibration part, and it is not needed for this feature.
-- The WHOOP model the team has is not known yet. If it turns out to be a model with an
-  officially supported way to trigger haptics, this proposal changes. Check the model first.
+- **The team's band is a WHOOP 5.0** (confirmed October 24, 2026). It has a haptic alarm
+  ([WHOOP community](https://www.community.whoop.com/t/will-5-0-still-have-the-haptic-alarm-feature/523/2))
+  and can broadcast heart rate from the WHOOP app's Device Settings. WHOOP's developer API is
+  read-only health data, and I found no official way for another app to trigger the haptic.
+- An unofficial Android app reportedly makes a WHOOP 5.0 vibrate by sending reverse-engineered
+  Bluetooth commands ([report, February 2026](https://gadgetsandwearables.com/2026/02/26/whootify/)).
+  It is not supported by WHOOP. Building the alert on it would mean depending on an undocumented
+  protocol that a firmware update could break, on an Android-only approach while the app is iOS,
+  and possibly on terms the team has not read. Not recommended for the demo; check WHOOP's terms
+  before considering it at all.
 
 Do not build on the WHOOP for alerts unless someone finds a documented way.
 
@@ -63,8 +71,8 @@ throwaway experiment is in `spikes/watch-haptics/` (README has the test protocol
 decide whether the watch is a workable alert channel. What research suggests, still to be
 checked on the real watch: a watch app plays haptics in the background only during an active
 workout session, and a plain phone notification does not reach the watch while the phone
-screen is on. The WHOOP model is still unknown and is parked. Options A and B stay as the
-fallback.
+screen is on. The WHOOP is a 5.0, which offers no supported way to trigger its haptic (section
+1), so it stays parked as an alert channel. Options A and B stay as the fallback.
 
 ## 5. Rules every option follows
 
@@ -123,4 +131,5 @@ The phone is the Bluetooth central and the vibration device is the peripheral.
 
 1. Which options: A and B only, or also D, or also C?
 2. What hardware or watch does the team actually have?
-3. What WHOOP model is it, and is anyone confident it can be made to vibrate from an app?
+3. ~~What WHOOP model is it?~~ WHOOP 5.0. Its haptic has no supported trigger, so it is not an
+   alert channel unless WHOOP adds one.
