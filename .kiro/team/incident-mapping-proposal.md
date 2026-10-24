@@ -3,8 +3,9 @@
 Status: DEFAULTS ACCEPTED by Role C, October 24, 2026; awaiting the iOS owner on decisions 3
 and 5. Built: migration `supabase/migrations/20261024130000_incident_mapping_and_indexes.sql`
 and tests `supabase/tests/incident_cells.test.sql` (20 assertions) pass on the local database.
-The website's incident section (`web/src/components/IncidentSection.tsx`, sample data in
-`web/fixtures/incident_cells.json`) is written but not yet built or type-checked. Companion to `supabase-contract.md`,
+The website shows the cells as a layer of the community map
+(`web/src/components/CommunityMapSection.tsx`, sample data in `web/fixtures/incident_cells.json`),
+written but not yet built or type-checked. Companion to `supabase-contract.md`,
 `hazard-contract.md`, and `privacy.md`.
 
 ## 1. What it is

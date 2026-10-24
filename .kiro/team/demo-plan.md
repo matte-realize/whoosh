@@ -60,7 +60,8 @@ milestone; here is how the app is built to take it." The demo still stands witho
 
 - [ ] Supabase project is awake. Free-tier projects can pause after inactivity; open the dashboard
       and check. **verify**
-- [ ] Migrations applied and `supabase test db` passed locally before pushing. **verify**
+- [x] Migrations applied and `supabase test db` passed locally (54 assertions, October 24, 2026).
+- [ ] Migrations applied to the hosted project. **verify**
 - [ ] Anonymous sign-ins enabled in the project. **verify**
 - [ ] The website builds: `cd web && npm install && npm run typecheck && npm run build`. **verify**
 - [ ] `package-lock.json` committed.

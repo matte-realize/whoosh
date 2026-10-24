@@ -79,6 +79,8 @@ RLS is consulted. Every migration therefore states its grants in the same file a
 | `near_misses` | select, insert, update, delete | none | select, insert, update, delete |
 | `public_rides` (view) | none | select | none |
 | `public_incident_cells` (view) | none | select | none |
+| `public_stats` (view) | none | select | none |
+| `is_valid_route(jsonb)` (function) | execute | none | execute |
 
 Grants only decide whether a role can touch the table. RLS still decides which rows. Do not
 fix a `42501` by granting `anon` access to a raw table.
@@ -150,6 +152,34 @@ confidence. The thresholds reduce re-identification risk and do not remove it.
 The app must drop incidents inside the privacy-trim zone (first and last 160 m) before upload.
 The database cannot check that.
 
+## Upload limits
+
+From migration `20261024140000_input_limits_and_public_stats.sql`. An upload that breaks any of
+these fails with `23514` (check violation). The app should treat that as a permanent error for
+that ride (do not retry forever) and log it.
+
+The app's upsert must set **every** column in its `on conflict (id) do update`, not just the
+ones that changed. A partial update can combine new values with old ones (for example a new
+active time with the old start and end) and fail `rides_active_within_elapsed`.
+
+| Column | Limit |
+| ------ | ----- |
+| `rides.route` | GeoJSON LineString, 2 to 10,000 points; each point `[lon, lat]` or `[lon, lat, alt]`, numbers only; lon −180..180, lat −90..90. The app should thin routes before upload. |
+| `rides.distance_m` | at most 1,000,000 (1,000 km) |
+| `rides.active_duration_s` | at most 172,800 (48 h), and at most the wall-clock span `ended_at − started_at` (+1 s) |
+| `rides.avg_speed_mps` | at most 40 |
+| `rides.ended_at` | at most 48 hours after `started_at` |
+| `rides.app_version` | at most 32 characters |
+| `near_misses.latitude` / `longitude` | −90..90 / −180..180 |
+| `near_misses.kind` | 1 to 32 characters |
+
+## Public stats
+
+The view `public_stats` returns one row: `shared_rides`, `total_distance_m`,
+`total_active_duration_s`, `riders` (null unless at least 3 riders have shared rides),
+`mapped_incidents` and `incident_cells` (both from `public_incident_cells`, so only cells that
+passed its thresholds). Readable by `anon` only.
+
 ## Indexes
 
 | Index | Serves |
@@ -188,9 +218,12 @@ slow, switch it to a materialized view refreshed on a schedule.
       tested locally. Not yet checked on a hosted project.
 - [ ] Confirm which API key type the project issued, and align the iOS variable name
       (`SUPABASE_ANON_KEY` in spec files vs `SUPABASE_PUBLISHABLE_KEY`).
-- [x] Run and validate the migrations locally: `supabase db reset` applies all three, and
-      `supabase test db` passes all 34 assertions in `supabase/tests/rls_rides.test.sql`
-      (October 24, 2026).
+- [x] Run and validate the migrations locally: `supabase db reset` applies all five, and
+      `supabase test db` passes all 81 assertions in `supabase/tests/` (October 24, 2026).
+- [x] Upload limits and the `public_stats` view: applied and tested locally
+      (`input_limits_and_stats.test.sql`, 27 assertions).
+- [x] Incident map view, `near_misses.source` / `share_publicly`, nullable `confidence`, and
+      performance indexes: applied and tested locally (`incident_cells.test.sql`, 20 assertions).
 - [ ] Apply to the real project: `supabase link`, `supabase db push --dry-run`, then push.
       Re-check isolation with two real anonymous sessions, and enable anonymous sign-ins in
       the project.

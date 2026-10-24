@@ -8,34 +8,44 @@ Each task below is a self-contained brief that can be handed to one subagent
 
 ## 0. Progress (October 24, 2026)
 
-Local database: the three migrations apply with `supabase db reset`, and `supabase test db` passes
-all 34 assertions (run by the user, October 24, 2026). Not yet done: applying to the hosted
-project, running the website, and checking that the tests fail when a policy is removed.
-Everything under `web/` is still unrun. The agent sandbox cannot run the Supabase CLI or Docker,
-so these runs happen in the user's own terminal.
+Local database: all five migrations apply with `supabase db reset` (seed included), and
+`supabase test db` passes all 81 assertions across `rls_rides.test.sql` (34),
+`incident_cells.test.sql` (20) and `input_limits_and_stats.test.sql` (27). Run by the user,
+October 24, 2026. All work is committed on
+branch `backend/supabase-web` (not pushed). The agent sandbox cannot run the Supabase CLI,
+Docker, or Node, so runs happen in the user's own terminal.
+
+**Done** means built and verified by a run. **Not done** says what is missing.
 
 | Task | State | Files |
 | ---- | ----- | ----- |
-| B1 migrations | Authored | `supabase/migrations/20261024120000_rides.sql`, `…120100_near_misses.sql` |
-| B2 RLS test | Authored | `supabase/tests/rls_rides.test.sql` |
-| B3 public view | Authored | `supabase/migrations/20261024120200_public_rides_view.sql` (test extended, 26 assertions) |
-| B4 seed data | Authored | `supabase/seed.sql`, `web/fixtures/rides.json` |
-| B6 contract | Done, still DRAFT 0.2 | `.kiro/team/supabase-contract.md` |
-| B5 website | Authored (Next.js 16, Leaflet + OpenStreetMap) | `web/` (never installed, built, or type-checked; needs Node >= 22) |
-| `config.toml` | Created by `supabase init` | `enable_anonymous_sign_ins` is still `false` locally; the app needs `true`. Tests do not. |
-| near_misses ownership fix | Authored | Insert/update policies check the ride belongs to the same user; assertions 27 and 29 |
-| Data API grants | Authored | Explicit grants in all three migrations; required by Supabase's 2026 default change |
-| Sharing-flow RLS tests | Done, passing locally | Assertions 30–34; the file has 34 assertions and clears seeded rides inside its transaction |
-| HazardDetection contract draft | Authored, awaiting 3-way OK | `.kiro/team/hazard-contract.md` |
-| Eval tooling for B | Done and run | `vision/eval/` (stdlib Python; `python3 run_toy.py`) |
-| Demo script and runbook | Drafted, never rehearsed | `.kiro/team/demo-plan.md` |
-| Incident map + indexes | Database done, passing locally (54 assertions across both test files); web part not yet built | Migration `20261024130000_…`, tests `incident_cells.test.sql` (20), web `IncidentSection` |
-| Website map performance | Authored, not yet built | Map created once per page; ride switch only swaps the route layer; canvas renderer |
-| iOS share-toggle proposal | Drafted, awaiting the iOS owner | `.kiro/team/ios-share-toggle-proposal.md` |
+| B1 migrations | **Done**, applied and tested locally | `supabase/migrations/20261024120000_rides.sql`, `…120100_near_misses.sql` |
+| B2 RLS test | **Done**, passing locally | `supabase/tests/rls_rides.test.sql` (34 assertions) |
+| B3 public view | **Done**, passing locally | `supabase/migrations/20261024120200_public_rides_view.sql` |
+| B4 seed data | **Done**, loads on `db reset` | `supabase/seed.sql`, `web/fixtures/rides.json` |
+| B6 contract | **Done** as a draft; still DRAFT, not Agreed | `.kiro/team/supabase-contract.md` |
+| near_misses ownership fix | **Done**, passing locally (assertions 27, 29) | Insert/update policies check the ride belongs to the same user |
+| Data API grants | **Done**, applied and tested locally | Explicit grants in every migration (Supabase's 2026 default change) |
+| Sharing-flow RLS tests | **Done**, passing locally | Assertions 30–34 |
+| Incident map: database | **Done**, passing locally | Migration `20261024130000_…`, tests `incident_cells.test.sql` (20 assertions) |
+| Performance indexes | **Done**, applied and their existence tested locally | Same migration; see "Indexes" in the contract |
+| Eval tooling for B | **Done**, 107 checks pass | `vision/eval/` (stdlib Python; `python3 run_toy.py`) |
+| B5 website | Not done: written, never installed, built, or type-checked | `web/` (needs Node >= 22) |
+| Community map (routes + incident cells) | Not done: written, never built | `web/src/components/CommunityMapSection.tsx`, `CommunityMap.tsx` |
+| Stats panel | Not done: written, never built | `web/src/components/StatsPanel.tsx`, `web/src/lib/stats.ts` |
+| Input limits + `public_stats` view | **Done**, passing locally | Migration `20261024140000_…`, tests `input_limits_and_stats.test.sql` (27 assertions) |
+| Performance evaluation | Not done: script runs to completion locally; the timings and query plans have not been reviewed | `supabase/perf/perf_eval.sql` (run with `docker exec`, see header) |
+| Website map performance | Not done: written, never built | Map created once per page; ride switch only swaps the route layer; canvas renderer |
+| `config.toml` | Not done: `enable_anonymous_sign_ins` is still `false` | Tests do not need it; the app does |
+| Hosted project | Not done: nothing applied to the real Supabase project | `supabase link`, `db push --dry-run`, then push |
+| Test "has teeth" check | Not done: no one has dropped a policy and watched a test fail | Section "How to check the test has teeth" in `rls_rides.test.sql` |
+| HazardDetection contract | Not done: drafted, awaiting the 3-way OK | `.kiro/team/hazard-contract.md` |
+| Demo script and runbook | Not done: drafted, never rehearsed | `.kiro/team/demo-plan.md` |
+| iOS share-toggle proposal | Not done: awaiting the iOS owner | `.kiro/team/ios-share-toggle-proposal.md` |
+| Incident map: iOS side | Not done: awaiting the iOS owner (mark-a-near-miss, trim-zone drop, opt-in) | `.kiro/team/incident-mapping-proposal.md` |
 
-Next, by you: install the CLI (`brew install supabase/tap/supabase`), start Docker, run
-`supabase init`, set `[auth] enable_anonymous_sign_ins = true`, then `supabase start`,
-`supabase db reset` and `supabase test db`. Expect to fix small SQL errors on the first run.
+Next, by you: install Node 22+, then `cd web && npm install && npm run typecheck && npm run build`
+and paste any errors. After that: the hosted project, the contract sign-offs, and a rehearsal.
 
 ## 1. Where Supabase integrates
 
