@@ -18,7 +18,7 @@ independently and integrate late.
 C keeps the data contracts honest (so B's model output and your `HazardDetector` protocol
 line up), owns the Supabase backend, and builds the website that shows synced rides and
 near-misses on a big screen. C is never on the iOS critical path: the app is local-first and
-the demo works in airplane mode. Supabase sync is an additive stretch (iOS tasks 21–23).
+the demo works in airplane mode. Supabase sync is an additive stretch (iOS tasks 26–28).
 
 C's source of truth for the backend is `supabase-contract.md` in this folder. The iOS app
 implements sync only after C marks it "Agreed."
@@ -50,8 +50,9 @@ Contract rules:
 Three checkpoints keep everyone converging on a demo.
 
 ### Checkpoint 1 — "It records" (foundation)
-- **You:** iOS tasks 1–10 (project, models, metrics, clock, repositories, location protocol +
-  state machine, CoreLocation, formatters). A ride can be recorded and summarized in tests.
+- **You:** iOS tasks 1–12 (project, theme, models, metrics, weekly stats, clock, repositories
+  with deleteAll, location protocol + state machine, CoreLocation, formatters). A ride can be
+  recorded and summarized in tests, and the design system is in place.
 - **B:** Collect/borrow a small rear-facing driving/cycling dataset; stand up a notebook that
   runs a baseline detector on sample clips offline; measure rough precision/recall. **Make no
   reliability claims yet.**
@@ -60,19 +61,21 @@ Three checkpoints keep everyone converging on a demo.
   Scaffold the website against a fixture JSON of rides.
 
 ### Checkpoint 2 — "It shows" (integration-ready)
-- **You:** iOS tasks 11–16 (home + permissions, map wrapper, active ride, summary, history,
-  mid-ride persistence). End-to-end ride → summary → history works on device.
+- **You:** iOS tasks 13–21 (settings VM + screen, home + permissions/location-denied, home
+  dashboard, map wrapper, active ride with hold-to-stop, summary, history, mid-ride
+  persistence). End-to-end ride → summary → history works on device, with the Home dashboard
+  and Settings in place.
 - **B:** Package the model to run on-device (Core ML / Vision) behind a Swift type that
   conforms to `HazardDetector`; emit `HazardDetection` events from a live camera feed in a
   tiny standalone harness. Share a `.mlmodel`/package + the conforming class.
 - **C:** Apply the schema and RLS policies; verify one anonymous user can't read another's
   rows. Website reads rides from Supabase (seeded test rows until the app syncs) and draws
   routes on a map; add a near-miss overlay driven by `HazardDetection` fixtures.
-- **You (stretch, after task 18):** iOS tasks 21–23, opt-in sync into C's `rides` table.
+- **You (stretch, after task 23):** iOS tasks 26–28, opt-in sync into C's `rides` table.
 
 ### Checkpoint 3 — "It warns" (demo)
-- **You:** iOS task 17 seams are real injection points; swap `NoopDetector` for B's detector
-  and `StubAlertManager` for a real haptic/audio alert. Tasks 18–20 (composition, resilience,
+- **You:** iOS task 22 seams are real injection points; swap `NoopDetector` for B's detector
+  and `StubAlertManager` for a real haptic/audio alert. Tasks 23–25 (composition, resilience,
   accessibility/privacy). Demo path: ride with rear camera → detection → haptic/audio alert,
   with honest "experimental" framing.
 - **B:** Tune thresholds/cooldown with you; provide the measured performance numbers so copy
