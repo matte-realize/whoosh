@@ -45,6 +45,10 @@ final class CrashResponseEnvironment {
     private let detector: CrashDetector
     private let clock: Clock
 
+    /// Shared with the live `MotionCrashDetector` (when present) so the detector
+    /// can read the ride's current GPS speed. The ride bridge publishes into it.
+    private let speedSnapshot: RideSpeedSnapshot
+
     /// The relay the coordinator holds; forwards to the current bridge.
     private let relayContext: RelayRideContext
 
@@ -71,7 +75,8 @@ final class CrashResponseEnvironment {
         footageBuffer: FootageBuffer,
         detector: CrashDetector,
         simulator: DebugCrashSimulator?,
-        clock: Clock
+        clock: Clock,
+        speedSnapshot: RideSpeedSnapshot = RideSpeedSnapshot()
     ) {
         self.contactStore = contactStore
         self.consentStore = consentStore
@@ -85,6 +90,7 @@ final class CrashResponseEnvironment {
         self.detector = detector
         self.simulator = simulator
         self.clock = clock
+        self.speedSnapshot = speedSnapshot
 
         let relay = RelayRideContext()
         self.relayContext = relay
@@ -125,7 +131,8 @@ final class CrashResponseEnvironment {
         let bridge = RideSessionBridge(
             rideViewModel: session,
             detector: detector,
-            armingInputs: { [weak self] in self?.armingInputs() ?? .disabled }
+            armingInputs: { [weak self] in self?.armingInputs() ?? .disabled },
+            publishSpeed: { [weak self] speed in self?.speedSnapshot.update(speed) }
         )
         self.bridge = bridge
         relayContext.underlying = bridge
@@ -138,6 +145,7 @@ final class CrashResponseEnvironment {
         bridge?.stop()
         bridge = nil
         relayContext.underlying = nil
+        speedSnapshot.update(nil)
     }
 
     /// Re-evaluate arming after a non-ride input changed (contacts edited,

@@ -409,19 +409,28 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 8.2
   - _Depends on:_ 16
 
-- [ ] 32. `[Teammate B]` or `[iOS]` `[STRETCH]` Motion-detector signal core (pure, test-first)
+- [x] 32. `[Teammate B]` or `[iOS]` `[STRETCH]` Motion-detector signal core (pure, test-first)
   - Windowed impact + speed-drop + stillness scoring per `design.md`; every threshold in
     `CrashResponseTuning`; tests against synthetic and recorded traces (pothole, drop, phone
     bump, hard stop, simulated crash); no framework imports.
   - _Requirements:_ 5.5, 5.6, 19.7
   - _Depends on:_ 7
 
-- [ ] 33. `[Teammate B]` or `[iOS]` `[STRETCH]` `MotionCrashDetector` adapter and field testing
+- [x] 33. `[Teammate B]` or `[iOS]` `[STRETCH]` `MotionCrashDetector` adapter and field testing
   - Core Motion adapter behind `CrashDetector` (armed only while riding; battery-aware sampling;
     local-only candidate log, nothing uploaded); off by default and labeled experimental.
   - Field test on real rides; record measured triggers per hour in `design.md` "Measured
     results"; the owner sets the acceptance bar (O9) before any UI offers it.
   - _Verify (device):_ battery impact measured; no permission prompt (confirm).
+  - _Implemented:_ `MotionCrashDetector` (Services/Crash) adapts the Core Motion device-motion
+    stream into the pure `MotionCrashSignalCore`; armed only by `RideSessionBridge`/`CrashArming`
+    while recording; battery-aware `MotionSamplingProfile` (50/20 Hz); no upload, no permission
+    prompt (device-motion streaming needs none); emits `source = "motion"`, `isDrill = false`.
+    Wired in `AppEnvironment.live()` as the LIVE detector whenever crash alerts are enabled
+    (fanned with the `DebugCrashSimulator` drill via `CompositeCrashDetector`).
+  - _Owner to do (device-only):_ run real rides, measure triggers/hour and battery impact,
+    confirm no permission prompt, record the numbers and acceptance bar (O9) in `design.md`
+    "Measured results" before any UI offers the toggle.
   - _Requirements:_ 5.5, 5.6, 5.7
   - _Depends on:_ 32, 26
 
