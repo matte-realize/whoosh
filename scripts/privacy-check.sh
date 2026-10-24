@@ -24,7 +24,7 @@
 # 13 import Photos / PHPhotoLibrary only in Services/Camera/PhotosClipExporter.swift.
 # 14 import WatchConnectivity only in Services/Remote/.
 # 15 UIScreen brightness writes and isIdleTimerDisabled only in Services/Screen/
-#   (temporarily also allowed in ActiveRideView until task 21 migrates it).
+#   (ActiveRideView's idle timer is migrated behind the ScreenController, task 21).
 # 16 files under Services/Sync/ and Services/Notification/ must not reference camera,
 #   clip, or footage types (VideoFrame, ClipRecord, SegmentInfo, FootageBuffer, AVAsset,
 #   .mp4/.mov).
@@ -191,8 +191,7 @@ for f in "${files[@]}"; do
   if grep -nE '\.brightness *=|isIdleTimerDisabled' "$f" >/dev/null; then
     case "$f" in
       */Services/Screen/*) ;;
-      */Features/Ride/ActiveRideView.swift) ;;
-      *) report "$f" "screen brightness write / isIdleTimerDisabled outside Services/Screen (ride mode and the idle timer are owned by the screen controller; ActiveRideView allowed until task 21)" ;;
+      *) report "$f" "screen brightness write / isIdleTimerDisabled outside Services/Screen (ride mode and the idle timer are owned by the screen controller)" ;;
     esac
   fi
 
