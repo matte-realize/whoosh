@@ -19,11 +19,17 @@ struct SettingsView: View {
     @Bindable var viewModel: SettingsViewModel
     @State private var showDeleteConfirmation = false
 
+    /// Navigation hook to push the Emergency setup hub (crash-response task 16).
+    /// Defaults to a no-op so the composition root (task 26) wires the push
+    /// without this view depending on it; the row is hidden until it is wired.
+    var onOpenCrashAlerts: (() -> Void)?
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                 cloudSyncSection
                 rideSection
+                crashAlertsSection
                 safetySection
                 deleteAllButton
             }
@@ -135,6 +141,44 @@ struct SettingsView: View {
                 .accessibilityLabel("GPS accuracy, \(viewModel.accuracy.rawValue)")
             }
             .cardStyle()
+        }
+    }
+
+    // MARK: - Safety · Crash alerts (opt-in; pushes the Emergency setup hub)
+
+    @ViewBuilder private var crashAlertsSection: some View {
+        if let onOpenCrashAlerts {
+            VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                sectionHeader("Safety")
+                Button(action: onOpenCrashAlerts) {
+                    HStack(spacing: Theme.Spacing.md) {
+                        Image(systemName: "shield.lefthalf.filled")
+                            .font(.system(size: 16))
+                            .foregroundStyle(Theme.Colors.textPrimary)
+                            .frame(width: 24)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Crash alerts")
+                                .font(Theme.Typography.body)
+                                .foregroundStyle(Theme.Colors.textPrimary)
+                            Text("Opt-in. Off by default.")
+                                .font(.system(size: 11))
+                                .foregroundStyle(Theme.Colors.textSecondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
+                    .padding(Theme.Spacing.md)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .cardStyle()
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Crash alerts, opt-in, off by default")
+                .accessibilityHint("Opens emergency contact and crash alert setup")
+            }
         }
     }
 
