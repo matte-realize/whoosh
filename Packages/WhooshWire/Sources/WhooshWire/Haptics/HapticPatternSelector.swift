@@ -186,8 +186,14 @@ public struct HapticPatternSelector: Sendable {
 
     /// The three safety-critical patterns that must be unmistakable (HP-1).
     public static let safetyCritical: [HapticPattern] = [
-        crashCountdownStart, rearLevel1, cameraStopped,
-    ]
+            crashCountdownStart, rearLevel1, cameraStopped,
+        ]
+    
+        /// Public accessors for the patterns the watch model plays directly (not via
+        /// a `WireAlert`): a local "command not confirmed" buzz and the crash
+        /// countdown repeat.
+        public static var commandNotConfirmedPattern: HapticPattern { commandNotConfirmed }
+        public static var crashCountdownStartPattern: HapticPattern { crashCountdownStart }
 
     /// Patterns that must feel **distinct from one another** (HP-1). Several
     /// acknowledgements intentionally share a simple cue and are told apart by
