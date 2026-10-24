@@ -4,8 +4,9 @@ Small, ordered, verifiable tasks. **No code exists for this feature yet and none
 until the owner approves this spec** (`requirements.md`, `design.md`, this file) and, for the
 network tasks, Role C marks `../../team/crash-alert-contract.md` **Agreed**.
 
-Spec status: **DRAFT** — awaiting owner review (October 24, 2026). Open decisions O1–O10 are in
-`design.md` ("Decisions").
+Spec status: **APPROVED** by the iOS owner (October 24, 2026) with the recommended answers to
+O1–O10 (`design.md`, "Owner resolution"). Tier 0 iOS tasks may proceed; Tier 1 tasks still wait
+for the contract to be Agreed.
 
 This plan is separate from the ride-recording MVP plan (`../ride-recording-mvp/tasks.md`, tasks
 1–28). Task numbers here are independent; cross-spec references say "MVP task N".
@@ -43,7 +44,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
 
 ## Phase 0 — Gate
 
-- [ ] 0. `[Owner]` `[DEMO]` Review and approve the spec; resolve open decisions
+- [x] 0. `[Owner]` `[DEMO]` Review and approve the spec; resolve open decisions
   - Read `requirements.md`, `design.md`, this plan, and the contract draft. Decide O1–O10 (or
     accept the recommended defaults) and record the answers in `design.md` "Decisions".
   - Confirm the provider (O6) and who holds the account.

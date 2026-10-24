@@ -1,8 +1,8 @@
 # Requirements — Whoosh Emergency Contact and Crash Response
 
-**Status: DRAFT for owner review (October 24, 2026).** No code is written until the iOS owner
-approves this spec, `design.md`, `tasks.md`, and Role C marks `.kiro/team/crash-alert-contract.md`
-**Agreed**. Open decisions are listed in `design.md` ("Decisions" table, items marked OPEN).
+**Status: APPROVED by the iOS owner (October 24, 2026)** with the recommended answers to the open
+decisions (`design.md`, "Owner resolution"). iOS Tier 0 work may proceed. Network tasks (Tier 1)
+still wait until Role C marks `.kiro/team/crash-alert-contract.md` **Agreed**.
 
 ## Introduction
 

@@ -1,8 +1,8 @@
 # Design — Whoosh Emergency Contact and Crash Response
 
-**Status: DRAFT for owner review (October 24, 2026).** This document contains **no source
-code** by design: the owner requires requirements, design, and tasks to be reviewed before any
-implementation. Types, protocols, and state machines are described in tables and diagrams;
+**Status: APPROVED by the iOS owner (October 24, 2026)** with the recommended answers to O1–O10
+(see "Owner resolution" under Decisions). This document contains **no source code** by design:
+the owner required requirements, design, and tasks to be reviewed before any implementation. Types, protocols, and state machines are described in tables and diagrams;
 the code is written later, task by task, test-first (`tasks.md`).
 
 ## Overview
@@ -559,7 +559,25 @@ needs an explicit owner decision before the affected tasks start.
 | D28 | Folder name | `Services/Network/` per owner brief (path monitor only) | Matches the brief; privacy rule keys on API names | Proposed |
 | D29 | Motion detector acceptance bar | Not set | Needs measured data | **OPEN O9** |
 
-### Open decisions for the owner (summary)
+### Owner resolution (October 24, 2026)
+
+The iOS owner approved this spec and accepted the recommended answer for every open decision.
+Where this resolution and an "OPEN" row above disagree, this resolution wins.
+
+| # | Resolution |
+| - | ---------- |
+| O1 | v1 = (a) foreground, screen-awake, client-driven countdown + (c) time-sensitive local-notification backup. (d) server-side countdown is the v2 design (task 36). (b) background location is not adopted; revisit in task 35. |
+| O2 | Per-ride cap = 1 **sent** automatic alert. Cancelled countdowns are not capped; the suppression window after a cancel still applies. |
+| O3 | Stale limit 30 min: within it, send with "delayed" wording; after it, never auto-send (mark `stale`, offer the composer fallback). |
+| O4 | Include the rider-tapped manual "Call 911" button; never shown for drills; never triggered automatically. |
+| O5 | On an unknown outcome (timeout), retry once with the same `crashEventId`; accept a rare duplicate over a silent loss (backend dedupes). |
+| O6 | Twilio as the provider (trial account for the demo). The account holder is Role C, to be confirmed at C1. Affects Tier 1 only. |
+| O7 | Approved: add one read-only `currentRideID` accessor to `RideSessionViewModel`; no other change to ride internals. |
+| O8 | Non-US numbers are out of scope for v1 (NANP only). |
+| O9 | No acceptance bar set yet. The motion detector (tasks 32–33) stays off and is not offered in the UI until measured results exist. |
+| O10 | Disarm detection while the ride is paused; armed only in `recording` and `signalLost`. |
+
+### Open decisions for the owner (summary, now resolved above)
 
 - **O1** Execution model: confirm (a) + (c) for v1, (d) as v2; decide whether (b) is ever wanted.
 - **O2** Per-ride cap (1 sent) and handling of repeated cancelled countdowns (none vs. a cap/cooldown).
