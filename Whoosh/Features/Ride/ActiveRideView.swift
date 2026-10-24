@@ -55,6 +55,10 @@ struct ActiveRideView: View {
     /// captures, records, or uploads, and the boxes are not the alert path.
     var cameraPreview: CameraPreviewViewModel?
 
+    /// Demo mode: the recorded road clip stands in for the rear camera and is
+    /// shown in place of the map (toggle back to the map with the same button).
+    var demoFeed: DemoVideoFeed?
+
     /// The screen controller that owns the idle timer (and ride-mode
     /// brightness). Defaults to the shared production controller so the idle
     /// timer funnels through the one reason-counting owner, shared with the
@@ -74,7 +78,25 @@ struct ActiveRideView: View {
         ZStack(alignment: .top) {
             Theme.Colors.rideBackground.ignoresSafeArea()
 
-            if isShowingCamera, let cameraPreview, let host = cameraPreview.previewHost {
+            if isShowingCamera, let demoFeed {
+                VStack(spacing: 0) {
+                    DemoFeedSurface(feed: demoFeed)
+                        .padding(.top, 110) // below the top chrome
+                    Spacer()
+                }
+                .ignoresSafeArea(edges: .top)
+                VStack(spacing: 6) {
+                    Spacer().frame(height: 110 + 200)
+                    ProgressView(value: demoFeed.proximity)
+                        .tint(demoFeed.proximity > 0.6 ? Theme.Palette.alert : Theme.Palette.amber)
+                        .animation(.easeOut(duration: 0.2), value: demoFeed.proximity)
+                        .padding(.horizontal, Theme.Spacing.lg)
+                        .accessibilityLabel("Approaching car closeness")
+                    Spacer()
+                }
+                .ignoresSafeArea(edges: .top)
+                .allowsHitTesting(false)
+            } else if isShowingCamera, let cameraPreview, let host = cameraPreview.previewHost {
                 // Full-bleed live rear-camera preview with the experimental
                 // detection boxes drawn on top (owner feedback). Display only;
                 // footage/frames never leave the device.
@@ -105,10 +127,17 @@ struct ActiveRideView: View {
             bottomSheet
         }
         .preferredColorScheme(.dark)
-        .onAppear { screen.setIdleTimerDisabled(true) }
+        .onAppear {
+            screen.setIdleTimerDisabled(true)
+            if let demoFeed {
+                showCamera = true
+                demoFeed.start()
+            }
+        }
         .onDisappear {
             screen.setIdleTimerDisabled(false)
             cameraPreview?.clear()
+            demoFeed?.stop()
         }
         .onChange(of: viewModel.banner) { _, banner in
             announceBanner(banner)
@@ -123,7 +152,7 @@ struct ActiveRideView: View {
     /// Post a VoiceOver announcement when a state banner appears so a
     /// non-visual user hears the signal-lost / permission-revoked change.
     private func announceBanner(_ banner: RideBanner?) {
-        guard let banner else { return }
+        guard demoFeed == nil, let banner else { return }
         let message: String?
         switch banner {
         case .signalLost:
@@ -158,7 +187,8 @@ struct ActiveRideView: View {
 
     private var topChrome: some View {
         VStack(spacing: Theme.Spacing.sm) {
-            if let banner = viewModel.banner, banner.isBannerWorthy {
+            // Demo rides have no real GPS; don't show the signal-lost banner.
+            if demoFeed == nil, let banner = viewModel.banner, banner.isBannerWorthy {
                 RideBannerView(banner: banner)
             } else {
                 HStack(alignment: .top) {
@@ -185,7 +215,7 @@ struct ActiveRideView: View {
     /// Whether the map/camera toggle is available: only when a live preview host
     /// exists for this ride (rear camera on). Off by default; the rider opts in.
     private var canToggleCamera: Bool {
-        cameraPreview?.previewHost != nil
+        cameraPreview?.previewHost != nil || demoFeed != nil
     }
 
     /// Whether the camera view is currently shown (guarded by availability so a
@@ -222,7 +252,10 @@ struct ActiveRideView: View {
     /// recording, the detector's state (on / model loading / unavailable) is
     /// surfaced so the rider knows whether experimental detection is running.
     @ViewBuilder private var cameraOrDetectionChip: some View {
-        if let cameraState {
+        if demoFeed != nil {
+            // Demo: the real detector runs on the recorded clip.
+            detectionChip
+        } else if let cameraState {
             switch cameraState {
             case .recording, .degraded:
                 detectionChip

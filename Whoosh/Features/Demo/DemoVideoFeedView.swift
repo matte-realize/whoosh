@@ -17,12 +17,8 @@ struct DemoVideoFeedView: View {
                 header
                 Spacer()
                 if feed.player != nil {
-                    ZStack {
-                        PlayerLayerView(player: feed.player)
-                        DetectionOverlay(boxes: feed.boxes)
-                    }
-                    .aspectRatio(feed.videoSize, contentMode: .fit)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    DemoFeedSurface(feed: feed)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else {
                     Text("Demo clip missing from the app bundle.")
                         .foregroundStyle(.white)
@@ -74,6 +70,21 @@ struct DemoVideoFeedView: View {
                 ? "Watching for vehicles behind you"
                 : feed.proximity > 0 ? "Car closing in · dings: \(feed.alertCount)" : "Dings sent: \(feed.alertCount)"
         }
+    }
+}
+
+/// The demo clip with the model's boxes drawn over it, at the clip's aspect
+/// ratio so the boxes line up. Used full-screen in Settings and in place of the
+/// map on the ride screen.
+struct DemoFeedSurface: View {
+    let feed: DemoVideoFeed
+
+    var body: some View {
+        ZStack {
+            PlayerLayerView(player: feed.player)
+            DetectionOverlay(boxes: feed.boxes)
+        }
+        .aspectRatio(feed.videoSize, contentMode: .fit)
     }
 }
 

@@ -38,6 +38,7 @@ final class DemoVideoFeed {
     @ObservationIgnored private let tone = AudioSessionTonePlayer()
     @ObservationIgnored private var dangerArea: Double = 0
     @ObservationIgnored private var lastApproachAt: Date?
+    @ObservationIgnored private var mainAreaHistory: [(Date, Double)] = []
     @ObservationIgnored private var lastDingAt: Date?
     @ObservationIgnored private var timer: Timer?
     @ObservationIgnored private var loopObserver: NSObjectProtocol?
@@ -132,12 +133,49 @@ final class DemoVideoFeed {
         }
     }
 
-    /// Track the flagged (approaching) box's size as the closeness signal.
+    /// Track only the **main** car: the largest vehicle box in the middle of
+    /// the lane (centre x in 0.25…0.75, bottom edge in the near half of the
+    /// frame). Parked cars at the edges and small cars far back are ignored.
+    /// It counts as dangerous when it is close (area ≥ 0.12) or still growing
+    /// (≥ 4% over the last ~0.6 s) at a meaningful size (area ≥ 0.03). Only the
+    /// main box is highlighted in the alert colour.
     private func updateBoxes(_ boxes: [DetectionOverlayBox]) {
-        self.boxes = boxes
-        if let danger = boxes.filter(\.isApproaching).map({ $0.width * $0.height }).max() {
-            dangerArea = danger
-            lastApproachAt = Date()
+        let now = Date()
+        let vehicles: Set<String> = ["car", "truck", "bus", "motorcycle"]
+        let main = boxes
+            .filter { vehicles.contains($0.label) && $0.confidence >= 0.5 }
+            .filter { box in
+                let centerX = box.x + box.width / 2
+                return (0.25...0.75).contains(centerX) && box.y + box.height > 0.45
+            }
+            .max { $0.width * $0.height < $1.width * $1.height }
+
+        var dangerous = false
+        if let main {
+            let area = main.width * main.height
+            mainAreaHistory.append((now, area))
+            mainAreaHistory.removeAll { now.timeIntervalSince($0.0) > 0.6 }
+            let oldest = mainAreaHistory.first?.1 ?? area
+            dangerous = area >= 0.12 || (area >= 0.03 && area >= oldest * 1.04)
+            if dangerous {
+                dangerArea = area
+                lastApproachAt = now
+            }
+        } else {
+            mainAreaHistory.removeAll()
+        }
+
+        self.boxes = boxes.map { box in
+            DetectionOverlayBox(
+                id: box.id,
+                label: box.label,
+                confidence: box.confidence,
+                x: box.x,
+                y: box.y,
+                width: box.width,
+                height: box.height,
+                isApproaching: dangerous && box.id == main?.id
+            )
         }
     }
 

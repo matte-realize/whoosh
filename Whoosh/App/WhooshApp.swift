@@ -59,6 +59,8 @@ struct WhooshApp: App {
     /// for this ride; the ride screen then shows only the map with no camera
     /// toggle. Display only — it never captures, records, or uploads.
     @State private var cameraPreview: CameraPreviewViewModel?
+    /// Demo mode's recorded rear feed, shown in place of the ride map.
+    @State private var demoFeed: DemoVideoFeed?
     @Environment(\.scenePhase) private var scenePhase
 
     /// Routes pushed on the Home-rooted stack.
@@ -249,9 +251,11 @@ struct WhooshApp: App {
                     viewModel: session,
                     crashAlertsOn: environment.crash.isFeatureOn,
                     cameraState: cameraCoordinator?.state,
-                    detectionState: rideDetection?.detectionState,
+                    // The demo feed runs the real detector on the recorded clip.
+                    detectionState: demoFeed != nil ? .on : rideDetection?.detectionState,
                     onSaveClip: cameraCoordinator == nil ? nil : { cameraCoordinator?.saveClip() ?? .nothingToSave },
-                    cameraPreview: cameraPreview
+                    cameraPreview: cameraPreview,
+                    demoFeed: demoFeed
                 )
                 .interactiveDismissDisabled()
                 .overlay(alignment: .bottomTrailing) {
@@ -345,7 +349,8 @@ struct WhooshApp: App {
     /// start with or without the camera). Otherwise start a normal ride
     /// immediately — the MVP path is unchanged.
     private func proceedToRideSetup() {
-        guard environment.isRearCameraRecordingEnabled else {
+        // Demo mode: the recorded clip stands in for the camera, so skip framing.
+        guard environment.isRearCameraRecordingEnabled, !environment.demo.isEnabled else {
             beginRide(withCamera: false)
             return
         }
@@ -375,6 +380,10 @@ struct WhooshApp: App {
         // harmless, so the ride flow is unchanged.
         environment.watchLive.attach(ride: session, camera: nil)
         attachWatchCommands(to: session)
+
+        // Demo mode: the recorded road clip plays as the rear feed on the ride
+        // screen, through the real model, dinging faster as a car closes in.
+        demoFeed = environment.demo.isEnabled ? environment.demo.makeVideoFeed() : nil
 
         guard withCamera, environment.isRearCameraRecordingEnabled else { return }
 
@@ -462,6 +471,8 @@ struct WhooshApp: App {
         rideDetection = nil
         cameraPreview?.clear()
         cameraPreview = nil
+        demoFeed?.stop()
+        demoFeed = nil
         rideModeController?.rideEnded()
         rideModeController = nil
         // Drop the ride binding but keep the watch coordinator ticking so a crash
