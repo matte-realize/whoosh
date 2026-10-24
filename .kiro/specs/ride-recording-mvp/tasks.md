@@ -38,7 +38,7 @@ Conventions:
     and running the full simulator test run are left to the orchestrator (no simulator/device
     boot in this task).
 
-- [ ] 2. Design system and theme (Support/)
+- [x] 2. Design system and theme (Support/)
   - Build `Theme` in `Support/` with the color tokens Ink `#0B0F14`, Lime `#C8F135`, Amber
     `#F5A524`, Alert `#D32F2F`, Mist `#F4F5F7` (asset-backed), and SF Pro typography with large
     bold tabular (monospacedDigit) numerals for ride metrics.
@@ -49,6 +49,14 @@ Conventions:
     are tabular; build has no first-party warnings.
   - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 10.5, 10.6_
   - _Depends on: 1_
+  - _Pending device check:_ code written and `build-for-testing` succeeds with no first-party
+    warnings; `scripts/privacy-check.sh` passes. Colors are defined in code as light/dark
+    dynamic `Color` tokens (`Support/Theme/Theme.swift` + `Color+Theme.swift`) rather than an
+    asset catalog, so the five brand hues live in one reviewable place with sensible light/dark
+    semantic roles. Components (`PrimaryButton`, `StateChip` with recording/paused/signalLost/
+    gpsReady/rearDetectionOff/synced/pending/onDevice variants, `StatTile`, `RideRow`, plus a
+    `RouteGlyph` mini-polyline) live in `Support/Components/` with a `#Preview` `ComponentGallery`
+    in light + dark. Visual rendering and Dynamic Type are verified on device by the orchestrator.
 
 - [x] 3. Domain models (pure)
   - Implement `RoutePoint`, `RideSummary`, `Ride`, `RideState`, and the `RideTuning` config
@@ -170,7 +178,7 @@ Conventions:
     first-party warnings; the full `xcodebuild test` run is left to the orchestrator. Delete-all
     failure is reported via `deleteErrorMessage` (plain, non-raw copy) per Requirement 11.4.
 
-- [ ] 14. Settings screen
+- [x] 14. Settings screen
   - Build `SettingsView` (pushed from Home, back label "Home") using the design system:
     functional GPS-accuracy control; read-only "Units · Miles · mph"; destructive "Delete all
     rides" with a confirmation alert → `deleteAll()`. Show DISABLED "Coming soon" rows until
@@ -181,8 +189,16 @@ Conventions:
     history; disabled rows show "Coming soon"; no camera prompt.
   - _Requirements: 14.1, 14.3, 14.5, 14.6, 14.7, 12.1, 9.4_
   - _Depends on: 2, 13_
+  - _Pending device check:_ `SettingsView` built per mockup 7 and bound to the existing
+    `SettingsViewModel`; `build-for-testing` succeeds with no first-party warnings;
+    privacy-check passes. The GPS-accuracy menu picker is bound to `viewModel.accuracy`
+    (persistence + relaunch survival is unit-tested in `SettingsViewModelTests`). Delete-all
+    uses a destructive confirmation alert calling `deleteAllRides()`, with a second alert
+    surfacing `deleteErrorMessage`. Disabled sync rows + the "Soon" rear-detection row request
+    nothing. Live relaunch/navigation and the no-camera-prompt behavior are verified on device
+    by the orchestrator.
 
-- [ ] 15. Home screen, permission UX, and location-denied state
+- [x] 15. Home screen, permission UX, and location-denied state
   - Build `HomeView` + `HomeViewModel` shell using the design system: primary Start Ride,
     entries to History and Settings, "GPS ready" status chip. Wire the location-denied state:
     explanation, a numbered Open-Settings help (1. Open Settings, 2. tap Location, 3. choose
@@ -193,8 +209,19 @@ Conventions:
     rides" still opens history; live auth changes update the UI.
   - _Requirements: 1.1, 1.4, 1.6, 2.2, 2.3, 2.4, 2.6, 10.3, 10.5, 13.8_
   - _Depends on: 2, 10, 11, 14_
+  - _Pending device check:_ `HomeViewModel` (`@Observable`) maps authorization to a `HomeState`
+    (`ready` / `needsPermission` / `denied`), observes `onAuthorizationChange` for live updates,
+    and loads finished rides only; `LocationDeniedView` renders the slashed-location icon,
+    numbered 1-2-3 help, the privacy reassurance, a lime "Open Settings" deep link
+    (`UIApplication.openSettingsURLString`, injected so previews/tests don't touch UIApplication),
+    and a secondary "View past rides". `HomeView` exposes `onStartRide`/`onOpenHistory`/
+    `onOpenSettings`/`onSelectRide` closures so task 23 wires navigation. Auth-state mapping and
+    live changes are unit-tested in `HomeViewModelTests`; `build-for-testing` + privacy-check
+    pass. The real deny→Settings deep link and live return-from-Settings flow are verified on
+    device by the orchestrator. _Assumption:_ `servicesDisabled` is covered by the same denied
+    view; the current `LocationAuthorizationStatus` surfaces device-wide disable as `.denied`.
 
-- [ ] 16. Home dashboard (weekly stats, recent rides, placeholders)
+- [x] 16. Home dashboard (weekly stats, recent rides, placeholders)
   - Flesh out `HomeView`/`HomeViewModel` to the mockup: wordmark, "Ready to ride?", a This-Week
     stats card (total miles, ride count, total active time, Mon–Sun 7-bar chart from
     `WeeklyStatsCalculator.compute` with injected `Clock`/`Calendar`), a Recent rides list
@@ -205,14 +232,33 @@ Conventions:
     is friendly; "See all" opens History; placeholder card never prompts for camera.
   - _Requirements: 13.1, 13.2, 13.3, 13.6, 13.7, 1.2_
   - _Depends on: 5, 7, 15_
+  - _Pending device check:_ `WeeklyStatsCard` renders the big tabular miles number, the
+    "N rides · 1h 02m" subtitle, and a Mon–Sun 7-bar chart (ink bars for days with rides, a
+    recessed baseline otherwise) with a single combined VoiceOver summary of per-day distances.
+    The dashboard shows the lime-underlined wordmark, "Ready to ride?", up to 3 finished
+    `RideRow`s with "See all ›", a dashed inert rear-detection card (no camera), a thumb-zone
+    lime Start Ride, and the "GPS ready" chip; the empty state shows "Your first ride will show
+    up here." Weekly numbers (totals, per-weekday buckets, week-boundary filtering), the
+    recent-limit/ordering, finished-only filtering, and the empty state are unit-tested in
+    `HomeViewModelTests`; `build-for-testing` + privacy-check pass. Visual rendering with real
+    rides and the no-camera-prompt behavior are verified on device by the orchestrator.
 
-- [ ] 17. RouteMapView wrapper
+- [x] 17. RouteMapView wrapper
   - Build a single `RouteMapView` that renders a polyline + current-location indicator and
     supports both live (growing) and static (full-route) modes, with reasonable auto-follow
     and manual-pan tolerance. This is the only MapKit touchpoint.
   - _Verify (device/sim):_ a sample polyline renders; auto-follow behaves.
   - _Requirements: 5.1, 5.6_
   - _Depends on: 1_
+  - _Pending device check:_ `Support/Map/RouteMapView.swift` is the only file importing MapKit
+    besides the Core Location tracker (verified by grep). It uses the iOS 17 SwiftUI `Map` with
+    two `MapPolyline`s (a wide ink casing under a lime line), start/end `Annotation` markers, and
+    a live user dot. `.live` mode auto-follows `currentLocation`, pauses follow on a manual pan
+    (`onMapCameraChange`), and shows a lime recenter button; `.static` fits the full route with
+    1.4× padding. Empty and single-point routes are handled without crashing (no polyline / a
+    single marker / a sensible region). `build-for-testing` + privacy-check pass. Live map
+    rendering, real auto-follow, and manual-pan tolerance are verified on device by the
+    orchestrator.
 
 - [ ] 18. Active ride screen with live map, metrics, and hold-to-stop
   - Build `ActiveRideView` as a non-dismissible full-screen cover using `RouteMapView` and the
