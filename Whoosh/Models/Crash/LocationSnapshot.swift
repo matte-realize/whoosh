@@ -2,7 +2,7 @@ import Foundation
 
 /// How fresh a captured location fix is, per the location snapshot policy
 /// (spec Requirement 7, design "Location snapshot policy").
-enum LocationFixStatus: String, Codable, Sendable, CaseIterable {
+nonisolated enum LocationFixStatus: String, Codable, Sendable, CaseIterable {
     /// A fix with age ≤ 10 s — described to a contact as the current location.
     case current
     /// An older accepted fix — described as "last known location" with age.
@@ -19,7 +19,7 @@ enum LocationFixStatus: String, Codable, Sendable, CaseIterable {
 /// Foundation-only value type; `Equatable`, `Codable`, `Sendable`. `age(at:)`
 /// is derived from `fixTime` so a persisted snapshot stays correct across
 /// relaunches.
-struct LocationSnapshot: Equatable, Codable, Sendable {
+nonisolated struct LocationSnapshot: Equatable, Codable, Sendable {
     let latitude: Double?
     let longitude: Double?
     let horizontalAccuracy: Double?

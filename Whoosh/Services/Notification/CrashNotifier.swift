@@ -5,7 +5,7 @@ import Foundation
 /// to the notifier only at send time and is never persisted in a crash record.
 ///
 /// Foundation-only value type; `Equatable`, `Sendable`.
-struct CrashNotificationRecipient: Equatable, Sendable {
+nonisolated struct CrashNotificationRecipient: Equatable, Sendable {
     let recipientRef: UUID
     let e164: String
 
@@ -22,7 +22,7 @@ struct CrashNotificationRecipient: Equatable, Sendable {
 /// text and is charset-restricted by the sanitizer before it reaches here.
 ///
 /// Foundation-only value type; `Equatable`, `Sendable`.
-struct CrashNotificationRequest: Equatable, Sendable {
+nonisolated struct CrashNotificationRequest: Equatable, Sendable {
     let crashEventId: UUID
     let kind: CrashMessageKind
     let riderLabel: String
@@ -66,7 +66,7 @@ struct CrashNotificationRequest: Equatable, Sendable {
 /// optional Whoosh/provider error code, and the SMS segment count.
 ///
 /// Foundation-only value type; `Equatable`, `Sendable`.
-struct CrashRecipientResult: Equatable, Sendable {
+nonisolated struct CrashRecipientResult: Equatable, Sendable {
     let recipientRef: UUID
     let status: AttemptStatus
     let whooshErrorCode: String?
@@ -95,7 +95,7 @@ struct CrashRecipientResult: Equatable, Sendable {
 /// the whole request was deduplicated (every recipient already sent).
 ///
 /// Foundation-only value type; `Equatable`, `Sendable`.
-struct CrashNotificationResult: Equatable, Sendable {
+nonisolated struct CrashNotificationResult: Equatable, Sendable {
     let crashEventId: UUID
     let kind: CrashMessageKind
     let deduplicated: Bool

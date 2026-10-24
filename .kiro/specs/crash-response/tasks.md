@@ -331,17 +331,23 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
 
 ## Phase 5 — Network integration and wiring
 
-- [ ] 25. `[iOS]` `[DEMO — Tier 1]` `SupabaseCrashNotifier`
-  - **Blocked until** the contract is **Agreed** and Role C C4–C6 are deployed to staging.
-  - Add `supabase-swift` pinned to an exact version (shared with MVP task 28; whichever lands
-    first adds it) and a shared client/anonymous-session provider; implement send and status
-    against the contract: headers, JSON, 10 s timeout, error body → typed errors per the
-    contract's client-behavior table, session pre-warm at ride start (online) and refresh-once on
-    `401`. Network work runs off the main actor. Only file(s) under `Services/Notification/`
-    touch the network.
-  - Tests with an injected transport double (no real network): success, each error code,
-    malformed body, timeout, partial recipients, `deduplicated`, header/URL correctness, no
-    footage/free-text fields possible.
+- [x] 25. `[iOS]` `[DEMO — Tier 1]` `SupabaseCrashNotifier`
+  - **Done (hackathon):** the contract is marked **AGREED v1.0** (iOS owner decision, pending Role C
+    review) and `SupabaseCrashNotifier` is implemented against it. Role C C4–C6 staging deploy is
+    still owed before the live trial-SMS run (task 28); the transport-double tests cover the client
+    side without it.
+  - `supabase-swift` is already pinned exact (2.55.4) and shared with MVP task 28; the notifier
+    reuses the existing `SupabaseClientProvider`/anonymous session. Implemented send and status
+    against the contract: `send-crash-alert` (POST) and `crash-alert-status` (GET), JSON wire DTOs,
+    10 s client timeout, error body → typed errors per the contract's client-behaviour table,
+    refresh-once on `401`. Network work runs off the main actor in an `actor`; only files under
+    `Services/Notification/` touch the network (`SupabaseFunctionsCrashTransport` is the sole
+    Supabase-SDK importer). Wired in `AppEnvironment.live()`: Supabase notifier when a client is
+    configured (`isMessagingConnected = true`), Noop + composer fallback otherwise.
+  - Tests with an injected transport double (no real network): success, structured + status-derived
+    error codes, timeout, offline, `401` refresh+retry, `deduplicated`, status query shape, and
+    request-shape (no footage/free-text field, location rules). See
+    `WhooshTests/SupabaseCrashNotifierTests.swift`.
   - _Requirements:_ 3.9, 9.2, 9.3, 14.1–14.5, 14.7, 14.10, 16.2, 16.3
   - _Depends on:_ 8, 13, C1, C4, C5, C6
 
