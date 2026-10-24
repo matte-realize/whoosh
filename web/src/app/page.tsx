@@ -58,13 +58,13 @@ export default function ProjectPage() {
               you choose to share them.
             </p>
             <div className="hero__actions">
-              <Link className="button button--primary" href="/dashboard">
-                See the live dashboard
+              <Link className="button button--primary" href="/simulation">
+                Try the 3D simulation
                 <span aria-hidden="true"> →</span>
               </Link>
-              <a className="button button--ghost" href="#how-it-works">
-                How it works
-              </a>
+              <Link className="button button--ghost" href="/dashboard">
+                Live dashboard
+              </Link>
             </div>
             <p className="hero__fine">Experimental prototype. Not a safety device.</p>
           </div>

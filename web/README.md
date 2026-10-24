@@ -24,6 +24,20 @@ before a demo so the page never claims more than has been tested.
 pnpm works too: `pnpm install`, `pnpm typecheck`, `pnpm build`, `pnpm start`. Pick one package
 manager for the team and commit only its lockfile.
 
+### Ride simulation (`/simulation`)
+
+A 3D illustration of how the app is designed to behave: a rider in a bike lane, traffic coming
+up from behind, and the caution cue. Three views (3D orbit you can drag, overhead, and the
+phone's rear camera with the simulated detector's boxes), four traffic scenarios, playback speed,
+optional sound, and a "Show detector mistakes" mode with missed vehicles and false alarms.
+
+- Logic: `src/lib/sim/engine.ts` (pure, no DOM). Drawing: `src/lib/sim/render.ts` (a small
+  hand-written 3D projection on a 2D canvas; no WebGL, no libraries).
+- Checks: `node scripts/sim-check.ts` (Node 23.6+), 22 checks: one cue per vehicle, oncoming
+  traffic never flagged, rider-frame left/right, mistakes mode, deterministic replay.
+- The simulated detector knows every vehicle's exact position. Its thresholds are illustrative,
+  not the real app's tuning, and the page says so.
+
 ### Interface notes
 
 - Light and dark themes follow the system setting. All animation (scroll reveal, count-up,

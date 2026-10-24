@@ -1426,3 +1426,370 @@ p {
     opacity: 0.7;
   }
 }
+
+/* ---------- Ride simulation ---------- */
+
+.sim {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .sim {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sim__canvas-wrap {
+  position: relative;
+  height: min(62vh, 560px);
+  min-height: 340px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #060708;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.sim__canvas-wrap.is-cue {
+  border-color: var(--signal-red);
+  box-shadow: 0 0 0 1px var(--signal-red), 0 0 40px rgb(255 90 79 / 30%);
+}
+
+.sim__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.sim__canvas--orbit {
+  cursor: grab;
+}
+
+.sim__canvas--orbit:active {
+  cursor: grabbing;
+}
+
+.sim__badge {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgb(6 7 8 / 80%);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.sim__overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: rgb(6 7 8 / 72%);
+  text-align: center;
+}
+
+.sim__controls {
+  margin-top: 14px;
+}
+
+.sim__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 10px;
+}
+
+.sim__row .chips {
+  margin: 0;
+}
+
+.sim__play {
+  min-width: 112px;
+  justify-content: center;
+}
+
+.sim__select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.sim__select select {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.sim__side {
+  display: grid;
+  gap: 14px;
+}
+
+/* Phone mock-up */
+
+.phone-mock {
+  position: relative;
+  padding: 34px 20px 18px;
+  border: 2px solid #2a2f35;
+  border-radius: 34px;
+  background: linear-gradient(180deg, #0d0f11, #060708);
+  box-shadow: var(--shadow-lift);
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.phone-mock.is-cue {
+  border-color: var(--signal-red);
+}
+
+.phone-mock__notch {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  width: 70px;
+  height: 14px;
+  border-radius: 10px;
+  background: #1a1d20;
+  transform: translateX(-50%);
+}
+
+.phone-mock p {
+  margin: 0;
+}
+
+.phone-mock__status {
+  color: var(--accent);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.phone-mock__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.phone-mock__time {
+  margin-top: 10px !important;
+  font-size: 2.5rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.phone-mock__distance,
+.phone-mock__speed {
+  color: var(--muted);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-mock__banner {
+  display: grid;
+  gap: 2px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.8125rem;
+  opacity: 0.35;
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.phone-mock.is-cue .phone-mock__banner {
+  border-color: var(--signal-red);
+  background: rgb(255 90 79 / 16%);
+  color: var(--text);
+  opacity: 1;
+}
+
+.phone-mock__banner strong {
+  color: var(--signal-red);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+}
+
+.phone-mock__caption {
+  margin-top: 12px !important;
+  color: var(--muted);
+  font-size: 0.6875rem;
+}
+
+/* Watch mock-up */
+
+.watch-mock {
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 110px;
+  border: 2px solid #2a2f35;
+  border-radius: 28px;
+  background: #060708;
+  transition: transform 0.1s;
+}
+
+.watch-mock__face {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 84px;
+  border-radius: 20px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.watch-mock.is-cue {
+  animation: tap 0.28s ease-in-out 4;
+}
+
+.watch-mock.is-cue .watch-mock__face {
+  background: rgb(255 90 79 / 22%);
+  color: var(--signal-red);
+}
+
+.sim__watch-note {
+  margin: -6px 0 0;
+  text-align: center;
+}
+
+/* Readouts and log */
+
+.sim__readouts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0;
+}
+
+.sim__readouts > div {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.sim__readouts dt {
+  color: var(--muted);
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.sim__readouts dd {
+  margin: 4px 0 0;
+  font-size: 1.125rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.sim__log {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.sim__log h3 {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.sim__log ol {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.sim__log li {
+  margin: 4px 0;
+}
+
+.sim__log li.is-false {
+  color: var(--signal-amber);
+}
+
+.sim__log li.is-false::marker {
+  content: "! ";
+}
+
+.sim-explainer {
+  margin-top: 48px;
+}
+
+.sim-explainer__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.sim-explainer__grid h3 {
+  margin-top: 0;
+}
+
+.sim-explainer__grid p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.simulation .honesty {
+  margin-top: 32px;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes tap {
+  25% {
+    transform: translateX(-3px) rotate(-2deg);
+  }
+  75% {
+    transform: translateX(3px) rotate(2deg);
+  }
+}
