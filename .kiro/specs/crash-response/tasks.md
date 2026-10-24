@@ -496,41 +496,63 @@ this job. Cite the contract section in each PR.
     Function secrets — never Git or the app.
   - _Requirements:_ 14.2, 14.9, 15.5, 16.6 · _Contract:_ 10, 11, 12
 
-- [ ] C3. `[Role C]` `[DEMO]` Database migration, RLS, and retention
+- [x] C3. `[Role C]` `[DEMO]` Database migration, RLS, and retention
   - Tables `crash_alert_events`, `crash_alert_deliveries`, `crash_alert_counters`,
     `crash_alert_config`; unique constraints; RLS (own-row `select`; no client writes; no
     client access to counters/config); scheduled purge (30-day audit, 48-hour counters).
   - _Verify:_ another anonymous user cannot read your rows; clients cannot write.
+  - _Done:_ `supabase/migrations/20261024150000_crash_alerts.sql` (tables, unique keys, RLS
+    select-own policies, no-policy RLS on counters/config, service-role grants, indexes,
+    `purge_crash_alert_data()`; pg_cron schedule noted in the migration).
   - _Requirements:_ 14.4, 14.5, 14.7, 16.6 · _Contract:_ 9
 
-- [ ] C4. `[Role C]` `[DEMO]` `send-crash-alert` Edge Function
+- [x] C4. `[Role C]` `[DEMO]` `send-crash-alert` Edge Function
   - Validate (5.3), idempotency insert-then-send (5.4), keyed recipient hash, template rendering
     per Appendix A, provider call with the status-callback URL and validity limits, response
     shape (5.5), PII-free logging.
+  - _Done:_ `supabase/functions/send-crash-alert/index.ts` + `_shared/` (validation.ts,
+    message.ts, hash.ts, twilio.ts, limits.ts, env.ts, http.ts). Insert-before-send unknown-
+    outcome policy, 409 on immutable-field mismatch, per-recipient dedupe, segment cap.
   - _Requirements:_ 3.9, 9.2, 10.8, 14.3–14.5, 14.8, 15.1, 15.3 · _Contract:_ 5, 12, Appendix A
   - _Depends on:_ C2, C3
 
-- [ ] C5. `[Role C]` `[DEMO]` `sms-status-callback` Edge Function
+- [x] C5. `[Role C]` `[DEMO]` `sms-status-callback` Edge Function
   - Signature validation, monotonic/sticky status updates, idempotent for duplicates and
     out-of-order callbacks, error-code mapping, always-200 after a valid signature.
+  - _Done:_ `supabase/functions/sms-status-callback/index.ts` (X-Twilio-Signature validated over
+    CALLBACK_BASE_URL+path before any DB access; `canApplyStatus` monotonic/sticky; unknown sid
+    ⇒ 200). Deploy with `--no-verify-jwt` (see functions/README.md).
   - _Requirements:_ 14.6, 4.5 · _Contract:_ 7
   - _Depends on:_ C3, C4
 
 - [ ] C6. `[Role C]` `[DEMO]` `crash-alert-status` and `delete-crash-audit` Edge Functions
   - Per-user status reads; rider-scoped delete (refuses events younger than 1 hour).
+  - _Partial:_ `crash-alert-status` done (`supabase/functions/crash-alert-status/index.ts`:
+    JWT + RLS own-rows read, 404 `unknown_event`). `delete-crash-audit` NOT yet implemented.
   - _Requirements:_ 11.4, 14.7, 16.7 · _Contract:_ 6, 8
   - _Depends on:_ C3
 
-- [ ] C7. `[Role C]` `[DEMO]` Rate limits, caps, kill switch, and config
+- [x] C7. `[Role C]` `[DEMO]` Rate limits, caps, kill switch, and config
   - All limits from contract section 10 backed by `crash_alert_counters` and `crash_alert_config`
     (tunable without deploy); the global kill switch and trial-mode flag; `429` bodies with scope.
+  - _Done:_ `_shared/limits.ts` (per-user + per-recipient + global/burst caps via counters),
+    `_shared/env.ts` `loadConfig`/`envKillSwitchOn`, config columns in the migration, `429`
+    bodies carry `scope`/`retryAfterSeconds`, `503 service_disabled` on kill switch.
   - _Requirements:_ 15.1–15.5 · _Contract:_ 10, 11
   - _Depends on:_ C3, C4
 
-- [ ] C8. `[Role C]` `[DEMO]` Contract test suite
+- [x] C8. `[Role C]` `[DEMO]` Contract test suite
   - Golden-message parity with Appendix A (all G1–G9 and A.3), validation matrix, idempotency
     (duplicate, race, immutable-field mismatch → 409, unknown outcome retry), callback ordering
     (duplicate/out-of-order/sticky terminal), caps, kill switch, no PII in logs.
+  - _Done (pure units):_ `supabase/functions/tests/` — `message_test.ts` (G1–G9 byte-exact +
+    segment counts + A.3), `validation_test.ts` (§5.3 matrix + NANP), `twilio_test.ts`
+    (status/error maps, monotonic/sticky, X-Twilio-Signature vs Twilio's documented vector),
+    `hash_test.ts`. Deno was unavailable in the build env (so `deno test` was not run here);
+    every pure module was transpiled with esbuild and run under Node against the same assertions
+    (message 30/30, validation 22/22, twilio 18/18, hash 4/4) and type-checks clean under
+    `tsc --strict`. _Still needed on a live DB:_ idempotency race, caps, and kill-switch
+    integration tests.
   - _Requirements:_ 10.2, 14.5, 14.6, 15.1–15.4, 19.7 · _Contract:_ all
   - _Depends on:_ C4–C7
 
@@ -547,8 +569,11 @@ this job. Cite the contract section in each PR.
   - _Requirements:_ 15.4, 19.9 · _Contract:_ 11, 14
   - _Depends on:_ C4–C7
 
-- [ ] C11. `[Role C]` `[STRETCH]` `all_clear` kind support
+- [x] C11. `[Role C]` `[STRETCH]` `all_clear` kind support
   - Render G9; require an existing `crash_alert` event for the same user; shared quota.
+  - _Done:_ `all_clear` renders G9 (`_shared/message.ts`); `send-crash-alert` requires a prior
+    `crash_alert` event for the user (else `422 no_prior_crash_alert`) and counts against the
+    shared test/drill quota (`limits.ts` treats it as a test-type kind).
   - _Requirements:_ 20.1–20.3 · _Contract:_ 5.1
   - _Depends on:_ C4
 

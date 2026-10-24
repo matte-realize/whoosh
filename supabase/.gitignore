@@ -6,3 +6,9 @@
 .env.keys
 .env.local
 .env.*.local
+
+# Edge Function secrets: never commit real .env files (crash-alert functions read Deno.env).
+# The committed functions/.env.example documents the NAMES only.
+functions/.env
+functions/**/.env
+!functions/.env.example
