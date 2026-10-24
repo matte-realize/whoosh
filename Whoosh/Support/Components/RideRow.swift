@@ -26,10 +26,18 @@ struct RideRow: View {
 
             Spacer(minLength: Theme.Spacing.sm)
 
-            Image(systemName: syncVariant.systemImage)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(syncIconColor)
-                .accessibilityHidden(true)
+            HStack(spacing: Theme.Spacing.sm) {
+                if showsSharing {
+                    Image(systemName: sharingVariant.systemImage)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                        .accessibilityHidden(true)
+                }
+                Image(systemName: syncVariant.systemImage)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(syncIconColor)
+                    .accessibilityHidden(true)
+            }
         }
         .padding(Theme.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -40,11 +48,38 @@ struct RideRow: View {
 
     // MARK: - Content
 
-    /// Until cloud sync exists every ride reads "On device" (Requirement 6.6 /
-    /// 7.2). Once sync ships this can map from the ride's stored sync status.
-    private var syncVariant: StateChip.Variant { .onDevice }
+    /// Maps the ride's stored `syncStatus` to the chip variant (icon + text).
+    private var syncVariant: StateChip.Variant {
+        switch ride.syncStatus {
+        case .localOnly: return .onDevice
+        case .pending: return .pending
+        case .synced: return .synced
+        case .failed: return .failed
+        }
+    }
 
-    private var syncIconColor: Color { Theme.Colors.textSecondary }
+    private var sharingState: SharingState {
+        SharingState.forRide(sharePublicly: ride.sharePublicly, syncStatus: ride.syncStatus)
+    }
+
+    /// Only surface a sharing icon when the ride is (or wants to be) public;
+    /// a `.private` ride just shows its sync status.
+    private var showsSharing: Bool { sharingState != .private }
+
+    private var sharingVariant: StateChip.Variant {
+        switch sharingState {
+        case .private: return .privateRide
+        case .shared: return .shared
+        case .sharingPending: return .sharingPending
+        }
+    }
+
+    private var syncIconColor: Color {
+        switch ride.syncStatus {
+        case .failed: return Theme.Palette.alert
+        default: return Theme.Colors.textSecondary
+        }
+    }
 
     private var subtitle: String {
         var parts = [
@@ -58,7 +93,11 @@ struct RideRow: View {
     }
 
     private var accessibilityText: String {
-        "\(Self.titleText(for: ride.startedAt)), \(subtitle), \(syncVariant.title)"
+        var text = "\(Self.titleText(for: ride.startedAt)), \(subtitle), \(syncVariant.title)"
+        if showsSharing {
+            text += ", \(sharingState.title)"
+        }
+        return text
     }
 
     /// e.g. "Thu, Oct 22 · 5:48 PM" — fixed en_US so it matches the mockup and

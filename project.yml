@@ -30,6 +30,14 @@ configFiles:
   Debug: Config/Shared.xcconfig
   Release: Config/Shared.xcconfig
 
+# Opt-in Supabase sync (Requirement 12). Pinned to the EXACT version per the
+# tech steering ("Exact Version"). The only third-party dependency allowed to
+# touch the network, and only from Whoosh/Services/Sync (privacy steering).
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    exactVersion: "2.55.4"
+
 targets:
   Whoosh:
     type: application
@@ -39,6 +47,9 @@ targets:
         type: syncedFolder
         excludes:
           - "**/.gitkeep"
+    dependencies:
+      - package: Supabase
+        product: Supabase
     configFiles:
       Debug: Config/Shared.xcconfig
       Release: Config/Shared.xcconfig
@@ -56,6 +67,12 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Whoosh uses your location to record your cycling route and show your ride map."
         INFOPLIST_KEY_NSCameraUsageDescription: "Whoosh uses the rear camera to experimentally detect approaching vehicles. Video is processed on your device and is not uploaded."
+        # Opt-in Supabase sync (task 28b): the gitignored Secrets.xcconfig values
+        # flow into the generated Info.plist so the app reads URL + publishable
+        # key at runtime; no key is hard-coded in Swift. With no Secrets.xcconfig
+        # these resolve to the placeholder/empty values and sync stays unavailable.
+        INFOPLIST_KEY_SUPABASE_URL: "$(SUPABASE_URL)"
+        INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY: "$(SUPABASE_PUBLISHABLE_KEY)"
 
   WhooshTests:
     type: bundle.unit-test

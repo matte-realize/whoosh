@@ -111,6 +111,131 @@ struct SettingsViewModelTests {
         // Must not leak raw framework error text.
         #expect(vm.deleteErrorMessage?.contains("RepositoryError") == false)
     }
+
+    // MARK: sync + sharing toggles (28f)
+
+    @Test func syncAndSharingAreOffByDefault() {
+        let (defaults, suite) = makeDefaults()
+        defer { cleanUp(defaults, suite) }
+        let vm = SettingsViewModel(repository: InMemoryRideRepository(), defaults: defaults)
+        #expect(vm.syncEnabled == false)
+        #expect(vm.shareNewRidesPublicly == false)
+    }
+
+    @Test func enablingSyncPersistsAndNotifies() {
+        let (defaults, suite) = makeDefaults()
+        defer { cleanUp(defaults, suite) }
+        let vm = SettingsViewModel(repository: InMemoryRideRepository(), defaults: defaults)
+        var changes: [Bool] = []
+        vm.onSyncEnabledChange = { changes.append($0) }
+
+        vm.setSyncEnabled(true)
+        #expect(vm.syncEnabled == true)
+        #expect(changes == [true])
+
+        // Survives relaunch.
+        let reloaded = SettingsViewModel(repository: InMemoryRideRepository(), defaults: defaults)
+        #expect(reloaded.syncEnabled == true)
+    }
+
+    @Test func sharingToggleIsIgnoredWhileSyncOff() {
+        let (defaults, suite) = makeDefaults()
+        defer { cleanUp(defaults, suite) }
+        let vm = SettingsViewModel(repository: InMemoryRideRepository(), defaults: defaults)
+
+        vm.setShareNewRidesPublicly(true) // sync is off
+        #expect(vm.shareNewRidesPublicly == false)
+        #expect(vm.activePrompt == nil)
+    }
+
+    @Test func enablingSharingRaisesConfirmationThenApplies() {
+        let (defaults, suite) = makeDefaults()
+        defer { cleanUp(defaults, suite) }
+        let vm = SettingsViewModel(repository: InMemoryRideRepository(), defaults: defaults)
+        vm.setSyncEnabled(true)
+
+        vm.setShareNewRidesPublicly(true)
+        // Does not take effect until confirmed.
+        #expect(vm.activePrompt == .confirmEnableSharing)
+        #expect(vm.shareNewRidesPublicly == false)
+
+        vm.confirmEnableSharing()
+        #expect(vm.shareNewRidesPublicly == true)
+        #expect(vm.activePrompt == nil)
+    }
+
+    @Test func disablingSharingWithSharedRidesRaisesUnsharePrompt() throws {
+        let (defaults, suite) = makeDefaults()
+        defer { cleanUp(defaults, suite) }
+        let repo = InMemoryRideRepository()
+        try repo.save(Ride(startedAt: Date(), sharePublicly: true, syncStatus: .synced))
+        let vm = SettingsViewModel(repository: repo, defaults: defaults)
+        vm.setSyncEnabled(true)
+        vm.setShareNewRidesPublicly(true)
+        vm.confirmEnableSharing()
+        #expect(vm.shareNewRidesPublicly == true)
+
+        vm.setShareNewRidesPublicly(false)
+        #expect(vm.activePrompt == .confirmDisableSharing)
+        #expect(vm.shareNewRidesPublicly == true) // not yet applied
+
+        var unshareCalled = false
+        vm.onUnshareAllSharedRides = { unshareCalled = true }
+        vm.confirmDisableSharingAndUnshare()
+        #expect(vm.shareNewRidesPublicly == false)
+        #expect(unshareCalled)
+        #expect(vm.activePrompt == nil)
+    }
+
+    @Test func disablingSyncWhileSharedRaisesDisableSyncPrompt() throws {
+        let (defaults, suite) = makeDefaults()
+        defer { cleanUp(defaults, suite) }
+        let repo = InMemoryRideRepository()
+        try repo.save(Ride(startedAt: Date(), sharePublicly: true, syncStatus: .synced))
+        let vm = SettingsViewModel(repository: repo, defaults: defaults)
+        vm.setSyncEnabled(true)
+
+        vm.setSyncEnabled(false)
+        #expect(vm.activePrompt == .confirmDisableSyncWhileShared)
+        #expect(vm.syncEnabled == true) // not applied yet
+
+        vm.confirmDisableSyncKeepShared()
+        #expect(vm.syncEnabled == false)
+        #expect(vm.activePrompt == nil)
+    }
+
+    @Test func turningSyncOffClearsShareFlag() {
+        let (defaults, suite) = makeDefaults()
+        defer { cleanUp(defaults, suite) }
+        let vm = SettingsViewModel(repository: InMemoryRideRepository(), defaults: defaults)
+        vm.setSyncEnabled(true)
+        vm.setShareNewRidesPublicly(true)
+        vm.confirmEnableSharing()
+        #expect(vm.shareNewRidesPublicly == true)
+
+        // No shared rides exist, so disabling sync applies immediately and
+        // clears the share flag.
+        vm.setSyncEnabled(false)
+        #expect(vm.syncEnabled == false)
+        #expect(vm.shareNewRidesPublicly == false)
+    }
+
+    @Test func deleteAllReportsPreviouslyUploadedIDs() throws {
+        let (defaults, suite) = makeDefaults()
+        defer { cleanUp(defaults, suite) }
+        let repo = InMemoryRideRepository()
+        let synced = Ride(startedAt: Date(timeIntervalSince1970: 1_000), syncStatus: .synced)
+        let local = Ride(startedAt: Date(timeIntervalSince1970: 2_000), syncStatus: .localOnly)
+        try repo.save(synced)
+        try repo.save(local)
+        let vm = SettingsViewModel(repository: repo, defaults: defaults)
+
+        var reported: [UUID] = []
+        vm.onDidDeleteAllRides = { reported = $0 }
+        vm.deleteAllRides()
+
+        #expect(reported == [synced.id]) // only the uploaded one needs remote deletion
+    }
 }
 
 /// A repository whose `deleteAll()` always throws, to exercise the view model's

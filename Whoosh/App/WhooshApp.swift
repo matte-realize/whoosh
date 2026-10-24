@@ -70,19 +70,35 @@ struct WhooshApp: App {
             }
             .onAppear(perform: checkForInterruptedRide)
             .onChange(of: scenePhase) { _, phase in
-                if phase != .active { rideSession?.persistSnapshot() }
+                if phase != .active {
+                    rideSession?.persistSnapshot()
+                } else {
+                    // App foreground: retry any pending uploads/deletes (no-op
+                    // while sync is off).
+                    Task { await environment.retryPendingSync() }
+                }
             }
         }
     }
 
     // MARK: - Navigation destinations
 
+    /// Builds the History view model and wires its local delete to request a
+    /// remote deletion too (no-op while sync is off).
+    private func makeHistoryViewModel() -> HistoryViewModel {
+        let viewModel = environment.makeHistoryViewModel()
+        viewModel.onDidDelete = { ride in
+            Task { await environment.rideWasDeleted(ride) }
+        }
+        return viewModel
+    }
+
     @ViewBuilder
     private func destination(_ route: Route) -> some View {
         switch route {
         case .history:
             HistoryView(
-                viewModel: environment.makeHistoryViewModel(),
+                viewModel: makeHistoryViewModel(),
                 onSelectRide: { path.append(.summary($0)) }
             )
         case .settings:
@@ -144,11 +160,16 @@ struct WhooshApp: App {
         session.start()
     }
 
-    /// "Done" on the finished-ride summary: clear the session (dismisses the
-    /// cover) and refresh Home so the new ride appears in stats/recent.
+    /// "Done" on the finished-ride summary: upload it (no-op while sync is off),
+    /// clear the session (dismisses the cover) and refresh Home so the new ride
+    /// appears in stats/recent.
     private func finishRide() {
+        let finished = rideSession?.finishedRide
         rideSession = nil
         environment.homeViewModel.load()
+        if let finished {
+            Task { await environment.rideDidFinish(finished) }
+        }
     }
 
     // MARK: - Interrupted-ride recovery (task 21 / 3.6)

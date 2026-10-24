@@ -38,6 +38,11 @@ final class AppEnvironment {
     /// The Home hub view model (owns its own tracker for authorization).
     let homeViewModel: HomeViewModel
 
+    /// The opt-in sync coordinator. Backed by `NoopRideSyncService` in previews/
+    /// tests and whenever no Supabase config is present, so with sync OFF the
+    /// app makes zero network calls and behaves exactly as before.
+    let syncCoordinator: SyncCoordinator
+
     /// Builds a fresh `LocationTracking` for a ride session. Injectable so
     /// previews/tests supply a `FakeLocationTracker`.
     private let makeRideTracker: () -> LocationTracking
@@ -50,6 +55,9 @@ final class AppEnvironment {
         calendar: Calendar,
         defaults: UserDefaults,
         storageNotice: String? = nil,
+        supabaseProvider: SupabaseClientProvider?,
+        appVersion: String,
+        pendingDeletes: PendingRemoteDeleteStore,
         makeHomeTracker: () -> LocationTracking,
         makeRideTracker: @escaping () -> LocationTracking
     ) {
@@ -59,13 +67,85 @@ final class AppEnvironment {
         self.alertManager = alertManager
         self.storageNotice = storageNotice
         self.makeRideTracker = makeRideTracker
-        self.settingsViewModel = SettingsViewModel(repository: repository, defaults: defaults)
+        let settings = SettingsViewModel(repository: repository, defaults: defaults)
+        self.settingsViewModel = settings
         self.homeViewModel = HomeViewModel(
             repository: repository,
             clock: clock,
             calendar: calendar,
             tracker: makeHomeTracker()
         )
+
+        // Choose the sync service: the real Supabase one only when a client is
+        // configured (secrets present); otherwise the Noop (sync never signs in).
+        // Its `isEnabled` reads a thread-safe flag mirrored from the live
+        // Settings toggle, so with sync OFF the coordinator makes zero network
+        // calls and the app behaves as before.
+        let enabledFlag = SyncEnabledFlag(settings.syncEnabled)
+        let service: RideSyncService
+        if let provider = supabaseProvider, let client = provider.client {
+            let transport = SupabaseRideSyncTransport(client: client)
+            service = SupabaseRideSyncService(
+                transport: transport,
+                appVersion: appVersion,
+                isEnabled: { enabledFlag.isOn }
+            )
+        } else {
+            service = NoopRideSyncService()
+        }
+        let coordinator = SyncCoordinator(
+            service: service,
+            repository: repository,
+            pendingDeletes: pendingDeletes
+        )
+        self.syncCoordinator = coordinator
+
+        // Mirror the Settings toggle into the flag and retry pending uploads
+        // when the user turns sync on.
+        settings.onSyncEnabledChange = { enabled in
+            enabledFlag.set(enabled)
+            guard enabled else { return }
+            Task { await coordinator.retryPending() }
+        }
+        // When the user chooses to unshare already-shared rides.
+        let repo = repository
+        settings.onUnshareAllSharedRides = { [weak coordinator] in
+            guard let coordinator else { return }
+            let shared = ((try? repo.allRides()) ?? []).filter { $0.sharePublicly }
+            Task { await coordinator.unshareRides(shared) }
+        }
+        // Propagate remote deletes after "Delete all rides".
+        settings.onDidDeleteAllRides = { [weak coordinator] ids in
+            guard let coordinator, !ids.isEmpty else { return }
+            Task { await coordinator.allRidesWereDeleted(previouslySynced: ids) }
+        }
+    }
+
+    // MARK: - Sync lifecycle hooks (called by the app / history)
+
+    /// After a ride is saved locally, mirror it to the backend (stamping the
+    /// current global sharing flag). No-op while sync is off.
+    func rideDidFinish(_ ride: Ride) async {
+        await syncCoordinator.rideDidFinish(
+            ride,
+            shareNewRidesPublicly: settingsViewModel.shareNewRidesPublicly
+        )
+    }
+
+    /// After a ride is deleted locally, request its remote deletion.
+    func rideWasDeleted(_ ride: Ride) async {
+        await syncCoordinator.rideWasDeleted(ride)
+    }
+
+    /// Before/after "Delete all rides", propagate remote deletes for any rides
+    /// that had been uploaded. Pass the ids collected before the wipe.
+    func allRidesWereDeleted(previouslySynced ids: [UUID]) async {
+        await syncCoordinator.allRidesWereDeleted(previouslySynced: ids)
+    }
+
+    /// App-foreground retry of pending uploads and deletes.
+    func retryPendingSync() async {
+        await syncCoordinator.retryPending()
     }
 
     // MARK: - Factories for view models
@@ -104,9 +184,19 @@ final class AppEnvironment {
             calendar: .current,
             defaults: .standard,
             storageNotice: storageNotice,
+            supabaseProvider: SupabaseClientProvider(),
+            appVersion: Self.appVersion(),
+            pendingDeletes: UserDefaultsPendingRemoteDeleteStore(),
             makeHomeTracker: { CoreLocationTracker() },
             makeRideTracker: { CoreLocationTracker() }
         )
+    }
+
+    /// The short build string (`CFBundleShortVersionString`), capped at the
+    /// contract's 32-char `app_version` limit.
+    private static func appVersion() -> String {
+        let raw = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? "0"
+        return String(raw.prefix(32))
     }
 
     private static func makeLiveRepository() -> (RideRepository, String?) {
@@ -148,6 +238,9 @@ final class AppEnvironment {
             alertManager: StubAlertManager(),
             calendar: calendar,
             defaults: defaults,
+            supabaseProvider: nil,
+            appVersion: "preview",
+            pendingDeletes: InMemoryPendingRemoteDeleteStore(),
             makeHomeTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) },
             makeRideTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) }
         )

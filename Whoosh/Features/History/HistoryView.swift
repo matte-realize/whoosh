@@ -132,6 +132,7 @@ struct HistoryView: View {
         case .localOnly: return .onDevice
         case .pending: return .pending
         case .synced: return .synced
+        case .failed: return .failed
         }
     }
 

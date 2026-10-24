@@ -17,6 +17,10 @@ struct StateChip: View {
         case synced
         case pending
         case onDevice
+        case failed
+        case privateRide
+        case shared
+        case sharingPending
 
         var title: String {
             switch self {
@@ -28,6 +32,10 @@ struct StateChip: View {
             case .synced: return "Synced"
             case .pending: return "Pending"
             case .onDevice: return "On device"
+            case .failed: return "Failed"
+            case .privateRide: return "Private"
+            case .shared: return "Shared"
+            case .sharingPending: return "Sharing pending"
             }
         }
 
@@ -41,6 +49,10 @@ struct StateChip: View {
             case .synced: return "checkmark.icloud"
             case .pending: return "clock"
             case .onDevice: return "iphone"
+            case .failed: return "xmark.icloud"
+            case .privateRide: return "lock"
+            case .shared: return "globe"
+            case .sharingPending: return "clock"
             }
         }
     }
@@ -85,6 +97,10 @@ struct StateChip: View {
         case .synced: return Theme.Colors.positive
         case .pending: return Theme.Palette.amber
         case .onDevice: return Theme.Colors.textSecondary
+        case .failed: return Theme.Palette.alert
+        case .privateRide: return Theme.Colors.textSecondary
+        case .shared: return Theme.Colors.positive
+        case .sharingPending: return Theme.Palette.amber
         }
     }
 

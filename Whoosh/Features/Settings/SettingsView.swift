@@ -59,38 +59,113 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
             sectionHeader("Cloud sync")
             VStack(spacing: 0) {
-                // Disabled sync toggle — "Coming soon" until sync ships.
+                // Functional sync toggle (off by default).
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Sync rides to Whoosh map")
                             .font(Theme.Typography.rowTitle)
-                            .foregroundStyle(Theme.Colors.textSecondary)
-                        Text("Coming soon")
-                            .font(.system(size: 11))
-                            .foregroundStyle(Theme.Colors.textSecondary)
+                            .foregroundStyle(Theme.Colors.textPrimary)
                     }
                     Spacer()
-                    Toggle("", isOn: .constant(false))
-                        .labelsHidden()
-                        .disabled(true)
-                        .tint(Theme.Palette.lime)
+                    Toggle("", isOn: Binding(
+                        get: { viewModel.syncEnabled },
+                        set: { viewModel.setSyncEnabled($0) }
+                    ))
+                    .labelsHidden()
+                    .tint(Theme.Palette.lime)
                 }
                 .padding(Theme.Spacing.md)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("Sync rides to Whoosh map, coming soon, off")
+                .accessibilityLabel("Sync rides to Whoosh map, \(viewModel.syncEnabled ? "on" : "off")")
 
                 rowDivider
-                disabledValueRow(title: "Privacy zone", value: "0.1 mi")
+
+                // Global public-sharing toggle — only interactive while sync is on.
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Share new rides on the Whoosh website")
+                            .font(Theme.Typography.rowTitle)
+                            .foregroundStyle(viewModel.syncEnabled ? Theme.Colors.textPrimary : Theme.Colors.textSecondary)
+                        if !viewModel.syncEnabled {
+                            Text("Turn on sync to share rides")
+                                .font(.system(size: 11))
+                                .foregroundStyle(Theme.Colors.textSecondary)
+                        }
+                    }
+                    Spacer()
+                    Toggle("", isOn: Binding(
+                        get: { viewModel.shareNewRidesPublicly },
+                        set: { viewModel.setShareNewRidesPublicly($0) }
+                    ))
+                    .labelsHidden()
+                    .disabled(!viewModel.syncEnabled)
+                    .tint(Theme.Palette.lime)
+                }
+                .padding(Theme.Spacing.md)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Share new rides on the Whoosh website, \(viewModel.syncEnabled ? (viewModel.shareNewRidesPublicly ? "on" : "off") : "unavailable, turn on sync first")")
+
                 rowDivider
-                disabledValueRow(title: "Identity", value: "Anonymous")
+                valueRow(title: "Privacy zone", value: "0.1 mi")
+                rowDivider
+                valueRow(title: "Identity", value: "Anonymous")
             }
             .cardStyle()
 
-            Text("Uploads finished rides (stats + route) so they appear on the Whoosh website. Camera video is never uploaded. Off by default.")
+            Text("Uploads finished rides (stats + privacy-trimmed route) so they appear on the Whoosh website. Camera video is never uploaded. Off by default. Sharing is a separate choice and only applies to rides finished while it's on.")
                 .font(.system(size: 11))
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        // Enable-sharing confirmation (Requirement 12.12).
+        .alert(
+            "Share new rides publicly?",
+            isPresented: promptBinding(.confirmEnableSharing)
+        ) {
+            Button("Cancel", role: .cancel) { viewModel.cancelPrompt() }
+            Button("Share new rides") { viewModel.confirmEnableSharing() }
+        } message: {
+            Text("New rides you finish will appear on the public Whoosh website: a privacy-trimmed route, distance, time, and average speed. No name or account is shown. Only rides finished while this is on are shared.")
+        }
+        // Disable-sharing prompt: unshare already-shared rides or keep them (12.14).
+        .confirmationDialog(
+            "Stop sharing new rides",
+            isPresented: promptBinding(.confirmDisableSharing),
+            titleVisibility: .visible
+        ) {
+            Button("Unshare already-shared rides", role: .destructive) {
+                viewModel.confirmDisableSharingAndUnshare()
+            }
+            Button("Keep them shared") { viewModel.confirmDisableSharingKeepShared() }
+            Button("Cancel", role: .cancel) { viewModel.cancelPrompt() }
+        } message: {
+            Text("New rides won't be shared. Do you also want to stop sharing the rides that are already public?")
+        }
+        // Disable-sync-while-shared prompt (Requirement 12.16).
+        .confirmationDialog(
+            "Turn off sync?",
+            isPresented: promptBinding(.confirmDisableSyncWhileShared),
+            titleVisibility: .visible
+        ) {
+            Button("Stop sharing, then turn off sync", role: .destructive) {
+                viewModel.confirmDisableSyncAndUnshare()
+            }
+            Button("Keep rides public, turn off sync") {
+                viewModel.confirmDisableSyncKeepShared()
+            }
+            Button("Cancel", role: .cancel) { viewModel.cancelPrompt() }
+        } message: {
+            Text("Some of your rides are still shared on the Whoosh website. Turning off sync won't remove them. Stop sharing them first?")
+        }
+    }
+
+    /// A binding that is `true` while the given prompt is active, so a single
+    /// `activePrompt` value drives several alerts/dialogs.
+    private func promptBinding(_ prompt: SettingsViewModel.Prompt) -> Binding<Bool> {
+        Binding(
+            get: { viewModel.activePrompt == prompt },
+            set: { if !$0, viewModel.activePrompt == prompt { viewModel.cancelPrompt() } }
+        )
     }
 
     // MARK: - Ride
@@ -189,11 +264,11 @@ struct SettingsView: View {
             .foregroundStyle(Theme.Colors.textSecondary)
     }
 
-    private func disabledValueRow(title: String, value: String) -> some View {
+    private func valueRow(title: String, value: String) -> some View {
         HStack {
             Text(title)
                 .font(Theme.Typography.body)
-                .foregroundStyle(Theme.Colors.textSecondary)
+                .foregroundStyle(Theme.Colors.textPrimary)
             Spacer()
             Text(value)
                 .font(Theme.Typography.body)
@@ -201,7 +276,7 @@ struct SettingsView: View {
         }
         .padding(Theme.Spacing.md)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title), \(value), coming soon")
+        .accessibilityLabel("\(title), \(value)")
     }
 
     private var rowDivider: some View {

@@ -25,10 +25,21 @@ struct RideSummaryView: View {
 
     let ride: Ride
     var presentation: Presentation = .justFinished
-    /// Sync status for the row (everything is `.localOnly` until sync ships).
-    var syncStatus: SyncStatus = .localOnly
+    /// Sync status for the row. Defaults to the ride's stored status; callers
+    /// may override (e.g. previews).
+    var syncStatus: SyncStatus?
     /// Called when "Done" is tapped (only used in `.justFinished`).
     var onDone: () -> Void = {}
+
+    /// The effective sync status shown in the row.
+    private var effectiveSyncStatus: SyncStatus { syncStatus ?? ride.syncStatus }
+
+    /// Whether the ride has been synced (so the privacy note + sharing row apply).
+    private var isSynced: Bool { effectiveSyncStatus == .synced }
+
+    private var sharingState: SharingState {
+        SharingState.forRide(sharePublicly: ride.sharePublicly, syncStatus: effectiveSyncStatus)
+    }
 
     var body: some View {
         ScrollView {
@@ -41,6 +52,12 @@ struct RideSummaryView: View {
                     avgSpeedTile
                 }
                 syncRow
+                if effectiveSyncStatus != .localOnly {
+                    sharingRow
+                }
+                if isSynced {
+                    privacyNote
+                }
                 if presentation == .justFinished {
                     PrimaryButton("Done") { onDone() }
                         .padding(.top, Theme.Spacing.sm)
@@ -168,7 +185,7 @@ struct RideSummaryView: View {
             Image(systemName: syncVariant.systemImage)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Theme.Colors.textSecondary)
-            Text(syncStatus.title)
+            Text(effectiveSyncStatus.title)
                 .font(Theme.Typography.rowTitle)
                 .foregroundStyle(Theme.Colors.textPrimary)
             Spacer()
@@ -178,15 +195,52 @@ struct RideSummaryView: View {
         .background(Theme.Colors.cardSurface)
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Sync status, \(syncStatus.title)")
+        .accessibilityLabel("Sync status, \(effectiveSyncStatus.title)")
     }
 
     private var syncVariant: StateChip.Variant {
-        switch syncStatus {
+        switch effectiveSyncStatus {
         case .localOnly: return .onDevice
         case .pending: return .pending
         case .synced: return .synced
+        case .failed: return .failed
         }
+    }
+
+    // MARK: - Sharing row + privacy note
+
+    private var sharingRow: some View {
+        HStack(spacing: Theme.Spacing.md) {
+            Image(systemName: sharingVariant.systemImage)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Theme.Colors.textSecondary)
+            Text(sharingState.title)
+                .font(Theme.Typography.rowTitle)
+                .foregroundStyle(Theme.Colors.textPrimary)
+            Spacer()
+        }
+        .padding(Theme.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.Colors.cardSurface)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Sharing, \(sharingState.title)")
+    }
+
+    private var sharingVariant: StateChip.Variant {
+        switch sharingState {
+        case .private: return .privateRide
+        case .shared: return .shared
+        case .sharingPending: return .sharingPending
+        }
+    }
+
+    private var privacyNote: some View {
+        Text("Start and end trimmed for privacy")
+            .font(Theme.Typography.caption)
+            .foregroundStyle(Theme.Colors.textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityLabel("Start and end trimmed for privacy")
     }
 
     // MARK: - Helpers

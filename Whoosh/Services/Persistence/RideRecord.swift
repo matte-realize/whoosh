@@ -27,6 +27,10 @@ final class RideRecord {
     /// `.localOnly`. An unrecognized value also maps to `.localOnly` at the
     /// repository boundary.
     var syncStatusRaw: String = SyncStatus.localOnly.rawValue
+    /// Whether the ride is (to be) publicly shared (Requirement 12.11–12.15).
+    /// Defaulted so existing stores migrate without a schema change: any record
+    /// written before sharing shipped reads back as `false`.
+    var sharePublicly: Bool = false
 
     init(
         id: UUID,
@@ -36,7 +40,8 @@ final class RideRecord {
         activeDuration: TimeInterval,
         averageSpeed: Double,
         encodedPoints: Data,
-        syncStatusRaw: String = SyncStatus.localOnly.rawValue
+        syncStatusRaw: String = SyncStatus.localOnly.rawValue,
+        sharePublicly: Bool = false
     ) {
         self.id = id
         self.startedAt = startedAt
@@ -46,5 +51,6 @@ final class RideRecord {
         self.averageSpeed = averageSpeed
         self.encodedPoints = encodedPoints
         self.syncStatusRaw = syncStatusRaw
+        self.sharePublicly = sharePublicly
     }
 }

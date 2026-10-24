@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0D8CDB10DC1DAC6F88BE3AA0 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 65A39A397D575BB1CFDF69D4 /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		831B4826D373BA6EE949DAB2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -26,9 +30,7 @@
 		F53B401EC804049925172FD7 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Models/.gitkeep,
 				Services/.gitkeep,
-				Support/.gitkeep,
 			);
 			target = 36CA87AA39F4DA21168149E4 /* Whoosh */;
 		};
@@ -57,6 +59,17 @@
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4053C86F9B7DA579FB8D12F9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0D8CDB10DC1DAC6F88BE3AA0 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		1BA0178FD48C01D4D85C449E = {
@@ -95,6 +108,7 @@
 			buildPhases = (
 				1EAE73F6B80D23D3F4CFBFCF /* Sources */,
 				5BBF5F0DA5C29766BD09E366 /* Resources */,
+				4053C86F9B7DA579FB8D12F9 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -105,6 +119,7 @@
 			);
 			name = Whoosh;
 			packageProductDependencies = (
+				65A39A397D575BB1CFDF69D4 /* Supabase */,
 			);
 			productName = Whoosh;
 			productReference = 290A0FAE07F4F96B8B6ECC13 /* Whoosh.app */;
@@ -156,6 +171,9 @@
 			);
 			mainGroup = 1BA0178FD48C01D4D85C449E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BB62BFC80463C9EE3C7B792A /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FD3BC061DA40886FE5E9B313 /* Products */;
 			projectDirPath = "";
@@ -305,6 +323,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Whoosh;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Whoosh uses the rear camera to experimentally detect approaching vehicles. Video is processed on your device and is not uploaded.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Whoosh uses your location to record your cycling route and show your ride map.";
+				INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY = "$(SUPABASE_PUBLISHABLE_KEY)";
+				INFOPLIST_KEY_SUPABASE_URL = "$(SUPABASE_URL)";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -348,6 +368,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Whoosh;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Whoosh uses the rear camera to experimentally detect approaching vehicles. Video is processed on your device and is not uploaded.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Whoosh uses your location to record your cycling route and show your ride map.";
+				INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY = "$(SUPABASE_PUBLISHABLE_KEY)";
+				INFOPLIST_KEY_SUPABASE_URL = "$(SUPABASE_URL)";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -452,6 +474,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BB62BFC80463C9EE3C7B792A /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = exactVersion;
+				version = 2.55.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		65A39A397D575BB1CFDF69D4 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB62BFC80463C9EE3C7B792A /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0609F80DAA31322635424507 /* Project object */;
 }
