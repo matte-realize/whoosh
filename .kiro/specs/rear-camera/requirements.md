@@ -1,6 +1,6 @@
 # Requirements — Whoosh Rear-Mounted Camera Recording
 
-**Status: DRAFT for owner review (October 24, 2026).** No code may be written until the iOS
+**Status: APPROVED by the iOS owner (October 24, 2026)** with the recommended answers to O-CAM1–O-CAM6 (`design.md`, "Owner resolution"). No code may be written until the iOS
 owner approves `requirements.md`, `design.md`, and `tasks.md`. This spec contains **no Swift
 code** by design.
 

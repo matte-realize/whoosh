@@ -3,9 +3,7 @@
 Small, ordered, verifiable tasks. **No code exists for this feature yet and none may be written
 until the owner approves this spec** (`requirements.md`, `design.md`, this file).
 
-Spec status: **DRAFT** (October 24, 2026), awaiting owner decisions O-CAM1…O-CAM6 (`design.md`,
-"Open decisions"). Pure-logic and fake-backed tasks (1–16) do not depend on the open decisions
-except where noted, so they can start the moment the spec is approved.
+Spec status: **APPROVED** by the iOS owner (October 24, 2026) with the recommended answers to O-CAM1–O-CAM6 (`design.md`, "Owner resolution").
 
 This plan is separate from the ride-recording MVP plan (`../ride-recording-mvp/tasks.md`, tasks
 1–28) and the crash-response plan (`../crash-response/tasks.md`). Task numbers here are independent;
@@ -49,7 +47,7 @@ path is unchanged.
 
 ## Phase 0 — Gate
 
-- [ ] 0. `[Owner]` `[DEMO]` Review and approve the spec; resolve open decisions
+- [x] 0. `[Owner]` `[DEMO]` Review and approve the spec; resolve open decisions
   - Read `requirements.md`, `design.md`, and this plan. Decide **O-CAM1** (watch), **O-CAM2**
     (background location), **O-CAM3** (default numbers), **O-CAM4** (retention), **O-CAM5** (audio),
     **O-CAM6** (detection auto-pin), or accept the recommended defaults, and record answers in

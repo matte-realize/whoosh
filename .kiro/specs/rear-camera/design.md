@@ -1,6 +1,6 @@
 # Design — Whoosh Rear-Mounted Camera Recording
 
-**Status: DRAFT for owner review (October 24, 2026).** This document contains **no source code**
+**Status: APPROVED by the iOS owner (October 24, 2026)** with the recommended answers to O-CAM1–O-CAM6 (`design.md`, "Owner resolution"). This document contains **no source code**
 by design: the owner requires requirements, design, and tasks to be reviewed before any
 implementation. Types, protocols, and state machines are described in tables and diagrams; code
 is written later, task by task, test-first (`tasks.md`).
@@ -869,7 +869,20 @@ WatchConnectivity (watch spec).
 | D-CAM16 | Folder map | `Services/Camera`, `Services/Screen`, `Services/Remote`, `Features/Camera` | Mirrors crash-response style; enables narrow privacy rules | Proposed |
 | D-CAM17 | Demo-mode | Independent; simulated detections use the same pipeline; clips tagged demo | Judges can see clips without a bike | Proposed (coordinate with `../demo-mode/`) |
 
-### Open decisions for the owner
+### Owner resolution (October 24, 2026)
+
+The iOS owner approved this spec and accepted every recommendation; this table is binding.
+
+| # | Resolution |
+| - | ---------- |
+| O-CAM1 | Apple Watch companion is the in-ride control and alert surface, specified in its own follow-up spec. This spec defines only its seams (`RideStatus`, `RideRemoteControl`, `AlertSink` fan-out). |
+| O-CAM2 | Enable the `location` background mode now (When-In-Use + `allowsBackgroundLocationUpdates` + blue indicator). |
+| O-CAM3 | Defaults: Standard 1080p30 HEVC at about 5 Mbps, 10-minute ring buffer capped at 1 GB, 2 GB cap on saved clips. These are hypotheses to measure on the iPhone 14 and tune. |
+| O-CAM4 | Saved clips auto-delete after 30 days. |
+| O-CAM5 | No audio recording for now (off by default; no microphone permission). |
+| O-CAM6 | Detections may auto-save clips, capped at 10 per ride, but this stays off until Teammate B supplies measured thresholds. |
+
+### Open decisions for the owner (now resolved above)
 
 | # | Question | Recommendation | Affects |
 | - | -------- | -------------- | ------- |
