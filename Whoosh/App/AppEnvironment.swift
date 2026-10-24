@@ -28,6 +28,11 @@ final class AppEnvironment {
     let detector: HazardDetector
     let alertManager: AlertManager
 
+    /// A calm, non-fatal notice to show the user when local storage had to fall
+    /// back to a non-persistent store (Requirement 11.4). `nil` in the normal
+    /// case. App-written copy only — never raw framework error text.
+    let storageNotice: String?
+
     /// Persisted GPS-accuracy setting; fed into `RideTuning` for each new ride.
     let settingsViewModel: SettingsViewModel
     /// The Home hub view model (owns its own tracker for authorization).
@@ -44,6 +49,7 @@ final class AppEnvironment {
         alertManager: AlertManager,
         calendar: Calendar,
         defaults: UserDefaults,
+        storageNotice: String? = nil,
         makeHomeTracker: () -> LocationTracking,
         makeRideTracker: @escaping () -> LocationTracking
     ) {
@@ -51,6 +57,7 @@ final class AppEnvironment {
         self.clock = clock
         self.detector = detector
         self.alertManager = alertManager
+        self.storageNotice = storageNotice
         self.makeRideTracker = makeRideTracker
         self.settingsViewModel = SettingsViewModel(repository: repository, defaults: defaults)
         self.homeViewModel = HomeViewModel(
@@ -88,7 +95,7 @@ final class AppEnvironment {
     /// if an on-disk store cannot be created, so the app still launches (history
     /// simply won't persist across launches in that degraded case).
     static func live() -> AppEnvironment {
-        let repository = Self.makeLiveRepository()
+        let (repository, storageNotice) = Self.makeLiveRepository()
         return AppEnvironment(
             repository: repository,
             clock: SystemClock(),
@@ -96,24 +103,29 @@ final class AppEnvironment {
             alertManager: StubAlertManager(),
             calendar: .current,
             defaults: .standard,
+            storageNotice: storageNotice,
             makeHomeTracker: { CoreLocationTracker() },
             makeRideTracker: { CoreLocationTracker() }
         )
     }
 
-    private static func makeLiveRepository() -> RideRepository {
+    private static func makeLiveRepository() -> (RideRepository, String?) {
         do {
             let container = try ModelContainer(for: RideRecord.self)
-            return SwiftDataRideRepository(context: container.mainContext)
+            return (SwiftDataRideRepository(context: container.mainContext), nil)
         } catch {
-            // Degrade gracefully: an in-memory store keeps the app usable.
+            // Degrade gracefully: an in-memory store keeps the app usable. Never
+            // surface the raw framework error — a calm, app-written notice only
+            // (Requirements 11.4 / design: SwiftData container failure is a
+            // non-fatal notice, not a crash).
+            let notice = "Saved rides are unavailable right now, so new rides won't be kept after you close the app. Everything else works."
             if let inMemory = try? ModelContainer(
                 for: RideRecord.self,
                 configurations: ModelConfiguration(isStoredInMemoryOnly: true)
             ) {
-                return SwiftDataRideRepository(context: inMemory.mainContext)
+                return (SwiftDataRideRepository(context: inMemory.mainContext), notice)
             }
-            return InMemoryRideRepository()
+            return (InMemoryRideRepository(), notice)
         }
     }
 

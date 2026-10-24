@@ -406,14 +406,41 @@ Conventions:
     capture warning in `Support/SystemClock.swift` was fixed minimally (a `@unchecked Sendable`
     box + `MainActor.assumeIsolated`) so the first-party build is warning-clean.
 
-- [ ] 24. Resilience pass
+- [x] 24. Resilience pass
   - Verify/implement: permission revoked mid-ride (stop & save), low-power behavior doesn't
     crash, stopped ride releases tracking, user-facing errors are actionable/dismissible and
     don't surface raw framework text.
   - _Requirements: 11.1, 11.2, 11.3, 11.4_
   - _Depends on: 23_
+  - _Pending device check:_ code audit-and-fix complete; `build-for-testing` succeeds with
+    zero first-party warnings and `scripts/privacy-check.sh` passes (53 files). Audit results:
+    **11.1 (revoked mid-ride)** was already correct — `RideSessionViewModel.handleAuthorizationChange`
+    row 11 sets `authorizationRevoked`, enters `signalLost`, stops appending, freezes active
+    duration, and keeps the ride stoppable/saveable (`permissionRevoked` banner is app copy).
+    **11.3 (release tracking / no retain cycles)** was already correct — every tracker/clock
+    closure captures `[weak self]`, `stop()` calls `tracker.stopUpdating()` and cancels the
+    loss/snapshot timers, and `CoreLocationTracker`'s delegate methods are `nonisolated` and
+    hop to the main actor with `[weak self]`. **11.4 (no raw error text)** was already correct —
+    `RideBanner` carries only app-written copy; the single `String(describing: error)` is inside
+    a `Logger` call in `SwiftDataRideRepository`, never the UI. **11.2 (low-power/thermal)** was
+    the real gap and is now **implemented**: new `Services/Power/` seam — `PowerStateMonitoring`
+    (protocol, Foundation-only, with an `effectiveAccuracy` policy that degrades `.high` →
+    `.balanced` while constrained and never upgrades `.balanced`), `ProcessInfoPowerMonitor`
+    (reads `ProcessInfo.isLowPowerModeEnabled` + `thermalState`, observes
+    `NSProcessInfoPowerStateDidChange` / `thermalStateDidChangeNotification`), and
+    `FakePowerMonitor` for tests. Injected into `RideSessionViewModel` (default
+    `ProcessInfoPowerMonitor`): `startMonitoring()` on begin, `stopMonitoring()` on stop, the
+    start request uses `currentAccuracy`, and a mid-ride power change re-applies the gentler
+    accuracy to the tracker (`isUsingReducedAccuracy` is exposed for the UI). Also: `AppEnvironment`
+    now returns a non-fatal `storageNotice` when the SwiftData container can't be created and
+    falls back to an in-memory store; `WhooshApp` surfaces it as a calm, dismissible alert.
+    Unit tests added (power-degrade at start, mid-ride re-apply, thermal, idle no-op, stop
+    releases monitor, plus `PowerStateMonitoringTests`). The real device behaviors — actual Low
+    Power Mode / thermal throttling, revoke-mid-ride in Settings, the status-bar tracking
+    indicator turning off after stop, and the airplane-mode flow — are verified on device by the
+    orchestrator (see `manual-qa.md`).
 
-- [ ] 25. Accessibility & privacy compliance pass
+- [x] 25. Accessibility & privacy compliance pass
   - Accessibility: VoiceOver labels on controls and dynamic metrics/state; the Stop VoiceOver
     custom action works; Dynamic Type spot check on primary screens; state via icon + text, not
     color alone; ≥60pt thumb-zone targets.
@@ -423,6 +450,31 @@ Conventions:
   - _Verify:_ the full record → summary → history → delete flow works in airplane mode.
   - _Requirements: 10.3, 10.4, 10.5, 10.6, 9.1, 9.2, 9.3, 9.4_
   - _Depends on: 23_
+  - _Pending device check:_ code audit-and-fix complete; `build-for-testing` succeeds with zero
+    first-party warnings and `scripts/privacy-check.sh` passes (53 files). Audit results:
+    **Accessibility** — controls already carry labels (ride metrics use `accessibilityLabel`,
+    the Stop control has label "Stop ride, press and hold" plus the `accessibilityAction(named:
+    "Stop ride")` custom action, chips/buttons are labeled); the gap was **state announcements**,
+    now added — `ActiveRideView` posts `UIAccessibility.post(.announcement, …)` on `banner`
+    changes (signal lost / permission revoked) and on pause/resume `rideState` changes. Primary
+    ride controls (Pause/Resume pill and `HoldToStopButton`) are ≥60pt (`Theme.Size.minTouchTarget
+    = 60`); state is icon + text throughout (`StateChip`). **Privacy** — verified by grep +
+    `privacy-check.sh`: no `URLSession`/`URLRequest`/`import Supabase`/analytics imports anywhere
+    outside the (not-yet-built) `Services/Sync`; the `NSLocationWhenInUseUsageDescription` and
+    `NSCameraUsageDescription` strings in `project.yml` (→ generated Info.plist) **exactly match**
+    `privacy.md`; the only `prevent/predict/guarantee` hits are in doc comments explicitly
+    disclaiming collision prediction and in honest "experimental · coming soon" UI copy; `delete`
+    and `deleteAll` are real deletes on both `InMemoryRideRepository` and `SwiftDataRideRepository`;
+    `Config/Secrets.xcconfig` is gitignored (only `Secrets.example.xcconfig` is tracked) and no
+    keys appear in source. The on-device confirmations — live VoiceOver walk-through, Dynamic Type
+    at Accessibility sizes, the no-camera-prompt behavior, and the full airplane-mode
+    record → summary → history → delete flow — are verified on device by the orchestrator (see
+    `.kiro/specs/ride-recording-mvp/manual-qa.md`).
+  - _Assumption:_ ride-screen metrics intentionally use fixed point sizes (per mockups 2/3, the
+    "three numbers" principle) so they stay tabular and never truncate; they don't scale with
+    Dynamic Type. This satisfies "SHOULD support Dynamic Type without truncating" (10.4) for the
+    ride screen while keeping the glanceable layout; app-chrome screens use system fonts that do
+    scale.
 
 ---
 

@@ -446,4 +446,84 @@ struct RideSessionViewModelTests {
         vm.stop()                           // now finished
         #expect(vm.finishedRides().count == 1)
     }
+
+    // MARK: - Task 24: low-power / thermal degradation (Requirement 11.2)
+
+    private static func makeViewModelWithPower(
+        tuning: RideTuning = RideTuning(accuracy: .high),
+        monitor: FakePowerMonitor
+    ) -> (RideSessionViewModel, FakeLocationTracker) {
+        let tracker = FakeLocationTracker(authorizationStatus: .authorizedWhenInUse)
+        let clock = TestClock(now: epoch)
+        let repo = InMemoryRideRepository()
+        let vm = RideSessionViewModel(
+            tracker: tracker,
+            clock: clock,
+            repository: repo,
+            tuning: tuning,
+            powerMonitor: monitor
+        )
+        return (vm, tracker)
+    }
+
+    @Test func lowPowerModeDegradesToBalancedAtStart() {
+        let monitor = FakePowerMonitor(lowPowerMode: true)
+        let (vm, tracker) = Self.makeViewModelWithPower(monitor: monitor)
+        vm.start()
+        // Requested .high but Low Power Mode forces .balanced for the request.
+        #expect(tracker.lastAccuracy == .balanced)
+        #expect(vm.isUsingReducedAccuracy)
+        #expect(monitor.isMonitoring)
+    }
+
+    @Test func normalPowerKeepsRequestedAccuracy() {
+        let monitor = FakePowerMonitor(lowPowerMode: false)
+        let (vm, tracker) = Self.makeViewModelWithPower(monitor: monitor)
+        vm.start()
+        #expect(tracker.lastAccuracy == .high)
+        #expect(!vm.isUsingReducedAccuracy)
+    }
+
+    @Test func enteringLowPowerMidRideReappliesBalanced() {
+        let monitor = FakePowerMonitor(lowPowerMode: false)
+        let (vm, tracker) = Self.makeViewModelWithPower(monitor: monitor)
+        vm.start()
+        #expect(tracker.lastAccuracy == .high)
+        let startsBefore = tracker.startUpdatingCount
+        // Device enters Low Power Mode mid-ride.
+        monitor.isLowPowerModeEnabled = true
+        monitor.notifyChange()
+        #expect(tracker.lastAccuracy == .balanced)
+        #expect(tracker.startUpdatingCount == startsBefore + 1)
+        #expect(vm.isUsingReducedAccuracy)
+        // Ride keeps recording — never crashes or stops.
+        #expect(vm.rideState == .recording)
+    }
+
+    @Test func thermalThrottlingDegradesAccuracy() {
+        let monitor = FakePowerMonitor(thermallyThrottled: true)
+        let (vm, tracker) = Self.makeViewModelWithPower(monitor: monitor)
+        vm.start()
+        #expect(tracker.lastAccuracy == .balanced)
+        #expect(vm.isUsingReducedAccuracy)
+    }
+
+    @Test func powerChangeWhileIdleDoesNotStartTracking() {
+        let monitor = FakePowerMonitor(lowPowerMode: false)
+        let (_, tracker) = Self.makeViewModelWithPower(monitor: monitor)
+        // No ride started.
+        monitor.isLowPowerModeEnabled = true
+        monitor.notifyChange()
+        #expect(!tracker.isUpdating)
+        #expect(tracker.startUpdatingCount == 0)
+    }
+
+    @Test func stopReleasesPowerMonitor() {
+        let monitor = FakePowerMonitor(lowPowerMode: true)
+        let (vm, _) = Self.makeViewModelWithPower(monitor: monitor)
+        vm.start()
+        #expect(monitor.isMonitoring)
+        vm.stop()
+        #expect(!monitor.isMonitoring)
+    }
 }

@@ -22,6 +22,9 @@ struct WhooshApp: App {
     @State private var rideSession: RideSessionViewModel?
     /// An unfinished ride found on launch, pending the recovery decision.
     @State private var interruptedRide: Ride?
+    /// Set once if local storage degraded to a non-persistent store; shown as a
+    /// calm, dismissible notice (Requirement 11.4).
+    @State private var storageNoticePresented = false
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -56,6 +59,14 @@ struct WhooshApp: App {
                 Button("Discard", role: .destructive) { discardInterrupted(ride) }
             } message: { _ in
                 Text("Whoosh found a ride that didn't finish. Save it to your history or discard it.")
+            }
+            .alert(
+                "Ride saving unavailable",
+                isPresented: $storageNoticePresented
+            ) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(environment.storageNotice ?? "")
             }
             .onAppear(perform: checkForInterruptedRide)
             .onChange(of: scenePhase) { _, phase in
@@ -147,6 +158,8 @@ struct WhooshApp: App {
         // unfinished ride; it owns no live tracking until `start()`.
         let probe = environment.makeRideSession()
         interruptedRide = probe.recoverInterruptedRide()
+        // Surface the non-fatal storage notice once, if storage degraded.
+        if environment.storageNotice != nil { storageNoticePresented = true }
     }
 
     private func saveInterrupted(_ ride: Ride) {

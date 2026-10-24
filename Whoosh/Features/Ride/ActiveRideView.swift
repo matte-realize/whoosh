@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// The always-dark, full-screen active-ride screen (Requirement 5, mockups 2/3).
 ///
@@ -39,6 +42,48 @@ struct ActiveRideView: View {
         .preferredColorScheme(.dark)
         .onAppear { setIdleTimer(disabled: true) }
         .onDisappear { setIdleTimer(disabled: false) }
+        .onChange(of: viewModel.banner) { _, banner in
+            announceBanner(banner)
+        }
+        .onChange(of: viewModel.rideState) { _, state in
+            announceRideState(state)
+        }
+    }
+
+    // MARK: - VoiceOver announcements (Requirement 10.3)
+
+    /// Post a VoiceOver announcement when a state banner appears so a
+    /// non-visual user hears the signal-lost / permission-revoked change.
+    private func announceBanner(_ banner: RideBanner?) {
+        guard let banner else { return }
+        let message: String?
+        switch banner {
+        case .signalLost:
+            message = "GPS signal lost. Your ride continues and resumes automatically."
+        case .permissionRevoked:
+            message = "Location access turned off. Your ride is saved. Hold Stop to finish."
+        case .permissionNeeded, .failed:
+            message = nil
+        }
+        if let message { postAnnouncement(message) }
+    }
+
+    /// Announce pause/resume transitions (icon + text is also on-screen).
+    private func announceRideState(_ state: RideState) {
+        switch state {
+        case .paused:
+            postAnnouncement("Ride paused")
+        case .recording:
+            postAnnouncement("Recording")
+        default:
+            break
+        }
+    }
+
+    private func postAnnouncement(_ message: String) {
+        #if canImport(UIKit)
+        UIAccessibility.post(notification: .announcement, argument: message)
+        #endif
     }
 
     // MARK: - Top chrome (chips + banner)

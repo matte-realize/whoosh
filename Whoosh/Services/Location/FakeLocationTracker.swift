@@ -22,6 +22,9 @@ final class FakeLocationTracker: LocationTracking {
     private(set) var isUpdating = false
     /// The accuracy passed to the most recent `startUpdating(accuracy:)`.
     private(set) var lastAccuracy: TrackingAccuracy?
+    /// Number of times `startUpdating(accuracy:)` was called (re-applied when the
+    /// power state degrades accuracy mid-ride).
+    private(set) var startUpdatingCount = 0
     /// Number of times authorization was requested.
     private(set) var requestAuthorizationCount = 0
 
@@ -38,6 +41,7 @@ final class FakeLocationTracker: LocationTracking {
     func startUpdating(accuracy: TrackingAccuracy) {
         isUpdating = true
         lastAccuracy = accuracy
+        startUpdatingCount += 1
     }
 
     func stopUpdating() {

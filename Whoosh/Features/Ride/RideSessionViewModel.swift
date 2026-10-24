@@ -42,6 +42,9 @@ final class RideSessionViewModel {
     @ObservationIgnored private let clock: Clock
     @ObservationIgnored private let repository: RideRepository
     @ObservationIgnored private let tuning: RideTuning
+    /// Observes Low Power Mode / thermal throttling so the engine can degrade to
+    /// balanced accuracy for the next location request (Requirement 11.2).
+    @ObservationIgnored private let powerMonitor: PowerStateMonitoring
     /// Produces the id for a new ride; injectable for deterministic tests.
     @ObservationIgnored private let makeID: () -> UUID
 
@@ -61,6 +64,11 @@ final class RideSessionViewModel {
 
     /// The banner/error to surface, or `nil` when there is nothing to show.
     private(set) var banner: RideBanner?
+
+    /// `true` while the engine has degraded to balanced accuracy because the
+    /// device is in Low Power Mode or thermally throttled (Requirement 11.2).
+    /// The UI may surface a calm, non-fatal notice; recording is unaffected.
+    private(set) var isUsingReducedAccuracy = false
 
     // MARK: Private ride bookkeeping
 
@@ -98,15 +106,18 @@ final class RideSessionViewModel {
         clock: Clock,
         repository: RideRepository,
         tuning: RideTuning = RideTuning(),
+        powerMonitor: PowerStateMonitoring = ProcessInfoPowerMonitor(),
         makeID: @escaping () -> UUID = { UUID() }
     ) {
         self.tracker = tracker
         self.clock = clock
         self.repository = repository
         self.tuning = tuning
+        self.powerMonitor = powerMonitor
         self.makeID = makeID
         self.authorizationStatus = tracker.authorizationStatus
         wireTrackerCallbacks()
+        wirePowerMonitor()
     }
 
     // MARK: - Intents
@@ -152,6 +163,7 @@ final class RideSessionViewModel {
         accumulateActiveSpan()
         cancelLossTimer()
         cancelSnapshotTimer()
+        powerMonitor.stopMonitoring()
         tracker.stopUpdating()
 
         let finalized = makeFinalizedRide(endedAt: clock.now())
@@ -234,6 +246,32 @@ final class RideSessionViewModel {
         tracker.onFailure = { [weak self] failure in
             self?.handleFailure(failure)
         }
+    }
+
+    // MARK: - Power / thermal observation (Requirement 11.2)
+
+    /// The accuracy to request right now: the configured profile, degraded to
+    /// `.balanced` while the device is in Low Power Mode or thermally throttled.
+    private var currentAccuracy: TrackingAccuracy {
+        powerMonitor.effectiveAccuracy(requested: tuning.accuracy)
+    }
+
+    private func wirePowerMonitor() {
+        powerMonitor.onPowerStateChange = { [weak self] in
+            self?.handlePowerStateChange()
+        }
+    }
+
+    /// React to a Low Power Mode / thermal change: if the engine is actively
+    /// recording, re-apply the (possibly degraded) accuracy to the tracker for
+    /// the next location request. Never crashes and never stops the ride.
+    private func handlePowerStateChange() {
+        let reduced = powerMonitor.prefersReducedAccuracy
+        isUsingReducedAccuracy = reduced
+        // Only the active recording stream needs re-tuning; paused/finished/idle
+        // will pick up `currentAccuracy` when (re)started.
+        guard rideState == .recording || rideState == .signalLost else { return }
+        tracker.startUpdating(accuracy: currentAccuracy)
     }
 
     private func handleLocation(_ point: RoutePoint) {
@@ -329,7 +367,9 @@ final class RideSessionViewModel {
         authorizationRevoked = false
         pointsSinceSnapshot = 0
         rideState = .recording
-        tracker.startUpdating(accuracy: tuning.accuracy)
+        isUsingReducedAccuracy = powerMonitor.prefersReducedAccuracy
+        powerMonitor.startMonitoring()
+        tracker.startUpdating(accuracy: currentAccuracy)
         armLossTimer()
         armSnapshotTimer()
     }
