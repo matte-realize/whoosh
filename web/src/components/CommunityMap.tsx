@@ -9,8 +9,8 @@ import type { IncidentCell, Ride } from "@/lib/types";
 /** Points kept per route on the overview map. Enough for the shape at city zoom. */
 const OVERVIEW_POINTS_PER_ROUTE = 300;
 
-const ROUTE_STYLE: L.PolylineOptions = { color: "#2f6bff", weight: 4, opacity: 0.65 };
-const ROUTE_HOVER_STYLE: L.PolylineOptions = { color: "#0b3fc4", weight: 7, opacity: 0.95 };
+const ROUTE_STYLE: L.PolylineOptions = { color: "#3ba7ff", weight: 4, opacity: 0.75 };
+const ROUTE_HOVER_STYLE: L.PolylineOptions = { color: "#2df5a8", weight: 7, opacity: 1 };
 
 function textNode(text: string): HTMLElement {
   const el = document.createElement("span");
@@ -94,10 +94,10 @@ export default function CommunityMap({ rides, cells, showRoutes, showIncidents }
         `${monthLabel(cell.first_month)} to ${monthLabel(cell.last_month)}.`;
       L.circleMarker(point, {
         radius: radiusFor(cell.incident_count),
-        color: "#a34100",
+        color: "#ff5a4f",
         weight: 2,
-        fillColor: "#ff8a3d",
-        fillOpacity: 0.55,
+        fillColor: "#ff5a4f",
+        fillOpacity: 0.35,
       })
         .bindTooltip(textNode(label))
         .addTo(incidents);

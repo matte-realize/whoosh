@@ -58,15 +58,15 @@ export default function RideMap({ ride }: { ride: RideWithNearMisses }) {
       ([lon, lat]): L.LatLngTuple => [lat, lon],
     );
 
-    const line = L.polyline(points, { color: "#0b4fd1", weight: 5, opacity: 0.9 }).addTo(layer);
+    const line = L.polyline(points, { color: "#2df5a8", weight: 5, opacity: 0.95 }).addTo(layer);
     map.fitBounds(line.getBounds(), { padding: [32, 32] });
 
     const start = points[0];
     const end = points[points.length - 1];
-    L.circleMarker(start, { radius: 9, color: "#ffffff", weight: 3, fillColor: "#146c2e", fillOpacity: 1 })
+    L.circleMarker(start, { radius: 9, color: "#060708", weight: 3, fillColor: "#2df5a8", fillOpacity: 1 })
       .bindTooltip(textNode("Start"), { permanent: true, direction: "top" })
       .addTo(layer);
-    L.circleMarker(end, { radius: 9, color: "#ffffff", weight: 3, fillColor: "#1f2328", fillOpacity: 1 })
+    L.circleMarker(end, { radius: 9, color: "#060708", weight: 3, fillColor: "#f4f6f8", fillOpacity: 1 })
       .bindTooltip(textNode("End"), { permanent: true, direction: "top" })
       .addTo(layer);
 
@@ -75,10 +75,10 @@ export default function RideMap({ ride }: { ride: RideWithNearMisses }) {
       const label = `${nearMiss.kind}, ${Math.round(nearMiss.confidence * 100)}% confidence${hint}`;
       L.circleMarker([nearMiss.latitude, nearMiss.longitude], {
         radius: 7,
-        color: "#9a1c1c",
+        color: "#ff5a4f",
         weight: 3,
         dashArray: "3 3",
-        fillColor: "#ffffff",
+        fillColor: "#060708",
         fillOpacity: 0.9,
       })
         .bindTooltip(textNode(label))

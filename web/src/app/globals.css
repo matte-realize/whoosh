@@ -4,51 +4,36 @@
    prefers-reduced-motion. Status and selection are never shown by color alone.
    ========================================================================== */
 
+/* Dark, data-first theme in the style of fitness wearables: near-black surfaces, high-contrast
+   numbers, and a few bright signal colors. Colors are our own, not any brand's. */
 :root {
-  --bg: #f4f6fb;
-  --surface: #ffffff;
-  --surface-2: #eef2fa;
-  --text: #121826;
-  --muted: #4a5568;
-  --border: #d6dce8;
-  --accent: #2f5bea;
-  --accent-strong: #1e3fae;
-  --accent-soft: #e6ecff;
-  --incident: #c2540a;
-  --ok: #157f3b;
-  --warn: #8a5a00;
-  --error: #b42318;
-  --hero-a: #0b1533;
-  --hero-b: #1b2f73;
-  --road-a: #2a3654;
-  --road-b: #3b4a70;
-  --radius: 14px;
-  --radius-sm: 9px;
-  --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 4px 16px rgb(16 24 40 / 6%);
-  --shadow-lift: 0 2px 4px rgb(16 24 40 / 8%), 0 12px 32px rgb(16 24 40 / 12%);
-  --focus: #f5a623;
+  --bg: #060708;
+  --surface: #111315;
+  --surface-2: #1a1d20;
+  --text: #f4f6f8;
+  --muted: #98a1ab;
+  --border: #262a2f;
+  --accent: #2df5a8;
+  --accent-strong: #7dffcb;
+  --accent-soft: rgb(45 245 168 / 12%);
+  --signal-blue: #3ba7ff;
+  --signal-amber: #ffb020;
+  --signal-red: #ff5a4f;
+  --incident: var(--signal-red);
+  --ok: #2df5a8;
+  --warn: #ffb020;
+  --error: #ff7a70;
+  --hero-a: #060708;
+  --hero-b: #0d1412;
+  --road-a: #1a1d20;
+  --road-b: #24282c;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 0 rgb(255 255 255 / 4%) inset, 0 8px 24px rgb(0 0 0 / 45%);
+  --shadow-lift: 0 1px 0 rgb(255 255 255 / 6%) inset, 0 14px 40px rgb(0 0 0 / 60%);
+  --focus: #ffb020;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0c111d;
-    --surface: #141b2b;
-    --surface-2: #1b2438;
-    --text: #e8ecf5;
-    --muted: #a3adc2;
-    --border: #2a3550;
-    --accent: #7c9cff;
-    --accent-strong: #a8bcff;
-    --accent-soft: #1d2a52;
-    --incident: #ff9a52;
-    --ok: #5fd38a;
-    --warn: #f0b955;
-    --error: #ff8a80;
-    --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 4px 16px rgb(0 0 0 / 25%);
-    --shadow-lift: 0 2px 4px rgb(0 0 0 / 35%), 0 12px 32px rgb(0 0 0 / 40%);
-  }
+  color-scheme: dark;
 }
 
 *,
@@ -73,8 +58,15 @@ body {
 h1,
 h2,
 h3 {
-  line-height: 1.2;
-  letter-spacing: -0.015em;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+h1,
+h2 {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 h1 {
@@ -84,7 +76,7 @@ h1 {
 
 h2 {
   margin: 0 0 12px;
-  font-size: clamp(1.4rem, 2.4vw, 1.875rem);
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
 }
 
 h3 {
@@ -262,10 +254,16 @@ p {
   place-items: center;
   width: 30px;
   height: 30px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, var(--accent), #7a4dff);
-  color: #ffffff;
-  font-size: 0.9375rem;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.875rem;
+  box-shadow: 0 0 14px rgb(45 245 168 / 35%);
+}
+
+.site-nav__brand {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
 }
 
 .site-nav__links {
@@ -287,8 +285,14 @@ p {
   background: var(--surface-2);
 }
 
+.site-nav__link {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8125rem;
+}
+
 .site-nav__link[aria-current="page"] {
-  color: var(--accent-strong);
+  color: var(--accent);
   background: var(--accent-soft);
   text-decoration: underline;
   text-decoration-thickness: 2px;
@@ -327,23 +331,24 @@ p {
   box-shadow: var(--shadow-lift);
 }
 
+.button {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.875rem;
+}
+
 .button--primary {
   background: var(--accent);
-  color: #ffffff;
+  color: #04110b;
+  box-shadow: 0 0 24px rgb(45 245 168 / 25%);
 }
 
 .button--primary:hover {
   background: var(--accent-strong);
 }
 
-@media (prefers-color-scheme: dark) {
-  .button--primary {
-    color: #0c111d;
-  }
-}
-
 .button--ghost {
-  border-color: rgb(255 255 255 / 45%);
+  border-color: rgb(255 255 255 / 30%);
   color: #ffffff;
 }
 
@@ -418,12 +423,13 @@ p {
 .swatch--route {
   height: 4px;
   border-radius: 2px;
-  background: #2f6bff;
+  background: var(--signal-blue);
+  box-shadow: 0 0 8px var(--signal-blue);
 }
 
 .swatch--incident {
-  background: #ff8a3d;
-  border: 2px solid #a34100;
+  background: rgb(255 90 79 / 55%);
+  border: 2px solid var(--signal-red);
 }
 
 .link-button {
@@ -444,10 +450,11 @@ p {
   position: relative;
   overflow: hidden;
   color: #ffffff;
+  border-bottom: 1px solid var(--border);
   background:
-    radial-gradient(circle at 85% 20%, rgb(122 77 255 / 35%), transparent 45%),
-    radial-gradient(circle at 10% 90%, rgb(47 91 234 / 40%), transparent 50%),
-    linear-gradient(135deg, var(--hero-a), var(--hero-b));
+    radial-gradient(circle at 80% 30%, rgb(45 245 168 / 16%), transparent 42%),
+    radial-gradient(circle at 15% 85%, rgb(59 167 255 / 14%), transparent 48%),
+    linear-gradient(180deg, var(--hero-a), var(--hero-b));
 }
 
 .hero__inner {
@@ -468,7 +475,7 @@ p {
 }
 
 .hero .eyebrow {
-  color: #b8c7ff;
+  color: var(--accent);
 }
 
 .hero h1 {
@@ -476,7 +483,7 @@ p {
 }
 
 .gradient-text {
-  background: linear-gradient(90deg, #8fb0ff, #c9a7ff);
+  background: linear-gradient(90deg, var(--accent), var(--signal-blue));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -485,7 +492,7 @@ p {
 .hero__lead {
   max-width: 560px;
   margin-top: 18px;
-  color: #d6def5;
+  color: #c3cbd3;
   font-size: 1.1875rem;
 }
 
@@ -496,18 +503,9 @@ p {
   margin-top: 28px;
 }
 
-.hero .button--primary {
-  background: #ffffff;
-  color: var(--hero-a);
-}
-
-.hero .button--primary:hover {
-  background: #e6ecff;
-}
-
 .hero__fine {
   margin-top: 18px;
-  color: #aab6d8;
+  color: var(--muted);
   font-size: 0.8125rem;
 }
 
@@ -532,7 +530,7 @@ p {
 
 .hero-visual__waves path {
   fill: none;
-  stroke: #9db6ff;
+  stroke: var(--accent);
   stroke-width: 4;
   stroke-linecap: round;
   opacity: 0;
@@ -548,12 +546,12 @@ p {
 }
 
 .hero-visual__car {
-  fill: #ffb547;
+  fill: var(--signal-red);
   animation: approach 4.8s var(--ease) infinite alternate;
 }
 
 .hero-visual__car-top {
-  fill: #ffd28a;
+  fill: #ff8c84;
 }
 
 .hero-visual__tire {
@@ -577,7 +575,7 @@ p {
 }
 
 .hero-visual__phone {
-  fill: #7c9cff;
+  fill: var(--accent);
   stroke: #ffffff;
   stroke-width: 2;
 }
@@ -633,12 +631,40 @@ p {
 }
 
 .stat-card {
-  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+  padding: 18px 18px 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   transition: transform 0.25s var(--ease), box-shadow 0.25s;
+}
+
+/* Thin signal-colored bar across the top of each stat card, cycling through the palette. */
+.stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--card-color, var(--accent));
+  box-shadow: 0 0 12px var(--card-color, var(--accent));
+}
+
+.stat-card:nth-child(5n + 2) {
+  --card-color: var(--signal-blue);
+}
+
+.stat-card:nth-child(5n + 3) {
+  --card-color: var(--signal-amber);
+}
+
+.stat-card:nth-child(5n + 4) {
+  --card-color: #b48cff;
+}
+
+.stat-card:nth-child(5n + 5) {
+  --card-color: var(--signal-red);
 }
 
 .stat-card:hover {
@@ -651,18 +677,20 @@ p {
   align-items: center;
   gap: 8px;
   color: var(--muted);
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 
 .stat-card dt .icon {
-  color: var(--accent);
+  color: var(--card-color, var(--accent));
 }
 
 .stat-card dd {
-  margin: 6px 0 0;
-  font-size: 1.625rem;
-  font-weight: 800;
+  margin: 10px 0 0;
+  font-size: 2rem;
+  font-weight: 900;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
@@ -690,13 +718,16 @@ p {
 
 .stats dt {
   color: var(--muted);
-  font-size: 0.8125rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 
 .stats dd {
-  margin: 0;
-  font-size: 1.375rem;
-  font-weight: 800;
+  margin: 4px 0 0;
+  font-size: 1.5rem;
+  font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
 
@@ -964,6 +995,20 @@ p {
   content: "⚠ ";
 }
 
+.eyebrow,
+.tag,
+.chip,
+.steps__tab,
+.toolbar__count {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.chip,
+.steps__tab {
+  font-size: 0.75rem;
+}
+
 .stack {
   display: grid;
   gap: 12px;
@@ -1009,21 +1054,21 @@ p {
 }
 
 .cta {
-  padding: 40px 24px;
+  padding: 44px 24px;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   text-align: center;
-  color: #ffffff;
-  background: linear-gradient(135deg, var(--hero-a), var(--hero-b));
+  background:
+    radial-gradient(circle at 50% 0%, rgb(45 245 168 / 14%), transparent 60%),
+    var(--surface);
 }
 
 .cta p {
-  color: #d6def5;
+  color: var(--muted);
 }
 
 .cta .button--primary {
   margin-top: 8px;
-  background: #ffffff;
-  color: var(--hero-a);
 }
 
 /* ---------- Messages, empty states, skeletons ---------- */
@@ -1286,12 +1331,60 @@ p {
   font-size: 0.875rem;
 }
 
-/* Leaflet tooltips in the site's style */
+/* Leaflet in the dark theme. The standard OpenStreetMap tiles are recolored dark with a CSS
+   filter on the tile layer only, so routes and markers keep their true colors and no other tile
+   provider (or key) is needed. */
+.leaflet-container {
+  background: #0b0d0f;
+  font-family: inherit;
+}
+
+.leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.82) contrast(0.92) saturate(0.4);
+}
+
 .leaflet-tooltip {
-  border: 0;
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
   box-shadow: var(--shadow-lift);
   font: 600 0.8125rem/1.4 ui-sans-serif, system-ui, sans-serif;
+}
+
+.leaflet-tooltip-top::before {
+  border-top-color: var(--surface-2);
+}
+
+.leaflet-tooltip-bottom::before {
+  border-bottom-color: var(--surface-2);
+}
+
+.leaflet-tooltip-left::before {
+  border-left-color: var(--surface-2);
+}
+
+.leaflet-tooltip-right::before {
+  border-right-color: var(--surface-2);
+}
+
+.leaflet-control-attribution {
+  background: rgb(6 7 8 / 75%) !important;
+  color: var(--muted) !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--text) !important;
+}
+
+.leaflet-bar a {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.leaflet-bar a:hover {
+  background: var(--surface);
 }
 
 /* ---------- Scroll reveal ---------- */
