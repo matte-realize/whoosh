@@ -157,7 +157,7 @@ between iOS and Vision. No code is written until the owner approves the spec.
 | ---------- | ----- | ----- | ---------- |
 | Capture, recording, clips | **You (iOS)** | `CameraCaptureService`, rolling-segment recorder, ring buffer, clip pinning/viewing/deleting/export, Mount & frame, ride mode (screen-dim, touch lock), permission and settings, background location, interruption handling, device QA and budgets | `rear-camera/tasks.md` 1–32 |
 | Frame-pipeline seam | **You (iOS)** | `FrameConsumer` / `VideoFrame` / `FramePipeline` with a latest-wins, never-blocking backpressure rule; `FakeCameraSource`; updated `HazardDetector` contract | tasks 6, 11, 14, 35 |
-| Watch / eyes-free seams | **You (iOS)** | `RideStatus`, `RideRemoteControl`, `AlertSink` fan-out, audio sinks; the Apple Watch companion itself is a **separate follow-up spec** (open decision O-CAM1) | tasks 13, 29, 34 |
+| Watch / eyes-free seams | **You (iOS)** | `RideStatus`, `RideRemoteControl`, `AlertSink` fan-out, audio sinks; the Apple Watch companion itself is specified in `.kiro/specs/watch-companion/` (open decision O-CAM1; see "Apple Watch companion workstreams" below) | tasks 13, 29, 34 |
 | Vision model + detector | **Teammate B** | A `HazardDetector` that is also a `FrameConsumer` (reads frames from the pipeline; never owns capture, permission, or recording); offline evaluation on real mounted footage; measured thresholds for the near-miss policy | B1–B3 |
 | Near-miss events in the database | **Role C** | Confirm `near_misses` takes **events only (no video, no clip id, no thumbnail)**; later, website markers | C-R1, C-R2 |
 
@@ -191,6 +191,43 @@ between iOS and Vision. No code is written until the owner approves the spec.
 See the rows below ("Heat on a seat post in sun", "Vibration blur", "Rain", "Battery drain", "Storage",
 "Silent camera failure", "Hidden-recording perception", "Watch dependency").
 
+## Apple Watch companion workstreams (new — October 24, 2026)
+
+Spec: `.kiro/specs/watch-companion/` (requirements, design, tasks; **draft, awaiting owner approval**).
+With the phone on the seat post, the wrist is the only in-ride surface, so this spec adds a watchOS app
+(controls, live status, wrist haptics, crash-countdown cancel) and a pre-ride "watch connected, haptics
+test" screen on the phone. It builds on the rear-camera seams (`RideStatus`, `RideRemoteControl`,
+`AlertSink` fan-out) and the crash-response countdown. No code is written until the owner approves the
+spec **and a feasibility spike on the owner's Apple Watch SE returns a go decision** (its central bet, a
+cycling workout session that keeps the watch app reachable and haptic-capable with the wrist down, is
+documented by Apple but unmeasured here). The Garmin fenix 6x and the Whoop are out of scope.
+
+| Workstream | Owner | Scope | Spec tasks |
+| ---------- | ----- | ----- | ---------- |
+| Feasibility spike, project setup, adapters, device QA | **You (iOS)** + the owner's watch | Run and extend `spikes/watch-haptics/` in a new folder; add the watch target and the shared `Packages/WhooshWire` package; WatchConnectivity adapters; workout-session keep-alive; battery and latency measurements | `watch-companion/tasks.md` 0–3, 16–19, 28 |
+| Pure core and phone seams | **You (iOS)** (a second contributor can take the package) | Versioned wire codec, command reducer and dedupe, arming, haptic catalog/limiter/freshness, routing and escalation, loopback tests | tasks 4–15 |
+| Watch UI, readiness screen, crash cancel, start from wrist, notices | **You (iOS)** | Ride/Controls/Idle/Summary pages, phone Apple Watch screen, countdown takeover, reconnect handling, accessibility, privacy and App Review pass | tasks 20–27, 29 |
+| Spike support | **Role C** | Author of the spike: share notes and help interpret the test protocol; no schema, API, or database change is needed (the watch sends nothing to the database) | C-W1 |
+| Vision / detector | **Teammate B** | No tasks. The wrist cue is driven by the same `HazardDetection` through the existing gate, cooldowns, and fan-out. | — |
+
+### Interfaces and ownership boundaries (additions)
+
+- **iOS ↔ Watch:** a versioned wire contract over WatchConnectivity, defined once in a Foundation-only
+  package both apps compile. The phone is authoritative; the watch sends typed, idempotent commands and
+  never decides a ride, camera, or crash state. Commands and alerts are never queued for later delivery.
+- **Watch ↔ everything else:** nothing leaves the rider's own devices. The watch receives no coordinates,
+  routes, video, contact names or numbers; the crash countdown shows a contact count only. The watch app
+  makes no network requests.
+- **Detector → wrist:** unchanged `HazardDetection`; gate, cooldowns, and fan-out are layered (the
+  rear-vehicle gate, the phone sink's 2 s cooldown, the routing policy's 3 s cooldown, the watch limiter).
+
+### Checkpoint 2.75 — "It buzzes" (after the camera checkpoint)
+
+- **You:** spike go decision, then Tier 0 (readiness screen, haptics test, pattern preview, demo-mode forced
+  alert buzzing the wrist), then Tier 1 (a ride controlled from the wrist).
+- **Role C:** optional notes on the spike; nothing else.
+- **Demo fallback:** if the watch misbehaves, the phone's audio path and the ride itself are unaffected.
+
 ## Risk register (team-level)
 
 | Risk | Owner | Mitigation |
@@ -217,7 +254,11 @@ See the rows below ("Heat on a seat post in sun", "Vibration blur", "Rain", "Bat
 | **Storage** | You | Bounded ring buffer and clip cap, free-space guard, ring cleared at ride end, short default retention. |
 | **Silent camera failure** (the rider cannot see the screen) | You | Every stop/degrade announced on watch/audio, red-to-amber dot, summary note; no silent states. |
 | **Hidden-recording perception / other people in footage** | You | Red dot always on, system indicators untouched, local-only footage, short retention, easy deletion, informational copy about local laws. |
-| **Watch dependency unknown** (reachability, latency, owner has a watch?) | You | Seams + audio fallback now; the watch spec starts with a feasibility spike (O-CAM1). |
+| **Watch dependency unknown** (reachability, latency, owner has a watch?) | You | Seams + audio fallback now; the watch spec (`watch-companion`) starts with a feasibility spike (O-CAM1). |
+| **Watch keep-alive bet unproven** (cycling workout session may not keep haptics/reachability with the wrist down on the owner's SE) | You | Spike first (`watch-companion` task 1) with a fallback ladder down to phone audio; no claim of wrist alerts before it passes. |
+| **Watch battery drain on a long ride** (older SE) | You | Measure, show watch battery before the ride, display-aware status, end the session at 5%; no battery claim before measured. |
+| **Haptic not felt or muted** (sleeve, vibration, Silent/Theater mode, Water Lock) | You | Distinct patterns tuned on the wrist, haptics test before the ride, audio escalation when the watch does not confirm, honest "cannot guarantee" copy. |
+| **Wrist cancel misread** (rider thinks a crash alert was cancelled when it was sent) | You | Reply-confirmed outcomes only ("Too late — alert is sending" shown honestly); the phone keeps its audible countdown and its own cancel. |
 | **iOS interrupts the camera when the phone locks** | You | Ride mode keeps the app foreground; on lock the camera stops cleanly, the rider is told, GPS continues via the `location` mode (O-CAM2). |
 | **Crash-countdown cancel unreachable on a rear mount** | You | Ride mode exits to full brightness and speaks the countdown; cancel on the watch (`cancelCrashCountdown`); consent copy says what is needed without a watch. |
 
@@ -226,7 +267,7 @@ See the rows below ("Heat on a seat post in sun", "Vibration blur", "Rain", "Bat
 Routing/directions, safer-route recommendations, infrastructure analysis, accounts/auth, and any
 claim that the app reliably predicts or prevents collisions. (_Update:_ rear-mounted camera
 recording, the `location` background mode, and the Apple Watch companion are now specified or
-recommended in `.kiro/specs/rear-camera/` and are no longer in this list; they remain post-MVP and
+recommended in `.kiro/specs/rear-camera/` and `.kiro/specs/watch-companion/` and are no longer in this list; they remain post-MVP and
 opt-in.) These are future; keep them out of the demo scope. Emergency contacts and
 crash alerts are a separate **post-MVP opt-in feature** (see "Crash response workstreams" above).
 
