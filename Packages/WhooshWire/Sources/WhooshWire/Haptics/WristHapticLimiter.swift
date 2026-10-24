@@ -26,6 +26,11 @@ public struct WristHapticLimiter: Sendable {
     public var disabled: Bool
     /// Whether the latest phone status reports demo mode active.
     public var demoActive: Bool
+    /// When true, rear cues skip their per-kind cooldown and storm backoff and
+    /// keep only the minimum gap, so a car closing in dings faster. The phone
+    /// still paces real-ride rear cues (3 s); only its urgent proximity path
+    /// sends them faster.
+    public var rapidRearCues = false
 
     // In-progress pattern state (for preemption and minimum gap).
     private var lastPlayMs: Int?
@@ -125,7 +130,8 @@ public struct WristHapticLimiter: Sendable {
                 return Outcome(result: .suppressedRate)
             }
             // Per-kind cooldown (rear cue uses storm backoff).
-            if let until = cooldownUntil[alert.kind], nowMs < until {
+            let skipCooldown = rapidRearCues && alert.kind == .rearVehicleCaution
+            if !skipCooldown, let until = cooldownUntil[alert.kind], nowMs < until {
                 return Outcome(result: .suppressedRate)
             }
         }

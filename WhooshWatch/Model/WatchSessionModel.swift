@@ -94,6 +94,8 @@ public final class WatchSessionModel {
         self.reducer = WatchRideReducer(tuning: tuning)
         self.commandTracker = WatchCommandTracker(tuning: tuning)
         self.limiter = WristHapticLimiter(tuning: tuning)
+        // A closing car dings faster (proximity cues from the phone).
+        self.limiter.rapidRearCues = true
         self.noticeLog = WatchNoticeLog(capacity: tuning.noticeLogSize)
         self.view = WatchRideReducer(tuning: tuning).viewModel(nowMs: 0)
     }

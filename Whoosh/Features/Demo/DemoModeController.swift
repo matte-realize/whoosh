@@ -286,7 +286,12 @@ final class DemoModeController {
     /// flags fires the rear-vehicle cue through the same fan-out as a ride
     /// (phone + watch).
     func makeVideoFeed() -> DemoVideoFeed {
-        DemoVideoFeed { [weak self] in self?.fireRearAlertOnce() }
+        DemoVideoFeed { [weak self] in
+            guard let self, self.isEnabled else { return }
+            // Each proximity ding skips the 3 s cooldown so the cue speeds up
+            // as the flagged car closes in.
+            self.alertManager.fireUrgent(.cautionRearVehicle)
+        }
     }
 
     func sendTestAlertsToWatch() {

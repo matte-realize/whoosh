@@ -50,6 +50,14 @@ protocol AlertManager {
     /// Fire an alert of the given kind. Must return immediately and never block
     /// or interrupt recording.
     func fire(_ kind: AlertKind)
+
+    /// Fire skipping the per-kind cooldown, for repeated proximity cues as a
+    /// car closes in. Defaults to `fire(_:)`.
+    func fireUrgent(_ kind: AlertKind)
+}
+
+extension AlertManager {
+    func fireUrgent(_ kind: AlertKind) { fire(kind) }
 }
 
 /// The MVP's inert `AlertManager`: accepts `fire(_:)` and does nothing.

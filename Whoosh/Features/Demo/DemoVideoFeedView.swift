@@ -54,6 +54,10 @@ struct DemoVideoFeedView: View {
             Text(statusText)
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(.white)
+            ProgressView(value: feed.proximity)
+                .tint(feed.proximity > 0.6 ? Theme.Palette.alert : Theme.Palette.amber)
+                .animation(.easeOut(duration: 0.2), value: feed.proximity)
+                .accessibilityLabel("Approaching car closeness")
             Text("Recorded clip played through the live detector. Experimental cue — cannot guarantee detection or delivery.")
                 .font(.system(size: 11))
                 .foregroundStyle(.white.opacity(0.7))
@@ -68,7 +72,7 @@ struct DemoVideoFeedView: View {
         case .ready:
             return feed.alertCount == 0
                 ? "Watching for vehicles behind you"
-                : "Vehicle alerts sent: \(feed.alertCount)"
+                : feed.proximity > 0 ? "Car closing in · dings: \(feed.alertCount)" : "Dings sent: \(feed.alertCount)"
         }
     }
 }

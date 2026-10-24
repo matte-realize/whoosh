@@ -43,6 +43,14 @@ final class FanOutAlertManager: AlertManager {
     }
 
     func fire(_ kind: AlertKind) {
+        deliver(kind, ignoringCooldown: false)
+    }
+
+    func fireUrgent(_ kind: AlertKind) {
+        deliver(kind, ignoringCooldown: true)
+    }
+
+    private func deliver(_ kind: AlertKind, ignoringCooldown: Bool) {
         let now = clock.now()
         let state = appState()
 
@@ -53,7 +61,7 @@ final class FanOutAlertManager: AlertManager {
             now: now,
             availableChannels: available,
             appState: state,
-            lastDeliveredByKind: lastDeliveredByKind
+            lastDeliveredByKind: ignoringCooldown ? [:] : lastDeliveredByKind
         )
         let channels = AlertRoutingPolicy.route(kind, context: context, tuning: tuning)
         guard !channels.isEmpty else { return }
