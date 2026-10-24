@@ -474,6 +474,9 @@ warnings without reaching the phone.
    hold" flag), and cancel crash countdown. Start is **not** a remote command in v1 (the ride is
    started and framed on the phone). The ride engine's existing public intents SHALL be reused;
    the engine SHALL NOT be modified.
+   _Amended by watch-companion A1 (October 24, 2026): `requestStart` is now allowed as a remote
+   command, but only while the phone is in an armed, rider-initiated ready state (watch-companion
+   Requirement 9); the ride engine is still not modified._
 3. The system SHALL define an **`AlertSink`** protocol (one output channel: watch haptic, phone
    speaker/headphone audio, phone haptic, local notification) and a **fan-out `AlertManager`**
    implementation that routes each `AlertKind` to the available sinks via a pure, unit-tested

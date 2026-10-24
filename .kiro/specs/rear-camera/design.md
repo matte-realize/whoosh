@@ -255,10 +255,10 @@ Application Support/Whoosh/Camera/        (isExcludedFromBackup; protection: aft
 | `SegmentInfo` | id, rideId, index, start (Date), end (Date), bytes, profile name, hasAudio, isPinned, hasGapBefore | in-memory index rebuilt from files on launch |
 | `ClipRecord` | id, rideId, reasons (set of `manual`, `detection`, `crash`, `demo`), createdAt, start, end, inOffset, outOffset, duration, bytes, thumbnail path, hasAudio, state (`pending`/`saved`/`endedEarly`), hasGap, eventRef (nearMissId or crashEventId), expiresAt | SwiftData `ClipRecordEntity` behind `ClipRepository` |
 | `NearMissEvent` | id, rideId, occurredAt, latitude, longitude (nearest accepted route point, may be absent), kind, confidence, positionHint, localClipId? | SwiftData via the same repository family; clip id is **local only** |
-| `RideStatus` | rideState, activeDurationAnchor (+ anchor date), distanceMeters, speed?, cameraState, cameraStopReason?, storageStatus, thermalLevel, phoneBatteryPercent, isCharging, banner, crashCountdownDeadline?, lastClipSavedAt?, lastDegradationNote? | value snapshot, never persisted |
-| `RideRemoteCommand` | pause · resume · saveClip · stop(confirmedByHold) · cancelCrashCountdown | transient |
-| `ScreenMode` | normal · graceCountdown(until) · dimLocked · unlockedTemporarily(until) · suspended | in-memory (+ persisted brightness guard) |
-| `AlertKind` (additions) | existing `cautionRearVehicle`; new `cameraInterrupted`, `cameraResumed`, `cameraStopped(reason)`, `clipSaved`, `clipNotSaved(reason)`, `phoneBatteryLow` | enum, `Sendable` |
+| `RideStatus` | rideState, activeDurationAnchor (+ anchor date), distanceMeters, speed?, cameraState, cameraStopReason?, storageStatus, thermalLevel, phoneBatteryPercent, isCharging, banner, crashCountdownDeadline?, lastClipSavedAt?, lastDegradationNote? | value snapshot, never persisted. _Amended by watch-companion A3 (October 24, 2026): additive fields `rideId`, `epoch`, `seq`, `start` readiness, `demo`, crash phase + contact count, and clip count are added for the watch wire mapping; all additive, the local status is unchanged._ |
+| `RideRemoteCommand` | pause · resume · saveClip · stop(confirmedByHold) · cancelCrashCountdown | transient. _Amended by watch-companion A2 (October 24, 2026): add `requestStart` (armed-gated, Requirement 9) and the envelope-level `commandId`, `rideId`, `holdConfirmed`, `crashEventId`._ |
+| `ScreenMode` | normal · graceCountdown(until) · dimLocked · unlockedTemporarily(until) · suspended | in-memory (+ persisted brightness guard). _Amended by watch-companion A6 (October 24, 2026): the `ScreenModeStateMachine` gains rows for `armed` (idle timer off, optional dim) and `startedFromWatch` (skip or shorten the mount grace)._ |
+| `AlertKind` (additions) | existing `cautionRearVehicle`; new `cameraInterrupted`, `cameraResumed`, `cameraStopped(reason)`, `clipSaved`, `clipNotSaved(reason)`, `phoneBatteryLow` | enum, `Sendable`. _Amended by watch-companion A5 (October 24, 2026): add `watchDisconnected` and `watchReconnected` (routed to phone channels only)._ |
 
 ---
 
@@ -276,7 +276,7 @@ Application Support/Whoosh/Camera/        (isExcludedFromBackup; protection: aft
 | `ClipExporting` | `export(clip)` async → success/failure with plain reason | `PhotosClipExporter`, fake |
 | `ScreenController` | `brightness`, `setBrightness`, `setIdleTimerDisabled`, `onSystemBrightnessChange` | `UIKitScreenController`, `FakeScreenController` |
 | `RideRemoteControlling` | `publish(RideStatus)`, `onCommand(RideRemoteCommand, reply)`; reachability callback | `NoopRideRemote`, `FakeRideRemote`; WatchConnectivity impl (watch spec) |
-| `AlertSink` | `channel`, `isAvailable`, `deliver(AlertKind, context)` non-blocking | `PhoneAudioAlertSink`, `LocalNotificationAlertSink`, watch sink (watch spec), `FakeAlertSink` |
+| `AlertSink` | `channel`, `isAvailable`, `deliver(AlertKind, context)` non-blocking | `PhoneAudioAlertSink`, `LocalNotificationAlertSink`, watch sink (watch spec), `FakeAlertSink`. _Amended by watch-companion A4 (October 24, 2026): `AlertContext` gains an alert id, tier, TTL, demo flag, optional coarse confidence, and a position hint, and the sink may report an outcome through a callback so the fan-out can escalate; additive — the `AlertManager` protocol is unchanged._ |
 | `AlertManager` (existing, unchanged) | `fire(AlertKind)` | `StubAlertManager`, `FanOutAlertManager` |
 | `HazardDetector` (existing) | unchanged members; contract text updated | `NoopDetector`, `FakeHazardDetector`, Teammate B's detector |
 | `MountLevelSensing` | gravity vector stream for the level indicator | `MountLevelSensor` (Core Motion), fake |
@@ -775,6 +775,9 @@ the mapped value. Actual upload is a separate future task behind opt-in ride syn
      only in `Services/Camera/`. Remove the allowance for `Services/Detection`.
   2. New: `import Photos` / `PHPhotoLibrary` only in `Services/Camera/PhotosClipExporter.swift`.
   3. New: `import WatchConnectivity` only in `Services/Remote/`.
+     _Amended by watch-companion A7 (October 24, 2026): WatchConnectivity is confined to
+     `Whoosh/Services/Remote/WCSessionWireLink.swift` (phone) and `WhooshWatch/Services/Link/`
+     (watch) — the two named wire-link adapters — not all of `Services/Remote/`._
   4. New: `UIScreen` brightness writes and `isIdleTimerDisabled` only in `Services/Screen/` (the
      existing `ActiveRideView` call is migrated first).
   5. New: Core Motion also allowed in `Services/Camera/` (crash-response's rule keeps `Services/Crash/`).
