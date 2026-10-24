@@ -83,6 +83,12 @@ RLS is consulted. Every migration therefore states its grants in the same file a
 | `is_valid_route(jsonb)` (function) | execute | none | execute |
 | `data_sources`, `public_crash_records` | none | none | all (imports only) |
 | `public_crash_points`, `public_data_sources`, `public_street_cells` (views) | none | select | none |
+| `bike_facility_types`, `bike_facilities`, `bike_count_locations`, `bike_count_days` | none | none | all (imports only) |
+| `public_bike_facilities`, `public_bike_count_locations`, `public_bike_count_years`, `public_crash_facility_context` (views) | none | select | none |
+| `segment_distance_m(...)` (function) | none | execute | execute |
+
+`segment_distance_m` is granted to `anon` because Postgres checks function privileges inside a
+view against the caller, not the view's owner. It is arithmetic only and reads no tables.
 
 Grants only decide whether a role can touch the table. RLS still decides which rows. Do not
 fix a `42501` by granting `anon` access to a raw table.
@@ -188,6 +194,43 @@ both, with 0 (not null) for the missing side. Whoosh counts come from `public_in
 so they keep its thresholds. Both are counts, not rates: there is no data yet on how many
 riders use each block.
 
+## Bike network and bike counts (real city records)
+
+From migrations `20261024170000_bike_network_and_counts.sql` (schema),
+`20261024170100_boston_bike_network_mass_ave.sql` and `20261024170200_boston_bike_counts_mass_ave.sql`
+(data). Public, de-identified city data; nothing here is rider data.
+
+- `bike_facility_types`: the city's 17 facility codes with a label and a protection class
+  (`separated`, `partly_separated`, `painted`, `shared`, `path`). Labels come from the coded-value
+  domain of the city's ArcGIS layer `Boston_Bicycle_Network_2024`.
+- `bike_facilities`: one row per lane segment, unique on `(source, source_record_id)`, with
+  `facility_code`, `install_year`, and `route` (GeoJSON LineString, validated by `is_valid_route`).
+  Source: Existing Bike Network (2024), <https://data.boston.gov/dataset/existing-bike-network-2024>,
+  PDDL. Snapshot: the 62 Massachusetts Avenue segments (5.7 km). It lists today's lane and its
+  install year, not what was there before.
+- `bike_count_locations` and `bike_count_days`: one row per counter, and one per counter per local
+  day (both directions summed; `hours_counted`, `bikes`, `motor_vehicles`). Source: Streets Hourly
+  Bike Counts, <https://data.boston.gov/dataset/streets-hourly-bike-counts>, PDDL. Snapshot: the 4
+  Mass Ave counters, 180 full days, 2016 to June 2026.
+- Importers: `supabase/data/boston-bike-network/import.py` and
+  `supabase/data/boston-bike-counts/import.py` (stdlib Python, snapshot or `--fetch`, same
+  pattern as the crash importer).
+
+Views, `anon` only:
+
+| View | What it returns |
+| ---- | --------------- |
+| `public_bike_facilities` | Each segment with `facility_label`, `protection`, `install_year`, `route`, and source attribution |
+| `public_bike_count_years` | Per counter per year: `days_counted`, `avg_daily_bikes`, `min_daily_bikes`, `max_daily_bikes`, `avg_daily_motor_vehicles`. Full days only; averages rounded half up |
+| `public_bike_count_locations` | Each counter with `days_counted`, `first_year`, `last_year`, and its latest year's `latest_year_days`, `latest_avg_daily_bikes`, `latest_avg_daily_motor_vehicles`, `latest_bike_share`. Counters with no full day are left out |
+| `public_crash_facility_context` | Each city bike crash with the nearest lane segment within 25 m (`facility_code`, `protection`, `install_year`, `distance_m`) and `facility_status`: `in_place`, `before_install`, `install_year` (can't tell), or null (no lane) |
+
+Matching uses a flat-earth distance helper (`segment_distance_m`), no PostGIS. Ties go to the
+lower `source_record_id` after rounding to the centimeter. The website repeats the same rules in
+`web/src/lib/cityStreets.ts` for fixtures mode. On the Mass Ave snapshot, all 65 crashes match a
+segment, the farthest at 5.6 m. The view scans every segment per crash; for a citywide import,
+switch it to a materialized view refreshed after each import.
+
 ## Upload limits
 
 From migration `20261024140000_input_limits_and_public_stats.sql`. An upload that breaks any of
@@ -262,6 +305,8 @@ slow, switch it to a materialized view refreshed on a schedule.
       performance indexes: applied and tested locally (`incident_cells.test.sql`, 20 assertions).
 - [ ] Public crash data (migrations `160000`, `160100`) and `public_crash_records.test.sql`
       (36 assertions): written, not yet run. Run `supabase db reset && supabase test db`.
+- [ ] Bike network and counts (migrations `170000` to `170200`) and
+      `bike_network_and_counts.test.sql` (48 assertions): written, not yet run.
 - [ ] Apply to the real project: `supabase link`, `supabase db push --dry-run`, then push.
       Re-check isolation with two real anonymous sessions, and enable anonymous sign-ins in
       the project.

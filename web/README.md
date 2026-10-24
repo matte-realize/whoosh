@@ -121,10 +121,23 @@ Massachusetts Ave; `supabase` reads the `public_crash_points` and `public_data_s
 The attribution under the map comes from the source row. To refresh or widen the data, see
 `supabase/data/boston-vision-zero/import.py`.
 
+### Bike lanes and bike counts (real data)
+
+Two more map layers and the "What the city measures on the same street" section use the city's
+bike lane inventory (`fixtures/bike_network.json` or `public_bike_facilities`) and its bike
+counters (`fixtures/bike_counts.json` or `public_bike_count_locations` and
+`public_bike_count_years`). Each crash is matched to the nearest lane within 25 m: in supabase mode
+by the `public_crash_facility_context` view, in fixtures mode by `src/lib/cityStreets.ts` with the
+same rules. The section's before/after panel picks the longest separated-lane project with at
+least 3 years of crash data before and 1 after, compares crashes per year (leaving out the install
+year), runs an exact test of equal rates, and shows the counter on those blocks, leaving out 2020
+and 2021. Every figure shows its sample size.
+
 ## Data and privacy
 
 - The site reads only `anon` views (`public_rides`, `public_incident_cells`, `public_stats`,
-  `public_crash_points`, `public_data_sources`), never raw tables. It never signs in.
+  `public_crash_points`, `public_data_sources`, `public_bike_facilities`, `public_bike_count_*`,
+  `public_crash_facility_context`), never raw tables. It never signs in.
 - It shows only rides the rider opted in to share.
 - Routes arrive already trimmed by the app (160 m from each end by default). The site does not
   receive `user_id`, `ended_at`, `app_version`, or `created_at`.

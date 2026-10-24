@@ -47,6 +47,9 @@ Docker, or Node, so runs happen in the user's own terminal.
 | Real city crash data: database | Not done: written; SQL (36 assertions) not yet run | Migrations `20261024160000_public_crash_records.sql`, `…160100_boston_bike_crashes_mass_ave.sql`; `supabase/tests/public_crash_records.test.sql` |
 | Real city crash data: importer | **Done**, output is reproducible from the snapshot | `supabase/data/boston-vision-zero/` (65 Mass Ave bike crashes, PDDL) |
 | Real city crash data: website | Not done: type-checks and builds; not checked in a browser | `web/src/lib/cityCrashes.ts`, map layer and two insights |
+| City bike network and counts: database | Not done: written; SQL (48 assertions) not yet run | Migrations `20261024170000_bike_network_and_counts.sql`, `…170100_…`, `…170200_…`; `supabase/tests/bike_network_and_counts.test.sql` |
+| City bike network and counts: importers | **Done**, output is reproducible from the snapshots | `supabase/data/boston-bike-network/` (62 Mass Ave segments), `supabase/data/boston-bike-counts/` (4 counters, 180 days); both PDDL |
+| City bike network and counts: website | Not done: type-checks and builds; not checked in a browser | `web/src/lib/cityStreets.ts`, `web/src/components/CityDataSection.tsx`, two map layers |
 
 Next, by you: install Node 22+, then `cd web && npm install && npm run typecheck && npm run build`
 and paste any errors. After that: the hosted project, the contract sign-offs, and a rehearsal.
