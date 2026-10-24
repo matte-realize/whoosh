@@ -50,7 +50,8 @@ final class PhoneAudioAlertSink: AlertSink {
             haptics.playCaution()
             tone.playCautionTone()
         case .cameraInterrupted, .cameraStopped, .phoneBatteryLow,
-             .cameraResumed, .clipSaved, .clipNotSaved:
+             .cameraResumed, .clipSaved, .clipNotSaved,
+             .watchDisconnected, .watchReconnected:
             tone.playCautionTone()
         }
     }

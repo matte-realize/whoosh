@@ -60,6 +60,8 @@ enum AlertRoutingPolicy {
         case .clipSaved: return "clipSaved"
         case let .clipNotSaved(reason): return "clipNotSaved.\(reason.rawValue)"
         case .phoneBatteryLow: return "phoneBatteryLow"
+        case .watchDisconnected: return "watchDisconnected"
+        case .watchReconnected: return "watchReconnected"
         }
     }
 
@@ -96,6 +98,10 @@ enum AlertRoutingPolicy {
             return tuning.cameraNoticeCooldown
         case .clipSaved, .clipNotSaved:
             return 0
+        case .watchDisconnected, .watchReconnected:
+            // Link-state announcements are coalesced with the camera-notice
+            // cooldown so a flapping link does not spam the rider.
+            return tuning.cameraNoticeCooldown
         }
     }
 
@@ -107,6 +113,10 @@ enum AlertRoutingPolicy {
             return true
         case .cameraInterrupted, .cameraStopped, .phoneBatteryLow:
             return false
+        case .watchDisconnected, .watchReconnected:
+            // A single audio announcement; never fans out to the watch (it is
+            // the watch link that is being announced).
+            return true
         }
     }
 
@@ -136,6 +146,11 @@ enum AlertRoutingPolicy {
         case .clipSaved, .clipNotSaved:
             // Light confirmation: watch → audio; never a local notification.
             return [.watchHaptic, .phoneHeadphones, .phoneSpeaker]
+        case .watchDisconnected, .watchReconnected:
+            // Audio only, on every watch-channel column (the watch link itself
+            // is what is being announced, so it can never carry this). No local
+            // notification: it is a transient spoken notice.
+            return [.phoneHeadphones, .phoneSpeaker]
         }
     }
 }

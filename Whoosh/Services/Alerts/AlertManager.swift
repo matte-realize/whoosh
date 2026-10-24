@@ -22,6 +22,14 @@ enum AlertKind: Equatable, Sendable {
     case clipNotSaved(ClipNotSavedReason)
     /// The phone battery is low (camera may stop so GPS can finish the ride).
     case phoneBatteryLow
+    // Watch-companion additions (watch-companion spec task 9, design "Fan-out,
+    // routing, and escalation"; Requirement 13). These route to **phone audio
+    // only** — they announce the watch link, so the watch itself cannot carry
+    // them.
+    /// The watch link was lost during a ride (announced on phone audio).
+    case watchDisconnected
+    /// The watch link came back during a ride (announced on phone audio).
+    case watchReconnected
 }
 
 /// Abstraction for haptic/audio safety alerts.
