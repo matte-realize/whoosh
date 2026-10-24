@@ -4,8 +4,7 @@ Small, ordered, verifiable tasks. **No code exists for this feature yet and none
 the owner approves this spec** (`requirements.md`, `design.md`, this file) **and the feasibility spike
 (task 1) returns a go decision.**
 
-Spec status: **DRAFT — awaiting owner approval** (October 24, 2026). Open decisions O-W1 … O-W11 are in
-`design.md` ("Decisions"), each with a recommendation.
+Spec status: **APPROVED** by the iOS owner (October 24, 2026) with the recommended answers to O-W1–O-W11 (`design.md`, "Owner resolution"). Owner's watch: Apple Watch SE (2nd generation).
 
 This plan is separate from the ride-recording MVP plan (`../ride-recording-mvp/tasks.md`), the
 crash-response plan (`../crash-response/tasks.md`), and the rear-camera plan
@@ -73,7 +72,7 @@ unaffected (Never block a ride).
 
 ## Phase 0 — Gate and feasibility
 
-- [ ] 0. `[Owner]` `[DEMO]` Review and approve the spec; resolve open decisions; identify the watch
+- [x] 0. `[Owner]` `[DEMO]` Review and approve the spec; resolve open decisions; identify the watch
   - Read `requirements.md`, `design.md`, and this plan. Decide **O-W1 … O-W11** or accept the recommended
     defaults, and record answers in `design.md` "Owner resolution".
   - **Identify the Apple Watch SE** (Watch app → General → About, or Apple Support "Identify your Apple

@@ -1,6 +1,6 @@
 # Design — Whoosh Apple Watch Companion
 
-**Status: DRAFT — awaiting owner approval (October 24, 2026).** This document contains **no source
+**Status: APPROVED by the iOS owner (October 24, 2026)** with the recommended answers to O-W1–O-W11 (`design.md`, "Owner resolution"). Owner's watch: Apple Watch SE (2nd generation). This document contains **no source
 code** by design: the owner requires requirements, design, and tasks to be reviewed before any
 implementation. Types, protocols, and state machines are described in tables and diagrams; code is
 written later, task by task, test-first (`tasks.md`), and only after the feasibility spike (task 1)
@@ -909,7 +909,13 @@ job**; the named task applies each edit after owner approval.
 | D-W20 | Confirmation levels | Stop hold 1.0 s; start hold 0.8 s; others tap; cancel single tap ≥ 80 pt | Parity with the phone; rain tolerance | **OPEN O-W11** |
 | D-W21 | Spike first | No production watch code before a go decision | The central bet is unmeasured | Proposed |
 
-### Open decisions for the owner (all unresolved; recommendations)
+### Owner resolution (October 24, 2026)
+
+The iOS owner approved this spec and accepted every recommendation below (O-W1–O-W11) as written;
+this note is binding. O-W1: the owner's watch is an Apple Watch SE (2nd generation), which runs
+current watchOS; the app still targets watchOS 10.0 so older team watches work.
+
+### Open decisions for the owner (now resolved; recommendations accepted)
 
 | # | Question | Recommendation | Affects |
 | - | -------- | -------------- | ------- |

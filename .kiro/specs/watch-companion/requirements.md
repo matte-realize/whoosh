@@ -1,6 +1,6 @@
 # Requirements — Whoosh Apple Watch Companion
 
-**Status: DRAFT — awaiting owner approval (October 24, 2026).** No code may be written until the
+**Status: APPROVED by the iOS owner (October 24, 2026)** with the recommended answers to O-W1–O-W11 (`design.md`, "Owner resolution"). Owner's watch: Apple Watch SE (2nd generation). No code may be written until the
 iOS owner approves `requirements.md`, `design.md`, and `tasks.md`, and the feasibility spike
 (`tasks.md` task 1) has produced a go decision. This spec contains **no Swift code** by design.
 Open decisions are **O-W1 … O-W11** (`design.md`, "Decisions"), each with a recommendation.
