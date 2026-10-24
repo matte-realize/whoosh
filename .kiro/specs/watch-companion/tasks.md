@@ -158,6 +158,14 @@ unaffected (Never block a ride).
   - _Requirements:_ 2.1–2.8
   - _Depends on:_ 0, 1 (background modes), 2
   - _Parallel:_ Group P0b (unblocks everything that touches targets)
+  - _Pending task 1 spike:_ the project setup landed ahead of the feasibility spike. O-W2 (cycling
+    `HKWorkoutSession` keep-alive) is the owner-approved path, so the watch target declares HealthKit +
+    the **Workout processing** background mode and the write-only workout usage strings now. The **Audio**
+    background mode, the watch Time-Sensitive notification permission, and any HealthKit capability on the
+    iOS target are intentionally NOT added yet — they are gated on the spike (T14 for background haptics /
+    Audio mode; T10 for the iOS `startWatchApp` capability) and on task 21 (watch crash-cancel
+    notification). Revisit this target's capabilities once task 1 records its go decision and the minimum
+    background modes in `spike-results.md`.
 
 ## Phase 1 — Pure core (Foundation only, test-first)
 

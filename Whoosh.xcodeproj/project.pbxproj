@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0D8CDB10DC1DAC6F88BE3AA0 /* WhooshWire in Frameworks */ = {isa = PBXBuildFile; productRef = 6088600822A3B7F4EA075369 /* WhooshWire */; };
+		5507B12F229B37A0650730C1 /* WhooshWire in Frameworks */ = {isa = PBXBuildFile; productRef = 8AEC97CD07B77142F1ED7A79 /* WhooshWire */; };
+		860F1005D6F49972055A2BDD /* WhooshWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 22E052C78F6925301E622835 /* WhooshWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		831B4826D373BA6EE949DAB2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -14,11 +20,34 @@
 			remoteGlobalIDString = 36CA87AA39F4DA21168149E4;
 			remoteInfo = Whoosh;
 		};
+		8A3559AC33199D463D8F2315 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0609F80DAA31322635424507 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = ABD0B02D3AF224685924F670;
+			remoteInfo = WhooshWatch;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E5335A211ED46EBA9ED1386B /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				860F1005D6F49972055A2BDD /* WhooshWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1ED3E3C78DD70D553B209950 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
+		22E052C78F6925301E622835 /* WhooshWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhooshWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		290A0FAE07F4F96B8B6ECC13 /* Whoosh.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Whoosh.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8B64F0C7FBB8C7F3D4CB27A6 /* WhooshWire */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WhooshWire; path = Packages/WhooshWire; sourceTree = SOURCE_ROOT; };
 		F9E699B0BB11436716774F23 /* WhooshTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WhooshTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -26,15 +55,22 @@
 		F53B401EC804049925172FD7 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Models/.gitkeep,
 				Services/.gitkeep,
-				Support/.gitkeep,
 			);
 			target = 36CA87AA39F4DA21168149E4 /* Whoosh */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		5C90BE33CFB06F74E990D792 /* WhooshWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = WhooshWatch;
+			sourceTree = "<group>";
+		};
 		A2A498788EB34A9FD1520B7F /* WhooshTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			explicitFileTypes = {
@@ -58,13 +94,34 @@
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		4053C86F9B7DA579FB8D12F9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0D8CDB10DC1DAC6F88BE3AA0 /* WhooshWire in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7607F80F79DDC09D22A3971 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5507B12F229B37A0650730C1 /* WhooshWire in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
 		1BA0178FD48C01D4D85C449E = {
 			isa = PBXGroup;
 			children = (
 				2866BEDCF897DBE8C13390AE /* Config */,
+				5FF98E5A4804080F581F2C1B /* Packages */,
 				CEC63E9F48AE9CA24B59D85B /* Whoosh */,
 				A2A498788EB34A9FD1520B7F /* WhooshTests */,
+				5C90BE33CFB06F74E990D792 /* WhooshWatch */,
 				FD3BC061DA40886FE5E9B313 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -77,11 +134,20 @@
 			path = Config;
 			sourceTree = "<group>";
 		};
+		5FF98E5A4804080F581F2C1B /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				8B64F0C7FBB8C7F3D4CB27A6 /* WhooshWire */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
 		FD3BC061DA40886FE5E9B313 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				290A0FAE07F4F96B8B6ECC13 /* Whoosh.app */,
 				F9E699B0BB11436716774F23 /* WhooshTests.xctest */,
+				22E052C78F6925301E622835 /* WhooshWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,16 +161,20 @@
 			buildPhases = (
 				1EAE73F6B80D23D3F4CFBFCF /* Sources */,
 				5BBF5F0DA5C29766BD09E366 /* Resources */,
+				4053C86F9B7DA579FB8D12F9 /* Frameworks */,
+				E5335A211ED46EBA9ED1386B /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F71AF8D6D6451153845E2937 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				CEC63E9F48AE9CA24B59D85B /* Whoosh */,
 			);
 			name = Whoosh;
 			packageProductDependencies = (
+				6088600822A3B7F4EA075369 /* WhooshWire */,
 			);
 			productName = Whoosh;
 			productReference = 290A0FAE07F4F96B8B6ECC13 /* Whoosh.app */;
@@ -132,6 +202,29 @@
 			productReference = F9E699B0BB11436716774F23 /* WhooshTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		ABD0B02D3AF224685924F670 /* WhooshWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D82EFE09C01A81653C7FEACF /* Build configuration list for PBXNativeTarget "WhooshWatch" */;
+			buildPhases = (
+				6ACD819D351D962E7C8038A0 /* Sources */,
+				C17638C7A1F8689E70F1CCC1 /* Resources */,
+				C7607F80F79DDC09D22A3971 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				5C90BE33CFB06F74E990D792 /* WhooshWatch */,
+			);
+			name = WhooshWatch;
+			packageProductDependencies = (
+				8AEC97CD07B77142F1ED7A79 /* WhooshWire */,
+			);
+			productName = WhooshWatch;
+			productReference = 22E052C78F6925301E622835 /* WhooshWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -142,6 +235,10 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					36CA87AA39F4DA21168149E4 = {
+						DevelopmentTeam = Z87CXCTTK6;
+						ProvisioningStyle = Automatic;
+					};
+					ABD0B02D3AF224685924F670 = {
 						DevelopmentTeam = Z87CXCTTK6;
 						ProvisioningStyle = Automatic;
 					};
@@ -156,12 +253,16 @@
 			);
 			mainGroup = 1BA0178FD48C01D4D85C449E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7C07F6C587760CB675D14527 /* XCLocalSwiftPackageReference "Packages/WhooshWire" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FD3BC061DA40886FE5E9B313 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				36CA87AA39F4DA21168149E4 /* Whoosh */,
+				ABD0B02D3AF224685924F670 /* WhooshWatch */,
 				66245B69BC7DFC9623F878D1 /* WhooshTests */,
 			);
 		};
@@ -169,6 +270,13 @@
 
 /* Begin PBXResourcesBuildPhase section */
 		5BBF5F0DA5C29766BD09E366 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C17638C7A1F8689E70F1CCC1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -199,9 +307,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6ACD819D351D962E7C8038A0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		F71AF8D6D6451153845E2937 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = ABD0B02D3AF224685924F670 /* WhooshWatch */;
+			targetProxy = 8A3559AC33199D463D8F2315 /* PBXContainerItemProxy */;
+		};
 		FF7900E94639F810CBE1B988 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 36CA87AA39F4DA21168149E4 /* Whoosh */;
@@ -267,12 +387,12 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
@@ -319,6 +439,29 @@
 			};
 			name = Release;
 		};
+		36A9390DB1E3D72D7785258B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = WhooshWatch/WhooshWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Z87CXCTTK6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Whoosh;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Whoosh uses a cycling workout so haptic alerts keep working with your wrist down, and can save your ride to Apple Health when you choose.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Whoosh uses a cycling workout so haptic alerts keep working with your wrist down, and can save your ride to Apple Health when you choose.";
+				INFOPLIST_KEY_UIBackgroundModes = "workout-processing";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.whoosh.app;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.whoosh.app.watchkitapp;
+				PRODUCT_NAME = Whoosh;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
 		487F3B431E91AEBBF0824EA1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -333,6 +476,29 @@
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Whoosh.app/Whoosh";
+			};
+			name = Release;
+		};
+		881297B540EBFDE86EAEB39C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = WhooshWatch/WhooshWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Z87CXCTTK6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Whoosh;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Whoosh uses a cycling workout so haptic alerts keep working with your wrist down, and can save your ride to Apple Health when you choose.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Whoosh uses a cycling workout so haptic alerts keep working with your wrist down, and can save your ride to Apple Health when you choose.";
+				INFOPLIST_KEY_UIBackgroundModes = "workout-processing";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.whoosh.app;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.whoosh.app.watchkitapp;
+				PRODUCT_NAME = Whoosh;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
@@ -412,12 +578,12 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
@@ -442,6 +608,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		D82EFE09C01A81653C7FEACF /* Build configuration list for PBXNativeTarget "WhooshWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				36A9390DB1E3D72D7785258B /* Debug */,
+				881297B540EBFDE86EAEB39C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		F34CAB763646815C98F6D2E1 /* Build configuration list for PBXNativeTarget "Whoosh" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -452,6 +627,24 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		7C07F6C587760CB675D14527 /* XCLocalSwiftPackageReference "Packages/WhooshWire" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/WhooshWire;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6088600822A3B7F4EA075369 /* WhooshWire */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WhooshWire;
+		};
+		8AEC97CD07B77142F1ED7A79 /* WhooshWire */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WhooshWire;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0609F80DAA31322635424507 /* Project object */;
 }

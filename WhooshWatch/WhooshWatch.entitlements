@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- HealthKit for the cycling HKWorkoutSession keep-alive (watch-companion
+	     Req 4, O-W2). Write-only workout sharing; the app reads no Health data
+	     and uploads nothing. -->
+	<key>com.apple.developer.healthkit</key>
+	<true/>
+</dict>
+</plist>
