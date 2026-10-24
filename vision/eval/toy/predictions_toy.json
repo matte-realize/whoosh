@@ -1,0 +1,9 @@
+[
+  {"clip_id": "clip_0001", "t_s": 9.0,   "kind": "vehicle", "confidence": 0.90, "position_hint": "left"},
+  {"clip_id": "clip_0001", "t_s": 41.5,  "kind": "vehicle", "confidence": 0.80, "position_hint": "center"},
+  {"clip_id": "clip_0002", "t_s": 20.0,  "kind": "vehicle", "confidence": 0.70, "position_hint": "right"},
+  {"clip_id": "clip_0002", "t_s": 21.0,  "kind": "vehicle", "confidence": 0.60, "position_hint": "right"},
+  {"clip_id": "clip_0002", "t_s": 90.0,  "kind": "vehicle", "confidence": 0.50, "position_hint": "left"},
+  {"clip_id": "clip_0003", "t_s": 29.5,  "kind": "vehicle", "confidence": 0.85, "position_hint": "left"},
+  {"clip_id": "clip_0003", "t_s": 100.0, "kind": "vehicle", "confidence": 0.40, "position_hint": null}
+]
