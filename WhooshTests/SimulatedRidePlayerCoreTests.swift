@@ -6,6 +6,15 @@ import Testing
 /// math (demo-mode task 1, Requirements 5.2/5.3/5.8). Pure and Foundation-only:
 /// no `Clock`, no device.
 struct SimulatedRidePlayerCoreTests {
+    /// A fixed 10 s-spaced script, so the timing tests check the player's math
+    /// rather than the shape of the bundled loop (which may be retuned).
+    private static let tenSecondScript = DemoRideScript(
+        name: "Ten-second fixture",
+        points: stride(from: 0.0, through: 60, by: 10).map {
+            ScriptedRoutePoint(latitude: 42.35, longitude: -71.09, offsetSeconds: $0, speedMetersPerSecond: 5, horizontalAccuracyMeters: 5)
+        }
+    )
+
     // MARK: Script shape (Req 5.2)
 
     @Test func bundledLoopHasMonotonicOffsets() {
@@ -44,7 +53,7 @@ struct SimulatedRidePlayerCoreTests {
     // MARK: Due-point selection at 1× (Req 5.3/5.8)
 
     @Test func duePointsAtOneXReturnsPointsUpToElapsed() {
-        let script = DemoRideScript.charlesRiverLoop
+        let script = Self.tenSecondScript
         // At 25 s elapsed (1×), points at offsets 0,10,20 are due (30 is not).
         let due = SimulatedRidePlayerCore.duePoints(
             in: script, speedFactor: 1, elapsedPlayback: 25
@@ -82,7 +91,7 @@ struct SimulatedRidePlayerCoreTests {
     }
 
     @Test func acceleratedDuePointsMatchScaledElapsed() {
-        let script = DemoRideScript.charlesRiverLoop
+        let script = Self.tenSecondScript
         // 3 s of playback at 10× == 30 s scripted: offsets 0,10,20,30 due.
         let due = SimulatedRidePlayerCore.duePoints(
             in: script, speedFactor: 10, elapsedPlayback: 3
@@ -107,7 +116,7 @@ struct SimulatedRidePlayerCoreTests {
     }
 
     @Test func pendingPointsAreThoseNotYetDue() {
-        let script = DemoRideScript.charlesRiverLoop
+        let script = Self.tenSecondScript
         let pending = SimulatedRidePlayerCore.pendingPoints(
             in: script, speedFactor: 1, elapsedPlayback: 25
         )

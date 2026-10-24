@@ -90,7 +90,13 @@ extension DemoRideScript {
             ScriptedRoutePoint(latitude: 42.356190, longitude: -71.085220, offsetSeconds: 56, speedMetersPerSecond: 1.0, horizontalAccuracyMeters: 8),
             // Pause segment: stopped at a signalled crossing (offsets 60 → 84).
             ScriptedRoutePoint(latitude: 42.356210, longitude: -71.085160, offsetSeconds: 60, speedMetersPerSecond: 0, horizontalAccuracyMeters: 9, marker: .pauseStart),
-            // ...pause interior withheld by the player...
+            // Stationary fixes a real phone keeps reporting at the light (small
+            // jitter, zero speed). The player withholds these while paused.
+            ScriptedRoutePoint(latitude: 42.356212, longitude: -71.085158, offsetSeconds: 64, speedMetersPerSecond: 0, horizontalAccuracyMeters: 10),
+            ScriptedRoutePoint(latitude: 42.356209, longitude: -71.085163, offsetSeconds: 68, speedMetersPerSecond: 0, horizontalAccuracyMeters: 10),
+            ScriptedRoutePoint(latitude: 42.356213, longitude: -71.085161, offsetSeconds: 72, speedMetersPerSecond: 0, horizontalAccuracyMeters: 9),
+            ScriptedRoutePoint(latitude: 42.356211, longitude: -71.085157, offsetSeconds: 76, speedMetersPerSecond: 0, horizontalAccuracyMeters: 9),
+            ScriptedRoutePoint(latitude: 42.356214, longitude: -71.085160, offsetSeconds: 80, speedMetersPerSecond: 0, horizontalAccuracyMeters: 9),
             // Resume riding.
             ScriptedRoutePoint(latitude: 42.356280, longitude: -71.084720, offsetSeconds: 84, speedMetersPerSecond: 3.4, horizontalAccuracyMeters: 8, marker: .pauseEnd),
             ScriptedRoutePoint(latitude: 42.356420, longitude: -71.084200, offsetSeconds: 88, speedMetersPerSecond: 4.8, horizontalAccuracyMeters: 7),
