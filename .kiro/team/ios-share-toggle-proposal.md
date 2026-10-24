@@ -3,6 +3,14 @@
 Status: PROPOSAL from Role C, October 24, 2026. Nothing in `.kiro/specs/ride-recording-mvp/` has
 been edited. If you accept it, the exact text to paste is in sections 2–4.
 
+> **Owner decision (October 24, 2026):** The iOS owner chose **one global sharing setting**
+> ("Share new rides on the Whoosh website", off by default, available only while cloud sync is
+> on, not retroactive) instead of this proposal's recommended per-ride switch. The behavior was
+> adapted into **Requirement 12.11–12.17** and the design's "Global public-sharing model". The
+> 9.2 / 12.6 user-initiated delete/unshare exception is **accepted**, and the disable-sync
+> prompt (12.16) is **in scope**. This proposal is kept for context; where it says "per ride,
+> default off", read "global setting, default off". See the note in section 8.
+
 ## 1. Why this is needed
 
 The backend already has the pieces:
@@ -127,7 +135,16 @@ site is only on a local machine for the demo, the line is still the safe wording
 
 ## 8. Decisions needed from the iOS owner
 
-1. Per-ride switch (recommended) or a global setting?
-2. Accept the 9.2 / 12.6 exception for user-initiated deletes and unshares?
-3. Is the disable-sync prompt (12.16) in scope for the hackathon, or documented as a known
-   gap? If it is a gap, say so in the app's privacy copy.
+**Resolved by the iOS owner on October 24, 2026:**
+
+1. Per-ride switch (recommended) or a global setting? → **Global setting.** The owner chose one
+   global "Share new rides on the Whoosh website" toggle (off by default, only while sync is on,
+   not retroactive) over the per-ride switch. The per-ride wording in sections 2–4 above should
+   be read as the global equivalent. Adapted into Requirement 12.11–12.17 and the design.
+2. Accept the 9.2 / 12.6 exception for user-initiated deletes and unshares? → **Yes, accepted.**
+   User-initiated deletes and unshares run at the moment the user asks, with a retryable error
+   if offline, never in the background. Requirement 9.2, 12.6, and 12.17 now say so, and
+   `privacy.md` records the same exception.
+3. Is the disable-sync prompt (12.16) in scope for the hackathon, or a documented gap? → **In
+   scope.** The prompt that fires when the user turns sync off while rides are shared is part of
+   the build (Requirement 12.16, iOS task 28f).

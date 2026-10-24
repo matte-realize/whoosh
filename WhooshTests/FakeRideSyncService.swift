@@ -14,6 +14,12 @@ import Foundation
 final class FakeRideSyncService: RideSyncService {
     struct SyncError: Error {}
 
+    /// A recorded `setSharing` call (for asserting sharing flows).
+    struct SharingCall: Equatable {
+        let id: UUID
+        let shared: Bool
+    }
+
     var isEnabled: Bool
 
     /// Ride ids passed to `upload`, in call order (duplicates included).
@@ -22,20 +28,26 @@ final class FakeRideSyncService: RideSyncService {
     private(set) var uploadedRides: [Ride] = []
     /// Ride ids passed to `deleteRemote`, in call order.
     private(set) var deletedIDs: [UUID] = []
+    /// `setSharing` calls in order.
+    private(set) var setSharingCalls: [SharingCall] = []
 
     /// Number of upcoming `upload` calls that should throw before succeeding.
     var uploadFailuresRemaining: Int
     /// Number of upcoming `deleteRemote` calls that should throw before succeeding.
     var deleteFailuresRemaining: Int
+    /// Number of upcoming `setSharing` calls that should throw before succeeding.
+    var setSharingFailuresRemaining: Int
 
     init(
         isEnabled: Bool = true,
         uploadFailuresRemaining: Int = 0,
-        deleteFailuresRemaining: Int = 0
+        deleteFailuresRemaining: Int = 0,
+        setSharingFailuresRemaining: Int = 0
     ) {
         self.isEnabled = isEnabled
         self.uploadFailuresRemaining = uploadFailuresRemaining
         self.deleteFailuresRemaining = deleteFailuresRemaining
+        self.setSharingFailuresRemaining = setSharingFailuresRemaining
     }
 
     func upload(_ ride: Ride) async throws {
@@ -53,5 +65,13 @@ final class FakeRideSyncService: RideSyncService {
             throw SyncError()
         }
         deletedIDs.append(id)
+    }
+
+    func setSharing(id: UUID, shared: Bool) async throws {
+        if setSharingFailuresRemaining > 0 {
+            setSharingFailuresRemaining -= 1
+            throw SyncError()
+        }
+        setSharingCalls.append(.init(id: id, shared: shared))
     }
 }

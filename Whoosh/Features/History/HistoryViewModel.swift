@@ -39,6 +39,10 @@ final class HistoryViewModel {
     /// Finished rides grouped into month sections, newest month first.
     private(set) var sections: [MonthSection] = []
 
+    /// Called after a ride is deleted locally, so the composition root can
+    /// request its remote deletion (Requirement 12.6). Not set in previews/tests.
+    @ObservationIgnored var onDidDelete: ((Ride) -> Void)?
+
     init(repository: RideRepository, calendar: Calendar = .current) {
         self.repository = repository
         self.calendar = calendar
@@ -62,6 +66,7 @@ final class HistoryViewModel {
     func delete(_ ride: Ride) {
         try? repository.delete(id: ride.id)
         load()
+        onDidDelete?(ride)
     }
 
     // MARK: - Grouping (pure)

@@ -57,19 +57,32 @@ final class SyncCoordinator {
 
     // MARK: Events
 
-    /// Call after a finished ride has been saved locally. Uploads it (when sync
-    /// is enabled) and records the outcome as the ride's `syncStatus`.
-    func rideDidFinish(_ ride: Ride) async {
+    /// Call after a finished ride has been saved locally. Stamps the ride's
+    /// public-sharing state from the *current* global flag (not retroactive,
+    /// Requirement 12.13), persists that stamp, then uploads it (when sync is
+    /// enabled) and records the outcome as the ride's `syncStatus`.
+    func rideDidFinish(_ ride: Ride, shareNewRidesPublicly: Bool = false) async {
         guard service.isEnabled else { return }
         // Demo rides are never uploaded (demo-mode spec Req 9.3); their local
         // sync status is left untouched.
         guard !ride.isDemo else { return }
-        await upload(ride)
+        var stamped = ride
+        if stamped.sharePublicly != shareNewRidesPublicly {
+            stamped.sharePublicly = shareNewRidesPublicly
+            try? repository.save(stamped)
+        }
+        await upload(stamped)
     }
 
     /// Call after a ride has been deleted locally. If it had been synced (or was
     /// pending), records a tombstone and requests remote deletion, keeping the
     /// tombstone if the delete fails so it is retried later.
+    ///
+    /// Per the privacy network invariant this runs only through a configured,
+    /// enabled service. The user-initiated remote-delete exception while
+    /// *background* sync is paused (Requirement 9.2 / 12.6) is expressed by the
+    /// service reporting `isEnabled == true` whenever a remote row could exist
+    /// (wired in 28f); a truly disabled/unconfigured service makes zero calls.
     func rideWasDeleted(_ ride: Ride) async {
         guard service.isEnabled else { return }
         // A ride that never left the device has no remote row to delete.
@@ -88,6 +101,22 @@ final class SyncCoordinator {
         }
         for id in pendingDeletes.allPending() {
             await drainDelete(id)
+        }
+    }
+
+    /// User turned global sharing OFF and chose to also unshare already-shared
+    /// rides (Requirement 12.14). For each ride, flips `sharePublicly` to false
+    /// locally and asks the backend to unshare it. A failure leaves the local
+    /// flag cleared (so the UI reflects the user's intent) and the ride marked
+    /// for a later retry via `retryPending()`.
+    func unshareRides(_ rides: [Ride]) async {
+        guard service.isEnabled else { return }
+        for ride in rides where ride.sharePublicly {
+            var updated = ride
+            updated.sharePublicly = false
+            try? repository.save(updated)
+            guard ride.syncStatus != .localOnly else { continue }
+            await setRemoteSharing(id: ride.id, shared: false)
         }
     }
 
@@ -112,8 +141,21 @@ final class SyncCoordinator {
 
     // MARK: Helpers
 
+    /// Requests a remote sharing update, swallowing a failure (the local flag is
+    /// already updated; a retry can re-apply it). Keeps sync failures from
+    /// affecting local data.
+    private func setRemoteSharing(id: UUID, shared: Bool) async {
+        try? await service.setSharing(id: id, shared: shared)
+    }
+
     /// Uploads a ride (privacy-trimmed) and persists the resulting status.
     /// Never uploads a ride already `.synced`.
+    ///
+    /// A `RideSyncTerminalOutcome` thrown by the service records a terminal
+    /// status and is never retried: `.failed` (a limit pre-check or a `23514`
+    /// check violation) → `.failed`; `.localOnly` (fewer than 2 points after
+    /// trimming, or a demo ride) → `.localOnly`. Any other error is retryable
+    /// → `.pending`.
     private func upload(_ ride: Ride) async {
         guard ride.syncStatus != .synced else { return }
         var trimmed = ride
@@ -121,6 +163,10 @@ final class SyncCoordinator {
         do {
             try await service.upload(trimmed)
             persist(ride, status: .synced)
+        } catch RideSyncTerminalOutcome.failed {
+            persist(ride, status: .failed)
+        } catch RideSyncTerminalOutcome.localOnly {
+            persist(ride, status: .localOnly)
         } catch {
             persist(ride, status: .pending)
         }

@@ -25,9 +25,9 @@ Conventions:
     the tech steering: `App/`, `Features/`, `Services/`, `Models/`, `Support/`, `WhooshTests/`.
   - Add Info.plist usage-description strings: `NSLocationWhenInUseUsageDescription` (active
     now) and `NSCameraUsageDescription` (groundwork, unused by MVP).
-  - Add `Secrets.example.xcconfig` (placeholder `SUPABASE_URL`, `SUPABASE_ANON_KEY`) and wire
-    a gitignored `Secrets.xcconfig` into the build settings. The app must build with the
-    placeholders.
+  - Add `Secrets.example.xcconfig` (placeholder `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` —
+    renamed from `SUPABASE_ANON_KEY` by task 28b) and wire a gitignored `Secrets.xcconfig` into
+    the build settings. The app must build with the placeholders.
   - Add a Swift Testing unit test target with one trivial `@Test` to prove the pipeline runs.
   - Set the signing team from the Apple Developer account so the app installs on the iPhone 14.
   - _Verify:_ app builds and launches to a placeholder home screen on an iOS 17+ simulator and
@@ -480,8 +480,11 @@ Conventions:
 
 ## Stretch: opt-in Supabase sync (never blocks the demo)
 
-Start only after task 23 is green and Role C has marked the schema "Agreed" in
-`.kiro/team/supabase-contract.md`.
+Start only after task 23 is green. The schema is now **Agreed v1.0** (October 24, 2026) in
+`.kiro/team/supabase-contract.md`, so tasks 26–27 are done and task 28 (28a–28g below) may
+proceed. Public sharing uses one global setting (owner decision, October 24, 2026). Role C's
+remaining items in the contract are deployment prerequisites for the on-device verification in
+28g, not schema blockers.
 
 - [x] 26. Sync seam and privacy trimming (test-first)
   - Define `SyncStatus`, `RideSyncService`, and `NoopRideSyncService`; add `syncStatus` and
@@ -539,20 +542,213 @@ Start only after task 23 is green and Role C has marked the schema "Agreed" in
     how task 28 will wire it (`rideDidFinish` after save, `rideWasDeleted` from the delete path,
     `allRidesWereDeleted` from Settings "Delete all rides", `retryPending` on foreground).
 
-- [ ] 28. Supabase implementation and settings toggle enablement
-  - Add `supabase-swift` via SPM pinned to an exact version. Implement
-    `SupabaseRideSyncService` (anonymous sign-in, upsert into `rides`, delete by id) against
-    the agreed contract. Network work runs off the main actor.
-  - Enable the previously-disabled Settings sync rows: flip "Sync rides to Whoosh map" from
-    "Coming soon" to a working toggle (off by default) with the plain copy on what's uploaded
-    and that camera video is never uploaded; activate the "Privacy zone · 0.1 mi" and
-    "Identity · Anonymous" rows. Surface sync status (icon + text) in history rows and the
-    summary, and show the "Start and end trimmed for privacy" note once a ride is synced.
-  - _Verify (device):_ with sync on, a finished ride appears in the Supabase table with a
-    trimmed route; another anonymous user can't read it (RLS); airplane mode → pending →
-    syncs after reconnect; deleting removes the remote row.
-  - _Requirements: 12.1, 12.7, 12.8, 12.9, 12.10, 6.6, 14.5_
-  - _Depends on: 14, 27_
+- [ ] 28. Supabase implementation, global sharing, and settings enablement
+
+  Task 28 is split into small, independently reviewable subtasks (28a–28g). Existing task
+  numbers 1–27 are unchanged. Start only after task 27 is green and the schema is **Agreed
+  v1.0** in `.kiro/team/supabase-contract.md` (it now is). Role C's deployment prerequisites
+  (below, and in the contract's "Open items for C") must be satisfied before the on-device /
+  hosted verification in 28g.
+
+- [x] 28a. Add `supabase-swift` via SPM (exact pin) and regenerate the project
+  - Add the `supabase-swift` package to `project.yml` under `packages:` and as a target
+    `dependencies:` entry for `Whoosh`, pinned to the **exact** version **2.55.4** (latest
+    stable, released 2026-10-13; "Exact Version" per the tech steering). Run `xcodegen
+    generate` once so the committed `Whoosh.xcodeproj` carries the package reference; synced
+    folders mean no further regeneration is needed for new Swift files.
+  - _Verify:_ the project resolves the package and builds; `import Supabase` compiles only in
+    `Services/Sync`; `scripts/privacy-check.sh` still passes (network stays in `Services/Sync`).
+  - _Requirements: 9.2, 12.7_
+  - _Depends on: 27_
+  - _Pending device check:_ `project.yml` gained a `packages: Supabase` entry
+    (`exactVersion: "2.55.4"`) and a `Whoosh` target `dependencies: - package: Supabase,
+    product: Supabase`; `xcodegen generate` was run and the regenerated `Whoosh.xcodeproj`
+    carries an `XCRemoteSwiftPackageReference` with `kind = exactVersion; version = 2.55.4`
+    (synced folders, Info.plist usage strings, signing team `Z87CXCTTK6`, and the
+    bundle-id/orientation settings are all unchanged). `xcodebuild -resolvePackageDependencies`
+    resolved Supabase 2.55.4; `build-for-testing` SUCCEEDED and `scripts/privacy-check.sh`
+    passes with `import Supabase` confined to `Services/Sync`. The on-device install is left to
+    the orchestrator.
+
+- [x] 28b. Secrets rename + Info.plist plumbing (`SUPABASE_PUBLISHABLE_KEY`)
+  - Rename `SUPABASE_ANON_KEY` → `SUPABASE_PUBLISHABLE_KEY` in `Config/Secrets.example.xcconfig`
+    (keep the `https:/$()/…` comment trick; document that the value is the publishable key
+    `sb_publishable_...`, and that the legacy `anon` JWT still works in that slot until Supabase
+    retires it). Add the two app-target build settings so the generated Info.plist exposes the
+    values at runtime: `INFOPLIST_KEY_SUPABASE_URL = $(SUPABASE_URL)` and
+    `INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY = $(SUPABASE_PUBLISHABLE_KEY)` (fall back to a custom
+    Info.plist dictionary if the custom `INFOPLIST_KEY_` keys misbehave). Only the public key
+    ships; never hard-code it in Swift; `Secrets.xcconfig` stays gitignored.
+  - _Verify:_ with placeholder secrets the app builds and the two keys appear in the built
+    Info.plist; with no `Secrets.xcconfig` the app still builds (sync just can't sign in).
+  - _Requirements: 12.7, 12.8_
+  - _Depends on: 28a_
+  - _Pending device check:_ `Config/Secrets.example.xcconfig` now documents `SUPABASE_URL` +
+    `SUPABASE_PUBLISHABLE_KEY` (publishable-key placeholder, legacy `anon` noted). The `Whoosh`
+    target gained `INFOPLIST_KEY_SUPABASE_URL = $(SUPABASE_URL)` and
+    `INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY = $(SUPABASE_PUBLISHABLE_KEY)` (present in the
+    regenerated project). `SupabaseClientProvider` reads both from the Info.plist at runtime and
+    **rejects placeholder/empty values**, so with only the committed example (or no
+    `Secrets.xcconfig`) the app builds and sync is simply unavailable — a `NoopRideSyncService`
+    is injected and no sign-in happens. `build-for-testing` SUCCEEDED. Confirming the two keys in
+    the *built* Info.plist with real secrets is left to the orchestrator (requires a filled
+    `Secrets.xcconfig`).
+
+- [x] 28c. `setSharing` on the protocol, Noop, and Fake (test-first)
+  - Add `func setSharing(id: UUID, shared: Bool) async throws` to `RideSyncService`; implement
+    it as a no-op on `NoopRideSyncService` and as a recorded call on the test
+    `FakeRideSyncService`. Add `sharePublicly: Bool` (default `false`) to the domain `Ride` and
+    to `RideRecord` (defaulted, lightweight migration), mapped both ways in the repositories
+    (protocol unchanged, as with `syncStatus`). Add `.failed` to `SyncStatus`.
+  - Unit tests: `setSharing` is recorded by the fake; new rides default `sharePublicly == false`;
+    `.failed` round-trips through persistence.
+  - _Requirements: 12.11, 12.13, 12.15, 12.22_
+  - _Depends on: 27_
+  - _Pending device check:_ code + tests written and `build-for-testing` SUCCEEDED (no
+    first-party warnings); `scripts/privacy-check.sh` passes. `RideSyncService` gained
+    `setSharing(id:shared:)` (no-op on `NoopRideSyncService`, recorded as `SharingCall`s on the
+    test `FakeRideSyncService`). `Ride` and `RideRecord` gained `sharePublicly` (defaulted
+    `false`; `RideRecord` uses a defaulted stored property for lightweight migration), mapped
+    both ways in `SwiftDataRideRepository` and flowing through `InMemoryRideRepository`
+    unchanged — the `RideRepository` protocol is untouched. `SyncStatus` gained `.failed`
+    ("Failed"). Tests live in `WhooshTests/SharingModelTests.swift` (setSharing recorded,
+    default-false, `.failed`+`sharePublicly` round-trip through both repositories). The full
+    `xcodebuild test` run is the orchestrator's.
+
+- [x] 28d. `RideUploadPolicy` — client-side thinning, limits, and row mapping (test-first)
+  - Implement a pure `RideUploadPolicy` (Metrics/Foundation-only) that runs in order: trim
+    (reuse `RoutePrivacy.trim`, 160 m each end) → thin to ≤ 10,000 points keeping first/last →
+    reject (keep `.localOnly`) if < 2 points → validate every contract limit (`distance_m ≤
+    1_000_000`, `active_duration_s ≤ 172_800` and ≤ `(endedAt − startedAt)+1 s`, `avg_speed_mps
+    ≤ 40`, `endedAt ≤ startedAt + 48 h`, `app_version ≤ 32`, coordinate ranges) → never upload
+    `isDemo` rides. On a limit violation it returns a "mark `.failed`, no request" outcome.
+  - Implement the `Ride` → `rides` row encoder: exact column names from
+    `supabase/migrations/20261024120000_rides.sql`, GeoJSON `LineString` `[lon, lat]`, SI +
+    ISO-8601, `user_id`/`created_at` omitted, explicit `share_publicly`.
+  - Unit tests: **golden-JSON** row mapping pinning column names and `[lon, lat]` order;
+    thinning to ≤ 10,000 keeping endpoints; `< 2` points → `.localOnly`; each limit violation
+    → `.failed` with no request; demo ride skipped; full set of columns present for the upsert.
+  - _Requirements: 12.5, 12.18, 12.19, 12.20, 12.21_
+  - _Depends on: 26, 28c_
+  - _Pending device check:_ code + tests written and `build-for-testing` SUCCEEDED (no
+    first-party warnings); privacy-check passes. `Metrics/RideUploadPolicy.swift` is a pure enum
+    with an `Outcome` (`.skipLocalOnly` / `.markFailed` / `.upload(RideUploadRow)`) that runs
+    trim→thin(≤10,000, endpoints kept)→<2-points→limit-validation→full-column row map in that
+    order; `isDemo` is an explicit parameter (the `Ride` model has no demo flag on this branch,
+    noted below). `Metrics/RideUploadRow.swift` holds `RideUploadRow` + `RouteGeoJSON` with the
+    exact snake_case column keys (`id`/`started_at`/`ended_at`/`distance_m`/`active_duration_s`/
+    `avg_speed_mps`/`route`/`app_version`/`share_publicly`); `user_id`/`created_at` omitted.
+    Tests in `WhooshTests/RideUploadPolicyTests.swift` include the golden-JSON assertions
+    (column names, ISO-8601 timestamps, `[lon, lat]` order, no `user_id`/`created_at`), thinning,
+    `<2`→`.localOnly`, each limit → `.markFailed`, demo-skip, and full-column presence. The full
+    test run is the orchestrator's. _Assumption:_ the type is named `RideUploadRow` (not
+    `RideRow`) to avoid colliding with the existing `RideRow` history UI component.
+
+- [x] 28e. `SupabaseClientProvider` + `SupabaseRideSyncService` (off the main actor)
+  - `SupabaseClientProvider` (in `Services/Sync`): read URL + publishable key from Info.plist,
+    build one `SupabaseClient`, perform **anonymous sign-in**, persist the session in the
+    Keychain via the SDK's default storage, and pre-warm the session. Network work runs off the
+    main actor; a transport seam is injected so unit tests never hit the network.
+  - `SupabaseRideSyncService` implements `RideSyncService`: `upload` does a **full-column**
+    `on conflict (id) do update` upsert into `rides` (via `RideUploadPolicy`); `deleteRemote`
+    deletes by `id`; `setSharing` updates `share_publicly` (re-sending the full row so a partial
+    update can't trip `rides_active_within_elapsed`). Map `23514` → permanent `.failed`,
+    `42501`/auth → retry after session refresh, network/offline → `.pending`.
+  - Extend `SyncCoordinator` for the global-sharing changes (stamp `sharePublicly` at finalize
+    from the global flag, not retroactive; queue unshares; treat them like any pending change)
+    and for the user-initiated delete/unshare exception while sync is off (run only on the
+    user's action, retryable if offline, never in the background).
+  - Unit tests (with the transport seam / fake): upsert sets every column; `23514` is permanent
+    (no retry loop) vs `42501` retryable after refresh; `isEnabled == false` ⇒ zero network
+    calls; sharing stamp is not retroactive; unshare path calls `setSharing(false)`; the
+    sync-off user-initiated delete/unshare runs once and surfaces a retryable error offline.
+  - _Requirements: 12.3, 12.4, 12.6, 12.9, 12.13, 12.17, 12.21, 12.22, 9.2_
+  - _Depends on: 28b, 28d_
+  - _Pending device check:_ code + tests written and `build-for-testing` SUCCEEDED (no
+    first-party warnings); privacy-check passes (`import Supabase` only in `Services/Sync`). A
+    `RideSyncTransport` protocol seam (+`SyncTransportError` carrying the PostgREST `code`) keeps
+    the only Supabase-importing type, `SupabaseRideSyncTransport` (an `actor`), out of every
+    test. `SupabaseClientProvider` reads the Info.plist URL/key, rejects placeholders, and builds
+    one `SupabaseClient`. `SupabaseRideSyncService` (an `actor`, off the main actor) runs
+    `RideUploadPolicy` (`trimMeters: 0`, the route arriving already trimmed), does a full-column
+    upsert `onConflict: "id"`, deletes by id, and updates `share_publicly` only; it classifies
+    errors via the pure `SyncErrorClassifier` (`23514`→`RideSyncTerminalOutcome.failed`,
+    `42501`→refresh session + retry once, offline/other→rethrow retryable) and throws
+    `RideSyncTerminalOutcome.localOnly/.failed` so the coordinator records a terminal status.
+    `SyncCoordinator` now maps those terminal outcomes to `.failed`/`.localOnly`, stamps
+    `sharePublicly` at finalize from the global flag (not retroactive), adds `unshareRides(_:)`,
+    and keeps every delete/retry behind `service.isEnabled` (the user-initiated exception is
+    realized by the service's `isEnabled` provider, wired in 28f). Tests:
+    `SupabaseRideSyncServiceTests` (a `FakeRideSyncTransport` actor — full-column upsert, `23514`
+    permanent/no-retry, `42501` refresh+retry, offline rethrow, `<2` pts → localOnly, setSharing)
+    `SyncErrorClassifierTests`, and coordinator sharing tests (stamp-not-retroactive, unshare →
+    `setSharing(false)`, terminal `.failed`, disabled = zero calls). _Assumption:_ the many pure
+    value types (`Ride`, `RoutePoint`, `RideSummary`, `SyncStatus`, `RideMetrics`, `RoutePrivacy`,
+    `RideUploadPolicy`, `RideUploadRow`, `RouteGeoJSON`, `SyncErrorClassifier`,
+    `RideSyncTerminalOutcome`, `SyncTransportError`, `SyncEnabledFlag`) are marked `nonisolated`
+    so the off-main-actor actors can use them under the project's default-MainActor isolation.
+    The live anonymous sign-in / session persistence and real error mapping are verified on
+    device in 28g by the orchestrator.
+
+- [x] 28f. Settings toggles, prompts, and sharing status UI
+  - Flip the "Sync rides to Whoosh map" toggle from "Coming soon" to a working toggle (off by
+    default) with the plain copy on what's uploaded and that camera video is never uploaded;
+    activate the "Privacy zone · 0.1 mi" and "Identity · Anonymous" rows. Add the global
+    **"Share new rides on the Whoosh website"** toggle beneath it (off by default, only
+    interactive while sync is on) with: the first-time confirmation (trimmed route, distance,
+    time, average speed; no name/account); the turn-off prompt (unshare already-shared rides vs
+    keep); and the disable-sync prompt (12.16). Surface each ride's sync status and sharing
+    state (icon + text: On device / Pending / Synced, Private / Shared / Sharing pending) in
+    history rows and on the summary, plus the "Start and end trimmed for privacy" note once a
+    ride is synced.
+  - _Requirements: 12.1, 12.10, 12.11, 12.12, 12.14, 12.15, 12.16, 6.6, 14.5_
+  - _Depends on: 28e_
+  - _Pending device check:_ code + tests written and `build-for-testing` SUCCEEDED (no
+    first-party warnings); `scripts/privacy-check.sh` passes (71 files). `SettingsViewModel`
+    gained persisted `syncEnabled` + `shareNewRidesPublicly` (both OFF by default), a `Prompt`
+    enum, `setSyncEnabled`/`setShareNewRidesPublicly` that raise the three prompts
+    (`confirmEnableSharing`, `confirmDisableSharing`, `confirmDisableSyncWhileShared`) and
+    apply only on confirmation, `hasSharedRides()`, and `onSyncEnabledChange` /
+    `onUnshareAllSharedRides` / `onDidDeleteAllRides` hooks; the sharing toggle is only mutable
+    while sync is on and turning sync off clears the share flag. `SettingsView` wires both
+    toggles with the plain upload/sharing copy and binds the prompts to an `.alert` +
+    `.confirmationDialog`s; "Privacy zone · 0.1 mi" and "Identity · Anonymous" are live info
+    rows. `StateChip` gained `.failed` / `.privateRide` / `.shared` / `.sharingPending`
+    variants; a pure `SharingState` model derives Private/Shared/Sharing-pending from
+    `sharePublicly` + `syncStatus`. `RideRow` now shows the ride's real `syncStatus` (plus a
+    sharing icon when public) and `RideSummaryView` shows the sync row, a sharing row, and the
+    "Start and end trimmed for privacy" note once synced. `AppEnvironment` builds a
+    `SupabaseRideSyncService` when a client is configured (else `NoopRideSyncService`), mirrors
+    the Settings toggle into a thread-safe `SyncEnabledFlag` the service reads, and wires the
+    coordinator hooks (`rideDidFinish` stamps sharing, unshare, delete-all propagation,
+    foreground retry); `WhooshApp` calls `rideDidFinish` on "Done", `retryPendingSync` on
+    `scenePhase` → `.active`, and `rideWasDeleted` from History's delete. **With sync OFF the
+    app injects `NoopRideSyncService`/never signs in and makes zero network calls, exactly as
+    before.** Tests: extended `SettingsViewModelTests` (default-off, enable/persist,
+    sharing-ignored-while-sync-off, enable-sharing confirmation, disable-sharing unshare prompt,
+    disable-sync-while-shared prompt, sync-off clears share flag, delete-all reports uploaded
+    ids) and new `SharingStateTests`. Live toggle interaction, the confirmation dialogs, and the
+    on-screen status rendering are verified on device by the orchestrator (28g).
+
+- [ ] 28g. Device / local-then-hosted verification
+  - Local (Docker): `supabase start`, enable anonymous sign-ins locally (set
+    `[auth] enable_anonymous_sign_ins = true` in `supabase/config.toml` — currently `false` —
+    a Role C change), point `Secrets.xcconfig` at `http://127.0.0.1:54321`, run the app in the
+    simulator, finish a ride, and see the row in the `rides` table; toggle global sharing and
+    see the ride appear in `public_rides` / on the website in `web/`; turn sharing off and see
+    it disappear; airplane mode → `pending` → syncs after reconnect; delete removes the remote
+    row; a doomed ride (limit-violating) is marked failed with no request; a second anonymous
+    session cannot read the first's raw row (RLS).
+  - Hosted: repeat against the hosted project once Role C has applied the migrations and
+    enabled anonymous sign-ins there.
+  - _Verify (device):_ the behaviors above, with the demo still working in airplane mode.
+  - _Requirements: 12.1, 12.3, 12.4, 12.6, 12.7, 12.8, 12.9, 12.10, 12.18, 12.22_
+  - _Depends on: 28f_
+
+  **Role C deployment prerequisites for 28g** (from the contract's open items): apply the
+  migrations to the hosted project (`supabase link`, `db push`), enable anonymous sign-ins in
+  the hosted project (and locally for simulator testing), re-check RLS isolation with two real
+  anonymous sessions, and decide the owner-rights `public_rides` view question.
 
 ---
 

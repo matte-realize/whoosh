@@ -272,22 +272,26 @@ bad record is skipped (logged) rather than throwing out of `allRides()`.
 ### RideSyncService (opt-in Supabase sync, Requirement 12)
 
 ```swift
-enum SyncStatus: String, Codable { case localOnly, pending, synced }
+enum SyncStatus: String, Codable { case localOnly, pending, synced, failed }
 
 protocol RideSyncService {
     var isEnabled: Bool { get }
-    func upload(_ ride: Ride) async throws          // idempotent upsert on ride.id
+    func upload(_ ride: Ride) async throws          // idempotent upsert on ride.id; sets EVERY column
     func deleteRemote(id: UUID) async throws
+    func setSharing(id: UUID, shared: Bool) async throws   // update share_publicly on the remote row
 }
 ```
 
-- `NoopRideSyncService` is the MVP default (`isEnabled == false`, does nothing).
-- `SupabaseRideSyncService` (later) uses the pinned `supabase-swift` client, anonymous
-  sign-in, and an upsert into the `rides` table defined in `.kiro/team/supabase-contract.md`.
-  Network calls run off the main actor.
+- `NoopRideSyncService` is the MVP default (`isEnabled == false`, does nothing). `setSharing`
+  is a no-op on it, and the test `FakeRideSyncService` records `setSharing` calls so sharing
+  flows are testable without the network.
+- `SupabaseRideSyncService` (task 28) uses the pinned `supabase-swift` client, anonymous
+  sign-in, and an upsert into the `rides` table defined in `.kiro/team/supabase-contract.md`
+  (Agreed v1.0). Network calls run off the main actor; `Services/Sync` stays the only folder
+  that imports `Supabase` or touches the network.
 - A small `SyncCoordinator` owns the retry policy: after a ride is saved locally it calls
   `upload`; on failure it marks the record `pending`; on app foreground it retries pending
-  records and pending deletes. It never touches the ride state machine.
+  records, pending deletes, and pending unshares. It never touches the ride state machine.
 - `RoutePrivacy.trim(points:meters:)` is a pure function applied before upload (default
   160 m from each end). It is unit-tested, including routes shorter than twice the trim.
 - `RideRecord` gains `syncStatus: SyncStatus` (default `.localOnly`) and a
@@ -296,6 +300,118 @@ protocol RideSyncService {
 Why local-first instead of using Supabase as the store: the demo has to survive bad venue
 Wi-Fi, the ride engine stays network-free and easy to test, and the web dashboard only needs
 finished rides.
+
+#### Global public-sharing model (Requirement 12.11–12.17)
+
+The owner chose **one global sharing setting** over a per-ride switch (decision October 24,
+2026; `.kiro/team/ios-share-toggle-proposal.md`). Sharing is a promise distinct from sync, so
+it has its own consent.
+
+- A single `shareNewRidesPublicly` flag lives in `SettingsViewModel` (persisted in
+  `UserDefaults`), OFF by default, and is only mutable while cloud sync is enabled.
+- The setting is **not retroactive**. At finalize, `SyncCoordinator` stamps the ride's
+  `sharePublicly` from the *current* value of the global flag; that stamped value travels with
+  the ride. `Ride`/`RideRecord` gain `sharePublicly: Bool = false`, and the upload payload
+  always sends an explicit `share_publicly` (never relies on the DB default).
+- Turning the global flag **on** shows the plain-language confirmation before it takes effect
+  (what becomes visible: trimmed route, distance, time, average speed; no name/account).
+- Turning the global flag **off** while rides are shared presents a choice: unshare the
+  already-shared rides (`setSharing(id:shared:false)` per ride, pending until the remote
+  matches) or keep them shared. The coordinator treats a changed `sharePublicly` like any
+  other pending change — retried on foreground, idempotent, never touching the state machine.
+- Turning **cloud sync** off while rides are shared shows the disable-sync prompt (12.16),
+  offering to stop sharing first.
+- A per-ride sharing state (Private / Shared / Sharing pending) is derived for the summary and
+  history rows from `sharePublicly` + whether the remote value is confirmed.
+
+Sharing state (derived, shown as icon + text):
+
+| State           | Meaning                                                    |
+| --------------- | ---------------------------------------------------------- |
+| Private         | `sharePublicly == false` and the remote row agrees (or ride is local only) |
+| Shared          | `sharePublicly == true` and the remote row confirmed `share_publicly = true` |
+| Sharing pending | the desired `sharePublicly` has not yet been mirrored remotely (upload/unshare queued) |
+
+#### Supabase row mapping (`Ride` → `rides`, Requirement 12.18–12.22)
+
+The column names are exactly those in `supabase/migrations/20261024120000_rides.sql`. A
+golden-JSON unit test pins them so a rename can't slip through. Values are SI; timestamps are
+`timestamptz` (UTC, ISO-8601).
+
+| `rides` column      | Source on `Ride`                                             |
+| ------------------- | ------------------------------------------------------------ |
+| `id`                | `ride.id` (device-generated uuid; makes the upsert idempotent) |
+| `user_id`           | omitted on upload — the DB default `auth.uid()` + RLS set/verify it |
+| `started_at`        | `ride.startedAt`                                             |
+| `ended_at`          | `ride.endedAt`                                               |
+| `distance_m`        | `ride.summary.distanceMeters`                               |
+| `active_duration_s` | `ride.summary.activeDuration`                               |
+| `avg_speed_mps`     | `ride.summary.averageSpeedMetersPerSecond`                  |
+| `route`             | GeoJSON `LineString` from the privacy-trimmed, thinned points, `[lon, lat]` order |
+| `app_version`       | short build string, ≤ 32 chars                              |
+| `share_publicly`    | the ride's stamped `sharePublicly`                          |
+| `created_at`        | omitted — DB `default now()`                                |
+
+Route encoding: `{ "type": "LineString", "coordinates": [[lon, lat], …] }`. Order is
+`[longitude, latitude]` (GeoJSON), the opposite of `CLLocationCoordinate2D`'s `(lat, lon)`;
+the golden test guards against swapping them.
+
+**Client-side pre-check and thinning (so a doomed ride never makes a request).** Before
+building the payload, a pure `RideUploadPolicy` runs in order:
+
+1. Trim the route (`RoutePrivacy.trim`, 160 m each end) — local copy stays complete.
+2. Thin the trimmed route to ≤ 10,000 points (even downsampling that keeps first and last).
+3. IF the trimmed+thinned route has < 2 points → do **not** upload; keep the ride `.localOnly`
+   ("local only"). (A tiny ride legitimately has nothing to show on the map.)
+4. Validate every contract limit: `distance_m ≤ 1_000_000`; `active_duration_s ≤ 172_800`
+   and `≤ (endedAt − startedAt) + 1 s`; `avg_speed_mps ≤ 40`; `endedAt ≤ startedAt + 48 h`;
+   `app_version` ≤ 32 chars; all coordinates lon∈[−180,180], lat∈[−90,90]. A violation →
+   mark the ride `.failed` and log without PII; **no request is made**.
+5. Demo rides (`ride.isDemo`, from the demo-mode spec; the flag may not exist on this branch
+   yet) are never uploaded or shared.
+
+**Full-column upsert.** The upsert is `on conflict (id) do update` setting **every** column
+it owns (`started_at`, `ended_at`, `distance_m`, `active_duration_s`, `avg_speed_mps`,
+`route`, `app_version`, `share_publicly`). A partial update could combine a new
+`active_duration_s` with an old `started_at`/`ended_at` and trip the backend's
+`rides_active_within_elapsed` check, so the app never does partial updates — even
+`setSharing` re-sends the full row (or uses an update that the golden test confirms carries
+all columns).
+
+**Error classification (Requirement 12.22).**
+
+| Server error                             | Treatment                                                   |
+| ---------------------------------------- | ----------------------------------------------------------- |
+| `23514` (check violation)                | **Permanent** for that ride → `.failed`, no further retries, log without PII |
+| `42501` (permission denied) / auth error | **Retryable** → refresh the anonymous session and retry on the next trigger |
+| network / offline / 5xx                  | Retryable → `.pending`, retried on app foreground           |
+
+`SyncCoordinator` maps these so a `.failed` ride is never retried in a loop while a `.pending`
+ride is. (`SyncStatus` gains `.failed` for the permanent case.)
+
+#### Supabase client, SDK pin, and secrets plumbing
+
+- **SDK:** `supabase-swift`, added via Swift Package Manager pinned to the **exact** version
+  **2.55.4** (latest stable, 2026-10-13; Exact Version per the tech steering). The package is
+  declared in `project.yml` (`packages:` + a target `dependencies:` entry) and the project is
+  regenerated once (`xcodegen generate`) so the committed `.xcodeproj` carries it.
+- **`SupabaseClientProvider`** (in `Services/Sync`): builds one `SupabaseClient` from the URL
+  and publishable key, performs **anonymous sign-in**, persists the session in the Keychain
+  via the SDK's default session storage, and pre-warms the session on first use so the first
+  upload isn't blocked on auth. Session refresh on a `42501`/auth error happens here.
+- **Secrets / Info.plist plumbing.** The app reads the URL and key at runtime from its
+  Info.plist, which is generated (`GENERATE_INFOPLIST_FILE = YES`) with `INFOPLIST_KEY_*`
+  build settings. Two new entries in the app target reference the xcconfig values:
+  `INFOPLIST_KEY_SUPABASE_URL = $(SUPABASE_URL)` and
+  `INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY = $(SUPABASE_PUBLISHABLE_KEY)` (adjust to a custom
+  Info.plist dictionary if `INFOPLIST_KEY_` custom keys prove awkward; the intent is that the
+  values flow from the gitignored `Secrets.xcconfig` into the bundle, never hard-coded in
+  Swift). `Config/Secrets.example.xcconfig` is renamed from `SUPABASE_ANON_KEY` to
+  **`SUPABASE_PUBLISHABLE_KEY`** (the publishable key `sb_publishable_...`, with the legacy
+  `anon` JWT still accepted in that slot until Supabase retires it). Only the public key ever
+  ships; the secret/`service_role` key never appears in the app or the repo.
+- With no `Secrets.xcconfig` present the app still builds (the `#include?` is optional) and
+  sync simply can't sign in; the toggle surfaces that state rather than crashing.
 
 ### Future seams (defined, not implemented)
 
@@ -475,7 +591,12 @@ inside views. Everything is styled through the shared `Theme` and components (be
   rides to Whoosh map" toggle (plain copy on what's uploaded + that camera video is never
   uploaded), "Privacy zone · 0.1 mi", and "Identity · Anonymous"; plus a disabled "Rear
   vehicle detection · Soon" row (experimental, no camera permission). The sync task
-  (task below) flips the toggle to enabled (Req 14, 12.1).
+  (task below) flips the "Sync rides to Whoosh map" toggle to enabled and adds, directly
+  beneath it, a global **"Share new rides on the Whoosh website"** toggle (off by default,
+  only interactive while sync is on) with its first-time confirmation and the two prompts —
+  turning sharing off while rides are shared (unshare vs keep) and turning sync off while rides
+  are shared (disable-sync prompt, Req 12.14/12.16). The per-ride sharing state surfaces on the
+  summary and history rows (Req 14, 12.1, 12.11–12.16).
 
 `SettingsViewModel` persists GPS accuracy:
 
@@ -529,6 +650,12 @@ History, Settings, Summary) is light; the active ride screen is dark.
 - Background location mode is **not** enabled in the MVP; foreground + screen-on is the
   reliable demo path. Enabling it later is a documented task with
   `NSLocationAlwaysAndWhenInUseUsageDescription` and the `location` background mode.
+- Supabase config (opt-in sync, task 28): the generated Info.plist carries `SUPABASE_URL` and
+  `SUPABASE_PUBLISHABLE_KEY`, set from the gitignored `Secrets.xcconfig` via
+  `INFOPLIST_KEY_SUPABASE_URL = $(SUPABASE_URL)` and
+  `INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY = $(SUPABASE_PUBLISHABLE_KEY)` build settings, so the
+  app reads them at runtime and no key is hard-coded in Swift. Only the public publishable key
+  ships.
 
 ## Error & Degradation Handling
 
@@ -567,9 +694,17 @@ Automated unit tests (fast, no device; run before each task is marked done):
   maps to `RideTuning.accuracy`; "Delete all rides" calls `deleteAll()`.
 - Formatters (Req 10) — miles/mph/feet and duration formatting for zero, typical, and large
   values, including the 10-mile decimal switch and the 1-hour duration switch.
-- Sync (Req 12) — `RoutePrivacy.trim` edge cases; `SyncCoordinator` with a fake
-  `RideSyncService`: saves locally before upload, marks pending on failure, retries without
-  duplicates, propagates deletes after reconnect, never runs while sync is disabled.
+- Sync (Req 12) — `RoutePrivacy.trim` edge cases; route thinning to ≤ 10,000 points keeping
+  first/last; a golden-JSON row-mapping test pinning the exact `rides` column names,
+  `[lon, lat]` coordinate order, and SI/ISO-8601 values; every contract limit pre-checked
+  client-side so a doomed ride is marked `.failed` **without** a request; a `< 2`-point
+  trimmed route stays `.localOnly`; full-column upsert (no partial update); `23514` → permanent
+  `.failed` (no retry loop) vs `42501`/auth → retryable after session refresh; and
+  `SyncCoordinator` with a fake `RideSyncService`: saves locally before upload, marks pending
+  on failure, retries without duplicates, propagates deletes after reconnect, global-sharing
+  flows (stamp at finalize, not retroactive; turn-off unshare vs keep; `setSharing` idempotent;
+  disable-sync prompt), the user-initiated delete/unshare exception while sync is off, and
+  `isEnabled == false` ⇒ zero network calls.
 - Permission flow — VM responses to each `LocationAuthorizationStatus` and to failures.
 
 Manual on-device verification (documented in the task, not automated):
@@ -600,8 +735,12 @@ Manual on-device verification (documented in the task, not automated):
 | 14| Rear detection UI   | Visible non-functional placeholder, 3 places, no camera | Honest "experimental"; never requests camera in MVP    |
 | 15| Design system       | `Theme` tokens + shared components; light chrome/dark ride| Consistency; three-numbers/60pt/icon+text principles  |
 
-Still open: the Supabase schema itself, until Role C marks it "Agreed" in
-`.kiro/team/supabase-contract.md`.
+Still open: nothing in the schema contract — Role C and the iOS owner marked
+`.kiro/team/supabase-contract.md` **Agreed v1.0** (October 24, 2026). Remaining items there
+are deployment prerequisites for Role C (apply migrations to the hosted project, enable
+anonymous sign-ins in the hosted project, re-check isolation with two real sessions, the
+owner-rights `public_rides` view question), not schema changes. Public sharing uses one
+**global** setting (owner decision, October 24, 2026), adapted into Requirement 12.11–12.17.
 
 ## Key Decisions & Rationale (summary)
 

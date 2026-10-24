@@ -33,4 +33,10 @@ protocol RideSyncService {
     /// Request remote deletion of the ride with the given `id`. Idempotent;
     /// deleting an already-absent remote row is not an error.
     func deleteRemote(id: UUID) async throws
+
+    /// Update the remote `share_publicly` flag for a ride (Requirement 12.11–
+    /// 12.15). The Supabase implementation re-sends the full row so a partial
+    /// update can't trip the backend's `rides_active_within_elapsed` check.
+    /// Idempotent on `id`.
+    func setSharing(id: UUID, shared: Bool) async throws
 }

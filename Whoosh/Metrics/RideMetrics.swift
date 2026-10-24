@@ -6,7 +6,7 @@ import Foundation
 /// Distance uses the Haversine formula summed over consecutive point pairs.
 /// Active duration is supplied by the caller (the view model knows pause spans);
 /// metrics never infer duration from timestamps, so paused gaps can't inflate it.
-enum RideMetrics {
+nonisolated enum RideMetrics {
     /// Mean Earth radius in meters used for the Haversine distance.
     static let earthRadiusMeters: Double = 6_371_000
 

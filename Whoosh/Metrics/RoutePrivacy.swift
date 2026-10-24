@@ -18,7 +18,7 @@ import Foundation
 ///   strictly inside the `(meters, total − meters)` window, so both privacy
 ///   zones are fully removed. The kept points stay in their original order and
 ///   form a contiguous slice of the input.
-enum RoutePrivacy {
+nonisolated enum RoutePrivacy {
     /// The default privacy-zone length trimmed from each end (~0.1 mi).
     static let defaultTrimMeters: Double = 160
 
