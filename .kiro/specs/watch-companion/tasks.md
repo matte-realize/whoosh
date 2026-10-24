@@ -307,7 +307,7 @@ unaffected (Never block a ride).
 
 ## Phase 3 — Real implementations, UI, and device checks
 
-- [ ] 16. `[iOS]` `[DEMO]` Phone WatchConnectivity adapter and `WatchLauncher`
+- [x] 16. `[iOS]` `[DEMO]` Phone WatchConnectivity adapter and `WatchLauncher`
   - `WCSessionWireLink` (the only phone file importing WatchConnectivity): activation, re-activation after
     deactivation, delegate callbacks hopping to an explicit actor, live send with reply, context update,
     queue transfer (capped outstanding transfers; stale ones cancelled), reachability, installed/paired
@@ -319,8 +319,16 @@ unaffected (Never block a ride).
   - _Requirements:_ 5.1, 5.7, 5.8, 10.3, 3.10
   - _Depends on:_ 12, 3, 1
   - _Parallel:_ Group P3 (with 17)
+  - _Pending task 1 spike:_ landed ahead of the on-device spike. Built for the approved **O-W2** path
+    (cycling workout-session keep-alive, fallback-ladder rung **F0**): the phone adapter owns only
+    WatchConnectivity (`Whoosh/Services/Remote/WCSessionWireLink.swift`, with `PhoneRemoteFactory`) and
+    `WatchLauncher` owns the single `startWatchApp` HealthKit call. The iOS target does **not** declare the
+    HealthKit capability yet — that is gated on the spike's **T10** result (whether `startWatchApp` needs
+    it). Re-confirm the live/context/transfer split and the outstanding-transfer cap against the measured
+    latency once the spike records its go decision in `spike-results.md`. The spike is still **pending**;
+    nothing here runs on device until it confirms **O-W2**.
 
-- [ ] 17. `[iOS]` `[DEMO]` Watch WatchConnectivity adapter and background-task handling
+- [x] 17. `[iOS]` `[DEMO]` Watch WatchConnectivity adapter and background-task handling
   - `WCSessionWireLink` for the watch (`WhooshWatch/Services/Link/`): activation, companion-installed fact,
     reachability, live send/reply, context, queue receive, and **completion of every WatchConnectivity
     background task** (on handling, on state change, and when no content is pending).
@@ -329,8 +337,14 @@ unaffected (Never block a ride).
   - _Requirements:_ 5.1, 5.8, 10.2
   - _Depends on:_ 12, 3, 1
   - _Parallel:_ Group P3
+  - _Pending task 1 spike:_ built for the approved **O-W2 / F0** path. The watch link lives only in
+    `WhooshWatch/Services/Link/` (`WCSessionWireLink` + `WatchLinkFactory`/`WatchLinkConnectivity`), and
+    `WhooshWatch/App/WatchAppDelegate` forwards each `WKWatchConnectivityRefreshBackgroundTask` to the link,
+    which completes it once `hasContentPending` is false (on activation, context, and user-info receipt).
+    Re-confirm the drain-then-complete timing against the spike's **T3/T4/T9** results in `spike-results.md`.
+    The spike is still **pending**; nothing here runs on device until it confirms **O-W2**.
 
-- [ ] 18. `[iOS]` `[DEMO]` Keep-alive: `HKWorkoutSessionController`
+- [x] 18. `[iOS]` `[DEMO]` Keep-alive: `HKWorkoutSessionController`
   - The only HealthKit file on the watch: share-only authorization (workout type; read none) after an
     in-app explanation; create the cycling session and builder with the location type from O-W4; handle the
     workout-configuration entry point for `startWatchApp`; open-mid-ride auto-start; pause/resume per the
@@ -344,6 +358,15 @@ unaffected (Never block a ride).
   - _Requirements:_ 4.1–4.12, 16.2, 16.3, 16.6, 19.5
   - _Depends on:_ 11, 15, 17, 1
   - _Parallel:_ Group P3b
+  - _Pending task 1 spike:_ built for the approved **O-W2 / F0** path. `HKWorkoutSessionController`
+    (the only HealthKit file on the watch) drives the pure `WorkoutSessionStateMachine`: share-only auth
+    (`HKObjectType.workoutType()`, read `[]`), cycling session + live builder, retry-with-backoff, 60 s
+    default-save timer, orphan/low-battery stop, `recoverActiveWorkoutSession`, and a diffed `WireWatchState`
+    report; battery is read via `WKInterfaceDevice` (monitoring, not a haptic call). Two rows are left
+    conservative pending the spike: **T11** (pause the session vs keep it running — change only the effect),
+    and **O-W4** (`.outdoor` vs `.unknown` location type — change only the value). Depends on task 15's
+    `WatchSessionModel` (not in this change) to be driven in-app; the protocol + fake here let it be wired.
+    The spike is still **pending**; nothing here runs on device until it confirms **O-W2**.
 
 - [x] 19. `[iOS]` `[DEMO]` `WKHapticPlayer`, pattern tuning, and the on-watch pattern preview
   - The only watch file calling `WKInterfaceDevice.play`: plays patterns in one cancellable serial task,

@@ -15,6 +15,9 @@ import WhooshWire
 @main
 struct WhooshWatchApp: App {
     @State private var model: WatchSessionModel = WhooshWatchApp.makeModel()
+    /// The app delegate owns and activates the single watch connectivity link and
+    /// completes every WatchConnectivity background task (task 17).
+    @WKApplicationDelegateAdaptor(WatchAppDelegate.self) private var delegate
 
     var body: some Scene {
         WindowGroup {
