@@ -17,7 +17,7 @@ import Foundation
 /// `Sendable` because detection work runs off the main actor (a dedicated actor
 /// or `@concurrent` work); only `onDetection` delivery hops back to the main
 /// actor. Pure value type, Foundation-only, no framework lock-in.
-struct HazardDetection: Equatable, Sendable {
+nonisolated struct HazardDetection: Equatable, Sendable {
     /// When the detection occurred; alignable with a `RoutePoint.timestamp`
     /// for future near-miss logging.
     let timestamp: Date
@@ -48,18 +48,37 @@ struct HazardDetection: Equatable, Sendable {
 /// **Integration point for the vision teammate (Role B).** Implement this
 /// against the abstraction; the ride-recording code does not need to change.
 ///
-/// Contract (also see the design "Future seams" section):
+/// ## Contract (rear-camera spec "HazardDetector seam update", Requirement 4.9)
+/// - **A camera-based detector is also a `FrameConsumer`.** It conforms to both
+///   `HazardDetector` and `FrameConsumer` and receives frames only through the
+///   `FramePipeline`; the `DetectionCoordinator` (not the detector) registers it
+///   with the pipeline. See `VisionVehicleConsumer`.
+/// - **Never owns capture.** A detector creates no capture session, requests
+///   no camera permission, and writes no video. The camera capture service and
+///   the camera-permission seam own those. Camera permission belongs to *rear
+///   camera recording*, not to detection; the privacy script no longer allows
+///   capture APIs in `Services/Detection`.
+/// - **`start()` / `stop()`.** `start()` begins inference (and, for the real
+///   detector, loads the model once); `stop()` ends inference and releases model
+///   resources. The coordinator pairs these with pipeline register/remove. Both
+///   are non-blocking.
 /// - **On-device.** Immediate safety alerts must not depend on a network.
 /// - **Non-blocking.** Implementations MUST never block, slow, or stop ride
 ///   recording. Heavy frame processing/inference runs off the main actor (a
-///   dedicated actor or `@concurrent` work); only `onDetection` delivery hops
-///   back to the main actor.
+///   dedicated serial queue or actor); only `onDetection` delivery hops back to
+///   the main actor.
+/// - **Timestamp.** `HazardDetection.timestamp` SHOULD be the triggering frame's
+///   `VideoFrame.capturedAt` (wall-clock), not inference-completion time, so
+///   near-miss clip windows align with the video.
+/// - **When it runs.** Only while the camera state is `recording` or `degraded`
+///   and rear detection is enabled; it is paused automatically on interruption
+///   (frames stop; the discontinuity flag is set on resume).
 /// - **Honest.** Detection is experimental; copy must not claim collision
-///   prediction or prevention.
+///   prediction or prevention, and it cannot guarantee detection or delivery.
 ///
-/// The MVP ships only `NoopDetector`; no camera permission is requested anywhere
-/// in the MVP (the Home card, the ride-screen "Rear detection off" chip, and the
-/// Settings "Soon" row are inert placeholders).
+/// A detection flows `DetectionCoordinator` → `NearMissPolicy` → (a) a local
+/// `NearMissEvent`, (b) a clip pin if enabled, (c) `AlertManager` after the
+/// existing gate/cooldown.
 protocol HazardDetector: AnyObject {
     /// Delivered on the main actor as detections occur.
     var onDetection: ((HazardDetection) -> Void)? { get set }
@@ -69,10 +88,14 @@ protocol HazardDetector: AnyObject {
     func stop()
 }
 
-/// The MVP's inert `HazardDetector`: never emits, never requests the camera.
+/// The inert `HazardDetector`: never emits, never registers a consumer, never
+/// requests the camera.
 ///
 /// Injected at the composition root so the ride flow runs unchanged until a real
-/// detector (Role B) replaces it.
+/// detector (Role B's `VisionVehicleConsumer`) replaces it. The no-op never
+/// registers a frame consumer with the pipeline; camera permission belongs to
+/// rear camera recording, not to detection (rear-camera spec "HazardDetector
+/// seam update").
 final class NoopDetector: HazardDetector {
     var onDetection: ((HazardDetection) -> Void)?
 

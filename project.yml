@@ -33,10 +33,18 @@ configFiles:
 # Opt-in Supabase sync (Requirement 12). Pinned to the EXACT version per the
 # tech steering ("Exact Version"). The only third-party dependency allowed to
 # touch the network, and only from Whoosh/Services/Sync (privacy steering).
+#
+# WhooshVision is Teammate B's on-device vehicle detector (frames in, boxes out;
+# Core ML + Vision, no network), vendored as a LOCAL Swift package at
+# cv/ios/WhooshVision. It is wrapped by Whoosh/Services/Detection; the detector
+# never owns capture, requests permission, or writes video (rear-camera spec
+# "HazardDetector seam update", Requirement 4.9).
 packages:
   Supabase:
     url: https://github.com/supabase/supabase-swift
     exactVersion: "2.55.4"
+  WhooshVision:
+    path: cv/ios/WhooshVision
 
 targets:
   Whoosh:
@@ -50,6 +58,8 @@ targets:
     dependencies:
       - package: Supabase
         product: Supabase
+      - package: WhooshVision
+        product: WhooshVision
     configFiles:
       Debug: Config/Shared.xcconfig
       Release: Config/Shared.xcconfig
