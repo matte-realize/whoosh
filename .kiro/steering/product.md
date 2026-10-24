@@ -50,6 +50,30 @@ Units are US customary (miles, mph, feet). The team is in Boston and the judges 
 - Opt-in sync of finished rides to Supabase so Role C's web dashboard can show them.
   The demo must still work in airplane mode.
 
+## Post-MVP opt-in safety feature: emergency contacts and crash response
+
+Specified in `.kiro/specs/crash-response/` (requirements, design, tasks) with the backend
+contract in `.kiro/team/crash-alert-contract.md`. It is **off by default**, **opt-in**, and
+**not part of the MVP scope above**; the MVP ride flow is unchanged and never depends on it.
+
+- A rider sets up one to three trusted emergency contacts, gives separate, versioned consent
+  (with the exact message shown), and can test the workflow and change or remove contacts.
+- If the crash-detection service identifies a *probable* crash during a ride, Whoosh preserves
+  the timestamp and best available location, runs an audible, visual, and haptic countdown with a
+  very large "I'm OK — Cancel" control, and, if not cancelled, texts the contacts a map link, the
+  time, and a clear statement that **a crash was detected but an injury has not been confirmed**.
+  The attempt and its delivery status are recorded on-device.
+- Automatic texting uses a backend SMS provider (an iOS app cannot send an SMS silently); the
+  native composer is only a rider-initiated fallback. Provider credentials never ship in the app.
+- Crash detection is **experimental** (Apple's system Crash Detection is not available to apps).
+  The demo uses a clearly labeled "Simulate crash" path; any motion-based detector is a stretch
+  that stays off until its false-positive behavior is measured.
+- Whoosh **never automatically calls or texts emergency services** and is **not a guaranteed
+  emergency-response service**: it cannot guarantee detection or delivery. Copy says so in setup,
+  consent, the countdown, and the status screens.
+- Pre-crash camera footage, if it ever exists, stays on the device and is never uploaded or
+  sent in a message. Crash alerts work only while the app is open during an active ride (v1).
+
 ## Explicitly NOT in the MVP demo
 
 These are designed-for but not implemented or not demo-critical:
@@ -63,6 +87,7 @@ These are designed-for but not implemented or not demo-critical:
 - Near-miss reporting, infrastructure analysis, safer-route recommendations
 - Smartwatch companion app
 - User-changeable units (units are read-only "Miles · mph" in the MVP Settings)
+- Emergency contacts and crash alerts (post-MVP opt-in feature; see the section above)
 
 ## Guiding Principles
 
@@ -72,5 +97,8 @@ These are designed-for but not implemented or not demo-critical:
   detection performance has been measured. UI and copy frame detection as experimental.
 - **Privacy first.** Location and camera data are sensitive. Keep them on-device by
   default and ask only for permissions a feature actually needs, when it needs them.
+- **Opt-in safety features are never guarantees.** Anything that notifies other people
+  (crash alerts) needs separate, versioned consent, shows exactly what is sent, offers a one-tap
+  cancel, and never claims reliable detection, guaranteed delivery, or that help is coming.
 - **Degrade gracefully.** Permission denial, GPS loss, camera failure, low battery, and
   interrupted rides are expected states, not crashes.

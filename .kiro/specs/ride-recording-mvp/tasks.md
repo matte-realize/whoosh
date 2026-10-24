@@ -539,3 +539,5 @@ Schema: Kiro IDE 1.x `v1` hook JSON. Scripts live in `scripts/`.
 3. Device/sim verification done where the task calls for it.
 4. No new first-party compiler warnings.
 5. Privacy invariants intact (no network unless sync is on, honest copy, no secrets in Git).
+
+See also: the post-MVP opt-in emergency-contact and crash-response plan in `../crash-response/tasks.md`.

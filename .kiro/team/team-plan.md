@@ -109,6 +109,41 @@ reconverge at integration, so blockers are minimized.
 - **Vision ↔ Backend:** C provides dataset storage and eval tooling; B provides detections and
   measured performance. Keep training data off any public bucket.
 
+## Crash response workstreams (post-MVP, opt-in — new)
+
+Spec: `.kiro/specs/crash-response/` (requirements, design, tasks). Backend contract:
+`crash-alert-contract.md` (DRAFT, owned by Role C). Nothing here is part of the MVP demo scope or
+changes the three MVP checkpoints; it is a fourth, optional checkpoint after "It warns". **No
+code is written until the iOS owner approves the spec and Role C marks the contract Agreed.**
+
+| Workstream | Owner | Scope | Spec tasks |
+| ---------- | ----- | ----- | ---------- |
+| iOS crash response | **You (iOS)** | Models, pure message builder and state machine, contact store (Keychain), consent, connectivity, notifier protocol + fakes, coordinator, countdown/status/log/setup screens, Supabase client implementation, privacy-script update, integration with `RideSessionViewModel`, Simulate-crash demo path, QA checklist | `crash-response/tasks.md` 0–29 |
+| Backend SMS alerts | **Role C** | Edge Functions `send-crash-alert`, `crash-alert-status`, `sms-status-callback`, `delete-crash-audit`; provider trial setup and limits; audit tables + RLS + retention; cost caps and kill switch; contract tests; contract finalization | `crash-response/tasks.md` C1–C12 |
+| Crash detector (optional) | **Teammate B** (or the iOS owner) | Experimental Core Motion heuristic behind the `CrashDetector` seam, field testing with measured false-positive numbers; later, the camera-side `FootageBuffer` | `crash-response/tasks.md` 32–34 |
+
+### Checkpoint 4 — "It alerts" (optional, after Checkpoint 3)
+
+- **You:** crash-response iOS tasks, **Tier 0 first** (Simulate crash → countdown → cancel/expire →
+  composer fallback, works in airplane mode), then Tier 1 when the backend is ready.
+- **Role C:** contract Agreed → provider trial account → migrations/RLS → `send-crash-alert` →
+  status callback/status endpoints → caps and kill switch → staging + rehearsed kill switch.
+- **B (optional):** pure signal core for the motion heuristic, then device field-testing. Nothing
+  about detection reliability is claimed until measured.
+- **Demo tiers:** Tier 0 (iOS only) must never depend on the backend; Tier 1 adds a real trial SMS
+  to a verified teammate phone ("WHOOSH DEMO - NOT REAL"). If the provider fails, show Tier 0.
+
+### New interfaces
+
+- **iOS ↔ Backend:** `crash-alert-contract.md` (anonymous Supabase JWT, fixed templates, idempotent
+  by `crashEventId`). No provider credentials in the app or the repo; the backend stores no
+  plaintext numbers, message bodies, or coordinates.
+- **iOS ↔ Detector:** the `CrashDetector` protocol (probable-crash signal with timestamp,
+  confidence, source). B never imports app code; the iOS owner owns arming, countdown, and alerts.
+  Camera-assisted cues could later arrive behind the same protocol.
+- **Shared test data:** Appendix A of the contract (golden messages) is the single source of truth
+  for the iOS message builder tests and the backend renderer tests.
+
 ## Risk register (team-level)
 
 | Risk | Owner | Mitigation |
@@ -119,12 +154,22 @@ reconverge at integration, so blockers are minimized.
 | Scope creep (near-miss, routing) | All | Those are post-MVP; see product steering "NOT in MVP". |
 | Backend becomes a blocker | C | App never hard-depends on cloud; cloud is additive only. |
 | Overclaiming safety in the pitch | C + You | Honest copy rule from privacy steering applies to the pitch too. |
+| Crash alerts overclaim ("we detect crashes / help is coming") | All | Experimental framing; "not a guaranteed emergency-response service" in setup, consent, countdown, status, and the pitch; privacy script flags claims. |
+| False crash alerts annoy contacts | You + B | Countdown with one-tap cancel, suppression window, per-ride cap, detector off by default, measure before enabling. |
+| SMS provider trial limits / registration lead time | C | Trial route with verified numbers for the demo; 10DLC/toll-free registration is production work; Tier 0 fallback demo. |
+| SMS cost or abuse (anonymous accounts are cheap) | C | Fixed templates, per-user and per-recipient caps, spend cap, kill switch (rehearsed), App Attest later. |
+| Safety feature depends on the cloud | You + C | Opt-in and labeled non-guaranteed; queue + composer fallback; core ride recording unaffected. |
+| Foreground-only limits (app closed/suspended) | You | Documented in consent; time-sensitive local notification backup; server-side countdown is a v2 option. |
+| Message text drifts between iOS and backend | You + C | Shared golden cases (contract Appendix A) and `templateVersion`. |
+| Accidental real 911 call during the demo | You | Call 911 is manual-only and hidden for drills. |
+| Time pressure on a post-MVP feature | All | Tier 0 first; stretch items (motion detector, all-clear, footage) never block. |
 
 ## What is explicitly NOT in the hackathon MVP
 
 Background location, routing/directions, safer-route recommendations, infrastructure
 analysis, smartwatch app, accounts/auth, and any claim that the app reliably predicts or
-prevents collisions. These are future; keep them out of the demo scope.
+prevents collisions. These are future; keep them out of the demo scope. Emergency contacts and
+crash alerts are a separate **post-MVP opt-in feature** (see "Crash response workstreams" above).
 
 ## First actions (today)
 
