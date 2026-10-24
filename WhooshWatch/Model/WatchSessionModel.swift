@@ -77,7 +77,7 @@ public final class WatchSessionModel {
 
     // MARK: Init
 
-    public init(
+    init(
         link: WireLink,
         haptics: HapticPlaying,
         workout: WorkoutSessionController,
@@ -121,7 +121,7 @@ public final class WatchSessionModel {
             guard let self else { return }
             Task { @MainActor in self.setReachable(value) }
         }
-        workout.onWatchStateChange { [weak self] state in
+        workout.onStateChange = { [weak self] state in
             guard let self else { return }
             Task { @MainActor in await self.reportWatchState(state) }
         }
@@ -400,8 +400,8 @@ public final class WatchSessionModel {
 
     // MARK: Health choice (Summary page)
 
-    public func saveWorkout() { workout.saveWorkout() }
-    public func discardWorkout() { workout.discardWorkout() }
+    public func saveWorkout() { workout.chooseSave() }
+    public func discardWorkout() { workout.chooseDiscard() }
 
     private var appBuild: String {
         (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "0"
