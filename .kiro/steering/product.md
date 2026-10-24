@@ -119,6 +119,23 @@ sample data, and permission/state previews. While on, an unmissable "DEMO MODE" 
 Home, the ride screen, and the emergency screens. It never sends a real alert, never dials, never
 uploads, and changes nothing when off.
 
+## Apple Watch companion (specified — approved, opt-in, post-MVP)
+
+Specified in `.kiro/specs/watch-companion/` (requirements, design, tasks; **approved by the owner,
+October 24, 2026**). With the phone rear-mounted, the wrist is the only surface the rider can see and touch
+during a ride, so the watch app provides: live ride time/distance/speed and camera/link state; pause,
+resume, press-and-hold stop, "Save clip", and an armed start from the wrist; distinct wrist haptics for
+the experimental rear-vehicle cue and camera/battery notices; and the crash-countdown Cancel (drills
+labeled DEMO). The phone stays authoritative; the watch only displays, requests, and plays haptics.
+
+- A cycling workout session keeps the watch app running with the wrist down. This is the design's central
+  bet; a **feasibility spike gates all production watch code**, with fallbacks down to phone audio.
+- Nothing about the ride (location, route, video, contacts) is sent to the watch beyond what it displays,
+  and nothing leaves the rider's own devices. Honest framing: haptics are a cue, not a guarantee.
+- The owner's Apple Watch SE is the target (watchOS 10 and later). A Garmin fenix 6x and a Whoop are
+  **out of scope**.
+- Without a watch every flow works as before (phone audio, ride-mode unlock).
+
 ## Explicitly NOT in the MVP demo
 
 These are designed-for but not implemented or not demo-critical:
@@ -136,8 +153,9 @@ These are designed-for but not implemented or not demo-critical:
 - Email/password accounts, routing/directions services
 - Near-miss reporting, infrastructure analysis, safer-route recommendations (near-miss **events**
   are recorded locally by the rear-camera spec; upload is a future task)
-- Smartwatch companion app (_recommended_ as the in-ride surface for a rear-mounted phone; a
-  separate follow-up spec)
+- Smartwatch companion app (_recommended_ as the in-ride surface for a rear-mounted phone). _Update:_
+  now specified as a draft in `.kiro/specs/watch-companion/` (see the section above); still post-MVP
+  and opt-in
 - User-changeable units (units are read-only "Miles · mph" in the MVP Settings)
 - Emergency contacts and crash alerts (post-MVP opt-in feature; see the section above)
 
