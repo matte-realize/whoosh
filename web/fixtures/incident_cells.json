@@ -1,32 +1,72 @@
 [
   {
-    "latitude": 30.267,
-    "longitude": -97.743,
-    "incident_count": 5,
-    "rider_reported_count": 2,
-    "detected_count": 3,
-    "vehicle_kinds": ["car", "truck"],
-    "first_month": "2026-09-01",
-    "last_month": "2026-10-01"
-  },
-  {
-    "latitude": 30.269,
-    "longitude": -97.733,
+    "latitude": 42.365,
+    "longitude": -71.104,
     "incident_count": 3,
-    "rider_reported_count": 0,
-    "detected_count": 3,
-    "vehicle_kinds": ["vehicle"],
+    "rider_reported_count": 1,
+    "detected_count": 2,
+    "vehicle_kinds": [
+      "car",
+      "truck",
+      "vehicle"
+    ],
     "first_month": "2026-10-01",
     "last_month": "2026-10-01"
   },
   {
-    "latitude": 30.277,
-    "longitude": -97.743,
-    "incident_count": 4,
-    "rider_reported_count": 3,
-    "detected_count": 1,
-    "vehicle_kinds": ["bus", "car"],
-    "first_month": "2026-08-01",
+    "latitude": 42.359,
+    "longitude": -71.094,
+    "incident_count": 3,
+    "rider_reported_count": 1,
+    "detected_count": 2,
+    "vehicle_kinds": [
+      "bus",
+      "car",
+      "vehicle"
+    ],
+    "first_month": "2026-10-01",
+    "last_month": "2026-10-01"
+  },
+  {
+    "latitude": 42.351,
+    "longitude": -71.089,
+    "incident_count": 3,
+    "rider_reported_count": 1,
+    "detected_count": 2,
+    "vehicle_kinds": [
+      "car",
+      "truck",
+      "vehicle"
+    ],
+    "first_month": "2026-10-01",
+    "last_month": "2026-10-01"
+  },
+  {
+    "latitude": 42.347,
+    "longitude": -71.087,
+    "incident_count": 3,
+    "rider_reported_count": 1,
+    "detected_count": 2,
+    "vehicle_kinds": [
+      "bus",
+      "car",
+      "vehicle"
+    ],
+    "first_month": "2026-10-01",
+    "last_month": "2026-10-01"
+  },
+  {
+    "latitude": 42.34,
+    "longitude": -71.082,
+    "incident_count": 3,
+    "rider_reported_count": 1,
+    "detected_count": 2,
+    "vehicle_kinds": [
+      "car",
+      "truck",
+      "vehicle"
+    ],
+    "first_month": "2026-10-01",
     "last_month": "2026-10-01"
   }
 ]
