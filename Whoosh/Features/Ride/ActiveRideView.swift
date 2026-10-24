@@ -15,8 +15,10 @@ import UIKit
 ///
 /// When the session's banner is `signalLost` an amber "GPS signal lost" banner
 /// appears; a `permissionRevoked` banner uses the same calm styling with copy
-/// that the ride is saved-and-stoppable. Keeps the screen awake while visible
-/// (`isIdleTimerDisabled`). State is always icon + text, never color alone.
+/// that the ride is saved-and-stoppable. Keeps the screen awake while visible by
+/// asking the injected `ScreenController` to hold the idle timer (the screen
+/// controller is the one owner of that toggle; rear-camera task 21). State is
+/// always icon + text, never color alone.
 ///
 /// Per the layering table this view touches no framework service types — it
 /// reads the injected `RideSessionViewModel` and renders maps through the
@@ -28,6 +30,12 @@ struct ActiveRideView: View {
     /// on the ride screen (Requirement 18.6). `nil` hides it (feature not set
     /// up / MVP previews); it adds no fourth ride number.
     var crashAlertsOn: Bool?
+
+    /// The screen controller that owns the idle timer (and ride-mode
+    /// brightness). Defaults to the shared production controller so the idle
+    /// timer funnels through the one reason-counting owner, shared with the
+    /// crash countdown. Tests/previews can inject a fake.
+    var screen: ScreenController = UIKitScreenController.shared
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -45,8 +53,8 @@ struct ActiveRideView: View {
             bottomSheet
         }
         .preferredColorScheme(.dark)
-        .onAppear { KeepAwake.shared.acquire(.ride) }
-        .onDisappear { KeepAwake.shared.release(.ride) }
+        .onAppear { screen.setIdleTimerDisabled(true) }
+        .onDisappear { screen.setIdleTimerDisabled(false) }
         .onChange(of: viewModel.banner) { _, banner in
             announceBanner(banner)
         }
