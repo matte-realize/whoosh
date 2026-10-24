@@ -99,6 +99,57 @@ final class CrashResponseCoordinator {
         return Int(max(0, deadline.timeIntervalSince(clock.now())).rounded(.up))
     }
 
+    /// Whether the current event is a drill (the "Simulate crash" demo path).
+    /// The countdown/status screens hide the manual "Call 911" control for
+    /// drills (Requirement 17.3) and label the UI as a demo.
+    var isDrill: Bool { machine.isDrill }
+
+    /// The whole-seconds length the active countdown was created with (the
+    /// clamped total), used by the takeover to drive the announcement cadence.
+    var totalCountdownSeconds: Int? {
+        machine.totalCountdownSeconds.map { Int($0.rounded()) }
+    }
+
+    /// The rider's chosen label (first name or nickname) for the countdown
+    /// sentence and status copy; empty when none is set.
+    var riderLabel: String { settingsStore.current().riderLabel ?? "" }
+
+    /// A rider-initiated composer-fallback payload (spec Requirement 12.1/12.9):
+    /// the reachable recipients' full numbers and the exact message built by the
+    /// shared `CrashMessageBuilder`, pre-filled with the current delay wording.
+    ///
+    /// This is the only place the coordinator surfaces full E.164 numbers, and
+    /// only for the native composer the rider explicitly opens — it never sends
+    /// automatically. Returns `nil` when there is no reachable contact.
+    struct ComposerFallbackPayload: Equatable, Sendable {
+        /// Full E.164 recipient numbers to pre-fill (composer only).
+        let recipients: [String]
+        /// The message body, rendered by the shared builder with delay wording.
+        let body: String
+    }
+
+    /// Build the composer-fallback payload for the current event at `now`.
+    /// Rider-initiated only; the composer never sends without the rider tapping
+    /// Send (iOS owns that interaction).
+    func composerFallback() -> ComposerFallbackPayload? {
+        let reachable = reachableContacts()
+        guard !reachable.isEmpty else { return nil }
+        let now = clock.now()
+        let message = CrashMessageBuilder.build(
+            kind: currentKind,
+            riderLabel: settingsStore.current().riderLabel ?? "",
+            detectedAt: currentEvent?.detectedAt ?? now,
+            utcOffsetMinutes: currentEvent?.utcOffsetMinutes ?? utcOffsetMinutes(at: now),
+            location: (currentKind == .crashAlert || currentKind == .drill) ? locationForSend(at: now) : nil,
+            delayedSeconds: TimeInterval(delayedSeconds(at: now)),
+            now: now
+        )
+        return ComposerFallbackPayload(
+            recipients: reachable.map(\.e164),
+            body: message.text
+        )
+    }
+
     // MARK: Private per-event bookkeeping (not persisted via the reducer)
 
     /// The in-progress crash event being assembled into the record.

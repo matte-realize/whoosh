@@ -22,6 +22,7 @@ struct EmergencySetupView: View {
                 contactsSection
                 verifyAndConsentSection
                 logRow
+                developerToolsSection
                 disclaimer
             }
             .padding(Theme.Spacing.lg)
@@ -254,6 +255,66 @@ struct EmergencySetupView: View {
         .disabled(!isWired)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(isWired ? title : "\(title), coming soon")
+    }
+
+    // MARK: - Developer / demo tools (task 23)
+
+    private var developerToolsSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            sectionHeader("Developer / demo tools")
+            VStack(spacing: 0) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Developer / demo tools")
+                            .font(Theme.Typography.rowTitle)
+                            .foregroundStyle(Theme.Colors.textPrimary)
+                        Text("Reveals a Simulate crash control for demos and testing.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $viewModel.developerToolsEnabled)
+                        .labelsHidden()
+                        .tint(Theme.Palette.lime)
+                }
+                .padding(Theme.Spacing.md)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Developer and demo tools, \(viewModel.developerToolsEnabled ? "on" : "off")")
+
+                if viewModel.developerToolsEnabled {
+                    rowDivider
+                    Button {
+                        viewModel.simulateCrash()
+                    } label: {
+                        HStack(spacing: Theme.Spacing.md) {
+                            Image(systemName: "theatermasks")
+                                .font(.system(size: 16))
+                                .foregroundStyle(Theme.Palette.alert)
+                                .frame(width: 24)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Simulate crash")
+                                    .font(Theme.Typography.body)
+                                    .foregroundStyle(Theme.Colors.textPrimary)
+                                Text("Runs the real countdown as a demo (no real crash).")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Theme.Colors.textSecondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            Spacer()
+                        }
+                        .padding(Theme.Spacing.md)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Simulate crash")
+                    .accessibilityHint("Runs the real crash countdown as a demo. No real crash occurs.")
+                }
+            }
+            .background(Theme.Colors.cardSurface)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
+        }
     }
 
     // MARK: - Disclaimer (honest copy, Requirement 1.1/1.3)
