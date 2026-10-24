@@ -11,6 +11,11 @@ import Testing
 /// ride model and that per-ride fetch is oldest-first.
 @MainActor
 struct SwiftDataNearMissRepositoryTests {
+    /// Keeps every container alive for the test run: a `ModelContext` does not
+    /// retain its container, so returning only the context let it be freed
+    /// before the repository was built (crashing the test host).
+    private static var liveContainers: [ModelContainer] = []
+
     private func makeContext() throws -> ModelContext {
         let schema: [any PersistentModel.Type] = [
             RideRecord.self,
@@ -21,6 +26,7 @@ struct SwiftDataNearMissRepositoryTests {
             for: Schema(schema),
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
+        Self.liveContainers.append(container)
         return container.mainContext
     }
 
