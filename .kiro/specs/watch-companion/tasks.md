@@ -392,7 +392,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 11, 15, 18, 19
   - _Parallel:_ Group P3b
 
-- [ ] 21. `[iOS]` `[IMPORTANT]` Crash countdown on the wrist
+- [x] 21. `[iOS]` `[IMPORTANT]` Crash countdown on the wrist
   - Phone: a read-only countdown snapshot from the crash coordinator and a rider-cancel that reports
     `cancelled` / `tooLate` / `notCancellable` (A8); publish countdown in status and send the `critical`
     alert; add the consent-copy sentence about the watch (A9); keep the phone's audible countdown and the
@@ -461,7 +461,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 13, 16, 17, 18
   - _Parallel:_ Group P4
 
-- [ ] 26. `[iOS]` `[IMPORTANT]` Demo-mode coordination
+- [x] 26. `[iOS]` `[IMPORTANT]` Demo-mode coordination
   - Confirm with the demo-mode spec (by name): the forced rear-vehicle alert and the crash drill reach the
     wrist through the same fan-out, carry `AlertContext.isDemo`, and are labeled DEMO on the watch (which
     honors them only while the phone reports demo mode active); the auto-trigger exercises the limiter;

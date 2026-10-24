@@ -118,17 +118,30 @@ final class WatchRideRemote: RideRemoteControlling {
         self.dedupe = CommandDedupeCache(tuning: tuning)
     }
 
-    /// Activate the link and track reachability. The real adapter forwards
-    /// received command envelopes to `handleCommand` after hopping to the main
-    /// actor (it registers its own synchronous live handler that does the hop
-    /// and calls back with the reply); this type does not register a synchronous
-    /// off-actor handler of its own.
+    /// Activate the link and track reachability, and register the live handler
+    /// so a wrist `command` reaches `handleCommand` on the main actor and its
+    /// reply is sent back over the same link. The live callback is `@Sendable`
+    /// and may run off the main actor, so it schedules the handling and returns
+    /// `nil` synchronously; the watch's dedupe cache replays the same id if it
+    /// retries before the async reply lands.
     func activate() async {
         await link.onReachabilityChange { [weak self] reachable in
             Task { @MainActor in self?.reachableFlag = reachable }
         }
+        await link.onLiveMessage { [weak self] envelope in
+            guard let self else { return nil }
+            Task { @MainActor in self.handleAndReply(envelope) }
+            return nil
+        }
         await link.activate()
         reachableFlag = await link.isReachable
+    }
+
+    /// Handle a command and send its reply over the link (main-actor).
+    private func handleAndReply(_ envelope: WireEnvelope) {
+        guard let reply = handleCommand(envelope) else { return }
+        let link = self.link
+        Task { _ = await link.send(reply) }
     }
 
     // MARK: - Publishing

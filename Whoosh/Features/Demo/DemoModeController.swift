@@ -271,6 +271,25 @@ final class DemoModeController {
         }
     }
 
+    // MARK: - Send test alerts to the watch (watch task 26, owner request)
+
+    /// Fire a short burst of real alerts so the owner can confirm the Apple
+    /// Watch shows them exactly as it would in a ride (watch task 26). They flow
+    /// through the same `AlertManager` fan-out as a real cue, so the watch sink
+    /// buzzes the wrist and shows the rear-vehicle alert screen, escalating to
+    /// phone audio when the watch does not confirm. No fabricated detection is
+    /// logged. No-op while demo mode is off.
+    ///
+    /// Honest: the rear-vehicle cue is experimental; Whoosh cannot guarantee
+    /// detection or delivery.
+    func sendTestAlertsToWatch() {
+        guard isEnabled else { return }
+        // The rear-vehicle caution (the wrist cue + alert screen).
+        alertManager.fire(.cautionRearVehicle)
+        // A camera notice a second later so the owner sees a second wrist notice.
+        alertManager.fire(.clipSaved)
+    }
+
     // MARK: - Seed / remove sample data (Requirement 7)
 
     /// How many demo rides are currently stored (updates `existingDemoRideCount`
