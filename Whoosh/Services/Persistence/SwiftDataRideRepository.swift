@@ -46,6 +46,7 @@ final class SwiftDataRideRepository: RideRepository {
             existing.activeDuration = ride.summary.activeDuration
             existing.averageSpeed = ride.summary.averageSpeedMetersPerSecond
             existing.encodedPoints = encodedPoints
+            existing.syncStatusRaw = ride.syncStatus.rawValue
         } else {
             context.insert(
                 RideRecord(
@@ -55,7 +56,8 @@ final class SwiftDataRideRepository: RideRepository {
                     distanceMeters: ride.summary.distanceMeters,
                     activeDuration: ride.summary.activeDuration,
                     averageSpeed: ride.summary.averageSpeedMetersPerSecond,
-                    encodedPoints: encodedPoints
+                    encodedPoints: encodedPoints,
+                    syncStatusRaw: ride.syncStatus.rawValue
                 )
             )
         }
@@ -121,7 +123,10 @@ final class SwiftDataRideRepository: RideRepository {
                 distanceMeters: record.distanceMeters,
                 activeDuration: record.activeDuration,
                 averageSpeedMetersPerSecond: record.averageSpeed
-            )
+            ),
+            // An unrecognized raw value falls back to `.localOnly` so a record
+            // written by a newer build is never treated as something invalid.
+            syncStatus: SyncStatus(rawValue: record.syncStatusRaw) ?? .localOnly
         )
     }
 }

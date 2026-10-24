@@ -21,6 +21,12 @@ final class RideRecord {
     /// Encoded `[RoutePoint]` (JSON). Decoded lazily by the repository, which
     /// skips (and logs) a record whose points fail to decode (Requirement 7.7).
     var encodedPoints: Data
+    /// Raw `SyncStatus` value (Requirement 12). Stored as the enum's raw
+    /// `String` with a default so existing stores migrate without a schema
+    /// change: any record written before sync shipped reads back as
+    /// `.localOnly`. An unrecognized value also maps to `.localOnly` at the
+    /// repository boundary.
+    var syncStatusRaw: String = SyncStatus.localOnly.rawValue
 
     init(
         id: UUID,
@@ -29,7 +35,8 @@ final class RideRecord {
         distanceMeters: Double,
         activeDuration: TimeInterval,
         averageSpeed: Double,
-        encodedPoints: Data
+        encodedPoints: Data,
+        syncStatusRaw: String = SyncStatus.localOnly.rawValue
     ) {
         self.id = id
         self.startedAt = startedAt
@@ -38,5 +45,6 @@ final class RideRecord {
         self.activeDuration = activeDuration
         self.averageSpeed = averageSpeed
         self.encodedPoints = encodedPoints
+        self.syncStatusRaw = syncStatusRaw
     }
 }

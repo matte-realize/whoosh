@@ -483,7 +483,7 @@ Conventions:
 Start only after task 23 is green and Role C has marked the schema "Agreed" in
 `.kiro/team/supabase-contract.md`.
 
-- [ ] 26. Sync seam and privacy trimming (test-first)
+- [x] 26. Sync seam and privacy trimming (test-first)
   - Define `SyncStatus`, `RideSyncService`, and `NoopRideSyncService`; add `syncStatus` and
     a pending-delete tombstone to persistence.
   - Implement pure `RoutePrivacy.trim(points:meters:)` (default 160 m each end).
@@ -492,7 +492,25 @@ Start only after task 23 is green and Role C has marked the schema "Agreed" in
   - _Requirements: 12.2, 12.5_
   - _Depends on: 8, 22_
 
-- [ ] 27. SyncCoordinator retry policy (test-first)
+  - _Pending device check:_ code + unit tests written and `build-for-testing` succeeds with no
+    first-party warnings; `scripts/privacy-check.sh` passes (60 files). The full `xcodebuild
+    test` run is left to the orchestrator. The existing `SyncStatus` enum (added for the
+    summary/history UI) is reused and extended — not duplicated. `syncStatus` (default
+    `.localOnly`) was added to the domain `Ride` (new defaulted init parameter, so every
+    existing caller is source-compatible) and persisted on `RideRecord` as `syncStatusRaw`
+    with a default value for lightweight migration; it maps both ways in
+    `SwiftDataRideRepository` and flows through `InMemoryRideRepository` unchanged, so the
+    `RideRepository` protocol is **not** altered. `Services/Sync/` now holds `RideSyncService`
+    (+ `NoopRideSyncService`), the `PendingRemoteDeleteStore` protocol (+ a
+    `UserDefaults`-backed store and an in-memory fake), and the pure `Metrics/RoutePrivacy.swift`
+    (`trim(points:meters:)`, default 160 m each end via cumulative Haversine through
+    `RideMetrics`; routes ≤ 2× trim return empty; empty/single-point safe; never mutates the
+    input). `RoutePrivacyTests` cover normal, short, exactly-2×, empty, single-point, default
+    distance, zero-trim, and input-not-mutated. _Assumption:_ "exactly 2× trim" is treated as
+    returning empty (no safe interior); a small epsilon keeps that stable against floating-point
+    rounding in the Haversine sum.
+
+- [x] 27. SyncCoordinator retry policy (test-first)
   - Implement `SyncCoordinator`: save locally first, then upload; mark `pending` on failure;
     retry pending uploads and deletes on app foreground; idempotent on ride `id`; does
     nothing while sync is disabled. On a prior `deleteAll`, pending remote deletes still
@@ -500,6 +518,26 @@ Start only after task 23 is green and Role C has marked the schema "Agreed" in
   - Unit tests with a fake `RideSyncService` that fails on command.
   - _Requirements: 12.3, 12.4, 12.6_
   - _Depends on: 26_
+
+  - _Pending device check:_ code + unit tests written and `build-for-testing` succeeds with no
+    first-party warnings; `scripts/privacy-check.sh` passes. The full `xcodebuild test` run is
+    left to the orchestrator. `Services/Sync/SyncCoordinator.swift` (`@MainActor`) implements
+    the retry policy: `rideDidFinish(_:)` uploads the (privacy-trimmed) ride only when
+    `service.isEnabled` — success → `.synced`, failure → `.pending`, persisting the status back
+    through the `RideRepository` while the local route stays complete; `retryPending()` (app
+    foreground) re-uploads every `.pending` ride and drains the tombstone store, never
+    re-uploading a `.synced` ride (idempotent on `id`); `rideWasDeleted(_:)` tombstones a
+    previously-uploaded ride and calls `deleteRemote`, keeping the tombstone on failure;
+    `allRidesWereDeleted(previouslySynced:)` tombstones every previously synced ride; and
+    everything is a no-op while sync is disabled. It never touches the ride state machine. The
+    scriptable `FakeRideSyncService` (records calls, fails on command) backs
+    `SyncCoordinatorTests`, which cover save-locally-before-upload, privacy-trim-on-upload,
+    pending-on-failure, retry without duplicates, no re-upload of a synced ride, delete
+    propagation after reconnect, deleteAll tombstones (success and failure), and disabled =
+    zero calls. The coordinator is **not** wired into the composition root yet (sync is off;
+    the Settings toggle stays "Coming soon"); a doc comment on `SyncCoordinator` records exactly
+    how task 28 will wire it (`rideDidFinish` after save, `rideWasDeleted` from the delete path,
+    `allRidesWereDeleted` from Settings "Delete all rides", `retryPending` on foreground).
 
 - [ ] 28. Supabase implementation and settings toggle enablement
   - Add `supabase-swift` via SPM pinned to an exact version. Implement

@@ -13,18 +13,25 @@ struct Ride: Identifiable, Equatable, Hashable, Codable, Sendable {
     var points: [RoutePoint]
     /// Recomputed on finalize from `points` and the accumulated active duration.
     var summary: RideSummary
+    /// The cloud-sync state of the ride (Requirement 12). Defaults to
+    /// `.localOnly` so every existing caller and stored ride is unaffected
+    /// until opt-in sync runs; the `SyncCoordinator` advances it to `.pending`
+    /// or `.synced`.
+    var syncStatus: SyncStatus
 
     init(
         id: UUID = UUID(),
         startedAt: Date,
         endedAt: Date? = nil,
         points: [RoutePoint] = [],
-        summary: RideSummary = .zero
+        summary: RideSummary = .zero,
+        syncStatus: SyncStatus = .localOnly
     ) {
         self.id = id
         self.startedAt = startedAt
         self.endedAt = endedAt
         self.points = points
         self.summary = summary
+        self.syncStatus = syncStatus
     }
 }
