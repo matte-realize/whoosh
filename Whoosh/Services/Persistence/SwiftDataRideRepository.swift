@@ -16,6 +16,10 @@ import SwiftData
 @MainActor
 final class SwiftDataRideRepository: RideRepository {
     private let context: ModelContext
+    /// A `ModelContext` does not keep its container alive; fetching after the
+    /// container is freed traps inside SwiftData. Holding it here means callers
+    /// can pass `container.mainContext` without retaining the container.
+    private let container: ModelContainer
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private static let logger = Logger(
@@ -25,6 +29,7 @@ final class SwiftDataRideRepository: RideRepository {
 
     init(context: ModelContext) {
         self.context = context
+        self.container = context.container
     }
 
     func save(_ ride: Ride) throws {

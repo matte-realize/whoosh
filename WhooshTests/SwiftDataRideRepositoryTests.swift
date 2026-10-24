@@ -49,6 +49,22 @@ struct SwiftDataRideRepositoryTests {
         return try ModelContainer(for: RideRecord.self, configurations: config)
     }
 
+    /// Builds a repository the way `AppEnvironment.live()` does: the container
+    /// is a local that goes out of scope, and only its `mainContext` is kept.
+    private func makeRepositoryDroppingContainer() throws -> SwiftDataRideRepository {
+        let container = try makeInMemoryContainer()
+        return SwiftDataRideRepository(context: container.mainContext)
+    }
+
+    // MARK: container lifetime
+
+    @Test func repositoryKeepsItsContainerAliveAfterCallerDropsIt() throws {
+        let repo = try makeRepositoryDroppingContainer()
+        let ride = Self.ride(startedAt: Self.t0)
+        try repo.save(ride)
+        #expect(try repo.allRides() == [ride])
+    }
+
     // MARK: save / get / list
 
     @Test func saveThenFetchByIDRoundTripsPointsAndSummary() throws {
