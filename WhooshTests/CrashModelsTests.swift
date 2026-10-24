@@ -183,9 +183,10 @@ struct CrashModelsTests {
 
     // MARK: - CrashAlertSettings
 
-    @Test func crashAlertSettingsDefaultsAreOff() {
+    @Test func crashAlertSettingsDefaults() {
+        // Enabled by default (hackathon build); arming still needs consent and a contact.
         let settings = CrashAlertSettings()
-        #expect(settings.enabled == false)
+        #expect(settings.enabled == true)
         #expect(settings.riderLabel == nil)
         #expect(settings.countdownSeconds == nil)
         #expect(settings.developerToolsEnabled == false)

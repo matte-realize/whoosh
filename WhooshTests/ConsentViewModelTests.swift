@@ -72,7 +72,11 @@ struct ConsentViewModelTests {
     // MARK: - Two controls required (Requirement 1.2, 3.1)
 
     @Test func enableRequiresBothControls() async {
-        let (vm, consentStore, settingsStore, _, _) = makeViewModel()
+        // Crash alerts default on in the hackathon build; start from off to
+        // prove enable() needs both controls.
+        let (vm, consentStore, settingsStore, _, _) = makeViewModel(
+            settings: CrashAlertSettings(enabled: false, riderLabel: "Alex")
+        )
         // Only data-use consent, no acknowledgement.
         vm.dataUseConsented = true
         vm.acknowledgedNotGuaranteed = false
