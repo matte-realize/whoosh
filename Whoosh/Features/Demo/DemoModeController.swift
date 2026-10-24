@@ -50,6 +50,13 @@ final class DemoModeController {
     /// root supplies the repository/`RideTuning`/`Clock`). The controller drives
     /// it like the normal ride flow would.
     @ObservationIgnored private let makeSimulatedSession: (LocationTracking) -> RideSessionViewModel
+    /// Runs a crash **drill** through the real crash-response coordinator
+    /// (demo-mode task 12). Injected by the composition root so the controller
+    /// stays free of concrete crash types; defaults to a no-op so previews/tests
+    /// that don't exercise the drill need not supply it. The drill bypasses
+    /// arming (drills only), uses the `drill` template, and never sends a real
+    /// alert.
+    @ObservationIgnored private let triggerCrashDrill: () -> Void
 
     // MARK: Observable state
 
@@ -110,7 +117,8 @@ final class DemoModeController {
         script: DemoRideScript = .charlesRiverLoop,
         tuning: DemoTuning = DemoTuning(),
         makeSimulatedTracker: @escaping (DemoRideScript, Double) -> LocationTracking,
-        makeSimulatedSession: @escaping (LocationTracking) -> RideSessionViewModel
+        makeSimulatedSession: @escaping (LocationTracking) -> RideSessionViewModel,
+        triggerCrashDrill: @escaping () -> Void = {}
     ) {
         self.defaults = defaults
         self.clock = clock
@@ -121,6 +129,7 @@ final class DemoModeController {
         self.tuning = tuning
         self.makeSimulatedTracker = makeSimulatedTracker
         self.makeSimulatedSession = makeSimulatedSession
+        self.triggerCrashDrill = triggerCrashDrill
         self.simulatedSpeedFactor = tuning.defaultSpeedFactor
 
         // Resolve the initial toggle state: a Debug-only launch argument may
@@ -321,13 +330,17 @@ final class DemoModeController {
 
     // MARK: - Crash drill (Requirement 6) — wired in task 12
 
-    /// Run a crash **drill** through the real crash-response coordinator (task
-    /// 12). The crash feature is not wired in this build, so this is a safe
-    /// no-op placeholder: it never sends a real alert and never dials.
+    /// Run a crash **drill** through the real crash-response coordinator
+    /// (demo-mode task 12). The drill bypasses arming in demo mode only (so it
+    /// runs with no active ride and even when no contacts or consent exist),
+    /// shows the real countdown takeover with the `drill` template
+    /// ("DEMO — NOT REAL"), hides "Call 911", and never consumes the real-alert
+    /// cap. When contacts and consent exist the same notifier path runs, which
+    /// in Tier 0 falls back to the prefilled composer — it never sends a real
+    /// (non-drill) alert and never dials. No-op while demo mode is off.
     func simulateCrashDrill() {
         guard isEnabled else { return }
-        // Intentionally inert until the crash-response coordinator is wired
-        // (demo-mode task 12). Surfacing a note is the UI's responsibility.
+        triggerCrashDrill()
     }
 
     // MARK: - Persistence

@@ -387,6 +387,45 @@ struct CrashResponseCoordinatorTests {
         h.detector.emitDrill()  // another drill allowed
         #expect(h.coordinator.eventState == .countdown)
     }
+
+    // MARK: - Demo-mode drill bypass (demo-mode task 4/12)
+
+    /// DRILL-1: `triggerDrill()` runs the real countdown even with no active
+    /// ride, no consent, and no contacts (normally disarmed). The event is a
+    /// drill and nothing is sent.
+    @Test func triggerDrill_runsWhenDisarmed_noRideNoConsentNoContacts() {
+        let h = Self.makeCoordinator(
+            rideRecording: false,
+            enabled: false,
+            consentVersion: nil,
+            riderLabel: nil,
+            contacts: []
+        )
+        h.coordinator.triggerDrill()
+        #expect(h.coordinator.eventState == .countdown)
+        #expect(h.coordinator.machine.isDrill)
+        #expect(h.coordinator.isTakeoverPresented)
+        // Drills hide "Call 911" (surfaced via isDrill to the takeover).
+        #expect(h.coordinator.isDrill)
+        // Nothing was sent (no reachable contact; no notifier call).
+        #expect(h.notifier.sendCallCount == 0)
+    }
+
+    /// DRILL-2: the bypass is for drills only — a real (non-drill) signal in the
+    /// same disarmed state is ignored (no event opens, nothing sent).
+    @Test func realSignalWhileDisarmed_isIgnored() {
+        let h = Self.makeCoordinator(
+            rideRecording: false,
+            enabled: false,
+            consentVersion: nil,
+            riderLabel: nil,
+            contacts: []
+        )
+        h.detector.emit(isDrill: false)  // real signal, detector monitoring
+        #expect(h.coordinator.eventState == .idle)
+        #expect(!h.coordinator.isTakeoverPresented)
+        #expect(h.notifier.sendCallCount == 0)
+    }
 }
 
 extension InMemoryCrashAlertRepository {
