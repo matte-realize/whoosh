@@ -39,4 +39,12 @@ protocol RideSyncService {
     /// update can't trip the backend's `rides_active_within_elapsed` check.
     /// Idempotent on `id`.
     func setSharing(id: UUID, shared: Bool) async throws
+
+    /// Upsert the near-miss events for a ride (rear-camera spec Requirement 15,
+    /// task 28). Called by the `SyncCoordinator` **after** the ride row is
+    /// uploaded, so the `near_misses.ride_id` foreign key always resolves. The
+    /// payloads are already privacy-filtered and mapped (no footage reference,
+    /// trim-zone and demo events dropped) by the caller. Idempotent on each
+    /// event id; a failure is thrown so the coordinator can retry later.
+    func uploadNearMisses(_ payloads: [NearMissUploadMapper.Payload]) async throws
 }

@@ -27,6 +27,13 @@ protocol RideSyncTransport: Sendable {
     /// `ended_at`, so it cannot trip the backend's `rides_active_within_elapsed`
     /// check (that concern only applies to writes that change the duration).
     func updateSharing(id: UUID, shared: Bool) async throws
+
+    /// Upsert a batch of near-miss rows into `near_misses`. `user_id` defaults to
+    /// `auth.uid()` on the server, so it is not part of the payload; `id` is
+    /// server-generated (`gen_random_uuid()`), so duplicate inserts from a retry
+    /// are acceptable at hackathon scale (the coordinator only re-sends a ride's
+    /// events on an earlier failure). An empty batch is a no-op.
+    func upsertNearMisses(_ rows: [NearMissUploadMapper.Payload]) async throws
 }
 
 /// A transport-layer failure carrying the PostgREST error `code` (when the

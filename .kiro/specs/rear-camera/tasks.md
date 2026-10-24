@@ -391,7 +391,7 @@ path is unchanged.
   - _Depends on:_ 26
   - _Parallel:_ Group P4
 
-- [ ] 28. `[iOS]` `[IMPORTANT]` Detection → near-miss → clip
+- [x] 28. `[iOS]` `[IMPORTANT]` Detection → near-miss → clip
   - Persist `NearMissEvent` locally with the ride; `DetectionCoordinator` pins detection clips
     (cooldown, per-ride cap, storage refusal) and links the local clip id; labels in the clip list
     ("Vehicle detected (experimental)"). Off by default until Teammate B's measured thresholds exist

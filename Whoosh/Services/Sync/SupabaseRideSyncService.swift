@@ -68,6 +68,11 @@ actor SupabaseRideSyncService: RideSyncService {
         try await send { try await transport.updateSharing(id: id, shared: shared) }
     }
 
+    func uploadNearMisses(_ payloads: [NearMissUploadMapper.Payload]) async throws {
+        guard !payloads.isEmpty else { return }
+        try await send { try await transport.upsertNearMisses(payloads) }
+    }
+
     // MARK: Error handling
 
     /// Runs a transport call, ensuring a session first; on a `42501`/auth error

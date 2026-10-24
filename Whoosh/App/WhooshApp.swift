@@ -166,7 +166,7 @@ struct WhooshApp: App {
                 crashAlertsSetup
             }
         case .summary(let ride):
-            RideSummaryView(ride: ride, presentation: .historyDetail)
+            RideSummaryView(ride: ride, presentation: .historyDetail, nearMisses: nearMisses(for: ride))
         }
     }
 
@@ -258,6 +258,7 @@ struct WhooshApp: App {
                     RideSummaryView(
                         ride: ride,
                         presentation: .justFinished,
+                        nearMisses: nearMisses(for: ride),
                         onDone: finishRide
                     )
                 }
@@ -295,6 +296,15 @@ struct WhooshApp: App {
             get: { mountAndFrame != nil },
             set: { if !$0 { mountAndFrame = nil } }
         )
+    }
+
+    // MARK: - Near misses
+
+    /// The locally stored near-miss events for a ride (rear-camera Req 15, task
+    /// 28), shown as markers on the summary map and a count row. Empty when the
+    /// store has none; footage is never referenced (events only).
+    private func nearMisses(for ride: Ride) -> [NearMissEvent] {
+        (try? environment.nearMissRepository.events(rideId: ride.id)) ?? []
     }
 
     // MARK: - Ride lifecycle

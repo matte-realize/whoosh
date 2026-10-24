@@ -42,17 +42,24 @@ final class SyncCoordinator {
     private let repository: RideRepository
     private let pendingDeletes: PendingRemoteDeleteStore
     private let trimMeters: Double
+    /// Supplies the locally stored near-miss events for a ride so the coordinator
+    /// can upsert them after the ride row is uploaded (rear-camera Req 15, task
+    /// 28). Defaults to "none", so a coordinator built without a near-miss store
+    /// (previews, sync-only tests) behaves exactly as before.
+    private let nearMissEvents: (UUID) -> [NearMissEvent]
 
     init(
         service: RideSyncService,
         repository: RideRepository,
         pendingDeletes: PendingRemoteDeleteStore,
-        trimMeters: Double = RoutePrivacy.defaultTrimMeters
+        trimMeters: Double = RoutePrivacy.defaultTrimMeters,
+        nearMissEvents: @escaping (UUID) -> [NearMissEvent] = { _ in [] }
     ) {
         self.service = service
         self.repository = repository
         self.pendingDeletes = pendingDeletes
         self.trimMeters = trimMeters
+        self.nearMissEvents = nearMissEvents
     }
 
     // MARK: Events
@@ -133,6 +140,13 @@ final class SyncCoordinator {
             await upload(ride)
         }
 
+        // Near misses: a ride can be `.synced` while its events failed to
+        // upsert earlier (the ride is safely synced, but the near misses are
+        // not). Re-attempt them here; the upsert is harmless to repeat.
+        for ride in rides where ride.syncStatus == .synced && !ride.isDemo {
+            await uploadNearMisses(for: ride)
+        }
+
         // Deletes: drain tombstones from offline deletions.
         for id in pendingDeletes.allPending() {
             await drainDelete(id)
@@ -163,6 +177,8 @@ final class SyncCoordinator {
         do {
             try await service.upload(trimmed)
             persist(ride, status: .synced)
+            // The ride row exists now, so the `near_misses.ride_id` FK resolves.
+            await uploadNearMisses(for: ride)
         } catch RideSyncTerminalOutcome.failed {
             persist(ride, status: .failed)
         } catch RideSyncTerminalOutcome.localOnly {
@@ -170,6 +186,29 @@ final class SyncCoordinator {
         } catch {
             persist(ride, status: .pending)
         }
+    }
+
+    /// Upserts the ride's locally stored near-miss events (rear-camera Req 15,
+    /// task 28). Called only after the ride row is uploaded. Drops demo events
+    /// (never uploaded) and any event inside the privacy-trim zone, then maps to
+    /// the contract shape with the ride's stamped `share_publicly` flag. A
+    /// failure is swallowed: it never reverts the ride's `.synced` status (the
+    /// ride is safely uploaded) and a later `retryPending()` re-attempts it. A
+    /// double send is harmless at hackathon scale (server ids are generated and
+    /// the batch is re-sent only on an earlier failure).
+    private func uploadNearMisses(for ride: Ride) async {
+        let stored = nearMissEvents(ride.id).filter { !$0.isDemo }
+        guard !stored.isEmpty else { return }
+        let uploadable = NearMissTrimFilter.uploadable(
+            events: stored,
+            points: ride.points,
+            meters: trimMeters
+        )
+        let payloads = uploadable.compactMap {
+            NearMissUploadMapper.mapIfUploadable($0, sharePublicly: ride.sharePublicly)
+        }
+        guard !payloads.isEmpty else { return }
+        try? await service.uploadNearMisses(payloads)
     }
 
     /// Requests remote deletion for an id, removing the tombstone only on

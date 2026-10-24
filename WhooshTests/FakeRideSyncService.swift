@@ -30,6 +30,8 @@ final class FakeRideSyncService: RideSyncService {
     private(set) var deletedIDs: [UUID] = []
     /// `setSharing` calls in order.
     private(set) var setSharingCalls: [SharingCall] = []
+    /// Near-miss payload batches passed to `uploadNearMisses`, in call order.
+    private(set) var uploadedNearMissBatches: [[NearMissUploadMapper.Payload]] = []
 
     /// Number of upcoming `upload` calls that should throw before succeeding.
     var uploadFailuresRemaining: Int
@@ -37,17 +39,21 @@ final class FakeRideSyncService: RideSyncService {
     var deleteFailuresRemaining: Int
     /// Number of upcoming `setSharing` calls that should throw before succeeding.
     var setSharingFailuresRemaining: Int
+    /// Number of upcoming `uploadNearMisses` calls that should throw first.
+    var uploadNearMissesFailuresRemaining: Int
 
     init(
         isEnabled: Bool = true,
         uploadFailuresRemaining: Int = 0,
         deleteFailuresRemaining: Int = 0,
-        setSharingFailuresRemaining: Int = 0
+        setSharingFailuresRemaining: Int = 0,
+        uploadNearMissesFailuresRemaining: Int = 0
     ) {
         self.isEnabled = isEnabled
         self.uploadFailuresRemaining = uploadFailuresRemaining
         self.deleteFailuresRemaining = deleteFailuresRemaining
         self.setSharingFailuresRemaining = setSharingFailuresRemaining
+        self.uploadNearMissesFailuresRemaining = uploadNearMissesFailuresRemaining
     }
 
     func upload(_ ride: Ride) async throws {
@@ -73,5 +79,13 @@ final class FakeRideSyncService: RideSyncService {
             throw SyncError()
         }
         setSharingCalls.append(.init(id: id, shared: shared))
+    }
+
+    func uploadNearMisses(_ payloads: [NearMissUploadMapper.Payload]) async throws {
+        if uploadNearMissesFailuresRemaining > 0 {
+            uploadNearMissesFailuresRemaining -= 1
+            throw SyncError()
+        }
+        uploadedNearMissBatches.append(payloads)
     }
 }

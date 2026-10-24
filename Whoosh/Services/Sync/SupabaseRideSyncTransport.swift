@@ -74,6 +74,18 @@ actor SupabaseRideSyncTransport: RideSyncTransport {
         }
     }
 
+    func upsertNearMisses(_ rows: [NearMissUploadMapper.Payload]) async throws {
+        guard !rows.isEmpty else { return }
+        do {
+            try await client
+                .from("near_misses")
+                .insert(rows, returning: .minimal)
+                .execute()
+        } catch {
+            throw Self.map(error)
+        }
+    }
+
     // MARK: Error mapping
 
     /// Convert any SDK error into a `SyncTransportError` carrying the PostgREST

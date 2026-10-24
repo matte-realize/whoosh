@@ -27,6 +27,14 @@ final class AppEnvironment {
     let clock: Clock
     let detector: HazardDetector
     let alertManager: AlertManager
+    /// Local store of near-miss events (rear-camera Req 15, task 28). Shared by
+    /// the recorder (write), the summary/history UI (read), and the sync path
+    /// (read, upsert after a ride). Device-only; the local clip id is never
+    /// uploaded.
+    let nearMissRepository: NearMissRepository
+    /// Persists near-miss events produced by detection/demo. Available for the
+    /// detector-coordinator wiring and the demo-mode simulated-detector path.
+    let nearMissRecorder: NearMissRecorder
 
     /// The opt-in crash-response sub-environment (crash-response task 26). Owns
     /// the coordinator, stores, and seams; always Tier 0 (Noop notifier, no
@@ -77,6 +85,7 @@ final class AppEnvironment {
         clock: Clock,
         detector: HazardDetector,
         alertManager: AlertManager,
+        nearMissRepository: NearMissRepository,
         crash: CrashResponseEnvironment,
         calendar: Calendar,
         defaults: UserDefaults,
@@ -95,6 +104,8 @@ final class AppEnvironment {
         self.clock = clock
         self.detector = detector
         self.alertManager = alertManager
+        self.nearMissRepository = nearMissRepository
+        self.nearMissRecorder = NearMissRecorder(repository: nearMissRepository)
         self.crash = crash
         self.storageNotice = storageNotice
         self.makeRideTracker = makeRideTracker
@@ -158,7 +169,10 @@ final class AppEnvironment {
         let coordinator = SyncCoordinator(
             service: service,
             repository: repository,
-            pendingDeletes: pendingDeletes
+            pendingDeletes: pendingDeletes,
+            nearMissEvents: { [nearMissRepository] rideId in
+                (try? nearMissRepository.events(rideId: rideId)) ?? []
+            }
         )
         self.syncCoordinator = coordinator
 
@@ -194,14 +208,18 @@ final class AppEnvironment {
         )
     }
 
-    /// After a ride is deleted locally, request its remote deletion.
+    /// After a ride is deleted locally, request its remote deletion and remove
+    /// its local near-miss events (real deletion; footage/links never persist).
     func rideWasDeleted(_ ride: Ride) async {
+        try? nearMissRepository.deleteAll(rideId: ride.id)
         await syncCoordinator.rideWasDeleted(ride)
     }
 
     /// Before/after "Delete all rides", propagate remote deletes for any rides
-    /// that had been uploaded. Pass the ids collected before the wipe.
+    /// that had been uploaded. Pass the ids collected before the wipe. Also
+    /// clears every local near-miss event (they belong to the deleted rides).
     func allRidesWereDeleted(previouslySynced ids: [UUID]) async {
+        try? nearMissRepository.deleteAll()
         await syncCoordinator.allRidesWereDeleted(previouslySynced: ids)
     }
 
@@ -321,7 +339,11 @@ final class AppEnvironment {
 
     /// A fresh History view model over the shared repository.
     func makeHistoryViewModel(calendar: Calendar = .current) -> HistoryViewModel {
-        HistoryViewModel(repository: repository, calendar: calendar)
+        HistoryViewModel(
+            repository: repository,
+            calendar: calendar,
+            nearMissRepository: nearMissRepository
+        )
     }
 
     // MARK: - Live stack
@@ -330,7 +352,7 @@ final class AppEnvironment {
     /// if an on-disk store cannot be created, so the app still launches (history
     /// simply won't persist across launches in that degraded case).
     static func live() -> AppEnvironment {
-        let (repository, crashRepository, clipRepository, storageNotice) = Self.makeLiveRepositories()
+        let (repository, crashRepository, clipRepository, nearMissRepository, storageNotice) = Self.makeLiveRepositories()
         let clock = SystemClock()
 
         // Crash-response stores (device-local only; no network). Contacts live
@@ -395,6 +417,7 @@ final class AppEnvironment {
             // forced-alert path produces a real cue, and camera notices reach the
             // phone speaker.
             alertManager: alertManager,
+            nearMissRepository: nearMissRepository,
             crash: crash,
             calendar: .current,
             defaults: .standard,
@@ -418,23 +441,19 @@ final class AppEnvironment {
         return String(raw.prefix(32))
     }
 
-    /// Builds the ride repository and the crash-alert repository over a **single
-    /// shared `ModelContainer`** holding both `RideRecord` and
-    /// `CrashAlertRecordEntity` (crash-response task 26: the crash record entity
-    /// is added to the same live container as rides, keeping the container-
-    /// retention rule and the in-memory fallback). Existing ride data is
-    /// untouched by adding the new `@Model`.
-    /// Builds the ride, crash-alert, **and clip** repositories over a **single
-    /// shared `ModelContainer`** holding `RideRecord`, `CrashAlertRecordEntity`,
-    /// and `ClipRecordEntity` (rear-camera task 15/19 + crash-response task 26:
-    /// each record entity is added to the same live container as rides, keeping
-    /// the container-retention rule and the in-memory fallback). Existing ride
-    /// data is untouched by adding the new `@Model`s.
-    private static func makeLiveRepositories() -> (RideRepository, CrashAlertRepository, ClipRepository, String?) {
+    /// Builds the ride, crash-alert, clip, and near-miss repositories over a
+    /// **single shared `ModelContainer`** holding `RideRecord`,
+    /// `CrashAlertRecordEntity`, `ClipRecordEntity`, and `NearMissEventEntity`
+    /// (crash-response task 26, rear-camera tasks 15/19/28: every record entity
+    /// lives in the same live container as rides, keeping the container-retention
+    /// rule and the in-memory fallback). Existing ride data is untouched by adding
+    /// the new `@Model`s.
+    private static func makeLiveRepositories() -> (RideRepository, CrashAlertRepository, ClipRepository, NearMissRepository, String?) {
         let schema: [any PersistentModel.Type] = [
             RideRecord.self,
             CrashAlertRecordEntity.self,
             ClipRecordEntity.self,
+            NearMissEventEntity.self,
         ]
         do {
             let container = try ModelContainer(for: Schema(schema))
@@ -443,6 +462,7 @@ final class AppEnvironment {
                 SwiftDataRideRepository(context: context),
                 SwiftDataCrashAlertRepository(context: context),
                 SwiftDataClipRepository(context: context),
+                SwiftDataNearMissRepository(context: context),
                 nil
             )
         } catch {
@@ -460,6 +480,7 @@ final class AppEnvironment {
                     SwiftDataRideRepository(context: context),
                     SwiftDataCrashAlertRepository(context: context),
                     SwiftDataClipRepository(context: context),
+                    SwiftDataNearMissRepository(context: context),
                     notice
                 )
             }
@@ -467,6 +488,7 @@ final class AppEnvironment {
                 InMemoryRideRepository(),
                 InMemoryCrashAlertRepository(),
                 InMemoryClipRepository(),
+                InMemoryNearMissRepository(),
                 notice
             )
         }
@@ -510,6 +532,7 @@ final class AppEnvironment {
             clock: clock,
             detector: NoopDetector(),
             alertManager: StubAlertManager(),
+            nearMissRepository: InMemoryNearMissRepository(),
             crash: crash,
             calendar: calendar,
             defaults: defaults,

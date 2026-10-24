@@ -10,6 +10,10 @@ import SwiftUI
 struct RideRow: View {
     let ride: Ride
     var showSpeed: Bool = true
+    /// Count of near-miss events recorded during this ride (rear-camera Req 15,
+    /// task 28). Shown as a small amber badge when non-zero. 0 by default so
+    /// existing callers are unaffected.
+    var nearMissCount: Int = 0
 
     var body: some View {
         HStack(spacing: Theme.Spacing.md) {
@@ -32,6 +36,9 @@ struct RideRow: View {
             Spacer(minLength: Theme.Spacing.sm)
 
             HStack(spacing: Theme.Spacing.sm) {
+                if nearMissCount > 0 {
+                    nearMissBadge
+                }
                 if showsSharing {
                     Image(systemName: sharingVariant.systemImage)
                         .font(.system(size: 14, weight: .semibold))
@@ -102,6 +109,22 @@ struct RideRow: View {
         .clipShape(Capsule())
     }
 
+    /// A small amber near-miss count badge (experimental logged events, task 28).
+    private var nearMissBadge: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 9, weight: .bold))
+            Text("\(nearMissCount)")
+                .font(.system(size: 10, weight: .semibold))
+        }
+        .foregroundStyle(Theme.Palette.ink)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(Theme.Palette.amber)
+        .clipShape(Capsule())
+        .accessibilityHidden(true)
+    }
+
     private var subtitle: String {
         var parts = [
             Formatters.miles(fromMeters: ride.summary.distanceMeters),
@@ -118,6 +141,10 @@ struct RideRow: View {
         var text = "\(demo)\(Self.titleText(for: ride.startedAt)), \(subtitle), \(syncVariant.title)"
         if showsSharing {
             text += ", \(sharingState.title)"
+        }
+        if nearMissCount > 0 {
+            let label = nearMissCount == 1 ? "1 near miss" : "\(nearMissCount) near misses"
+            text += ", \(label)"
         }
         return text
     }

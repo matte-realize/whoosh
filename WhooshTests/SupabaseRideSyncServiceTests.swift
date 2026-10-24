@@ -10,6 +10,7 @@ actor FakeRideSyncTransport: RideSyncTransport {
     private(set) var upsertedRows: [RideUploadRow] = []
     private(set) var deletedIDs: [UUID] = []
     private(set) var sharingUpdates: [(id: UUID, shared: Bool)] = []
+    private(set) var nearMissBatches: [[NearMissUploadMapper.Payload]] = []
 
     /// Codes to throw on the next upsert calls (consumed front to back). `nil`
     /// entry = a code-less transport/offline error.
@@ -35,6 +36,10 @@ actor FakeRideSyncTransport: RideSyncTransport {
 
     func updateSharing(id: UUID, shared: Bool) async throws {
         sharingUpdates.append((id, shared))
+    }
+
+    func upsertNearMisses(_ rows: [NearMissUploadMapper.Payload]) async throws {
+        nearMissBatches.append(rows)
     }
 }
 
@@ -291,4 +296,5 @@ final class TerminalOutcomeSyncService: RideSyncService {
     func upload(_ ride: Ride) async throws { throw outcome }
     func deleteRemote(id: UUID) async throws {}
     func setSharing(id: UUID, shared: Bool) async throws {}
+    func uploadNearMisses(_ payloads: [NearMissUploadMapper.Payload]) async throws {}
 }

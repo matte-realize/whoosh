@@ -28,6 +28,10 @@ struct RideSummaryView: View {
     /// Sync status for the row. Defaults to the ride's stored status; callers
     /// may override (e.g. previews).
     var syncStatus: SyncStatus?
+    /// Near-miss events recorded during this ride (rear-camera Req 15, task 28).
+    /// Shown as markers on the map and a count row. Empty by default so existing
+    /// callers are unaffected.
+    var nearMisses: [NearMissEvent] = []
     /// Called when "Done" is tapped (only used in `.justFinished`).
     var onDone: () -> Void = {}
 
@@ -50,6 +54,9 @@ struct RideSummaryView: View {
                 HStack(spacing: Theme.Spacing.md) {
                     rideTimeTile
                     avgSpeedTile
+                }
+                if !markableNearMisses.isEmpty {
+                    nearMissRow
                 }
                 syncRow
                 if effectiveSyncStatus != .localOnly {
@@ -131,7 +138,7 @@ struct RideSummaryView: View {
         if ride.points.isEmpty {
             noRoutePlaceholder
         } else {
-            RouteMapView(points: ride.points, mode: .static)
+            RouteMapView(points: ride.points, mode: .static, nearMisses: markableNearMisses)
                 .frame(height: 190)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
         }
@@ -196,10 +203,44 @@ struct RideSummaryView: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
     }
 
+    // MARK: - Near-miss row
+
+    /// Near-miss events that have a coordinate to mark on the map.
+    private var markableNearMisses: [NearMissEvent] {
+        nearMisses.filter { $0.latitude != nil && $0.longitude != nil }
+    }
+
+    private var nearMissCountText: String {
+        let count = markableNearMisses.count
+        return count == 1 ? "1 near miss" : "\(count) near misses"
+    }
+
+    private var nearMissRow: some View {
+        HStack(spacing: Theme.Spacing.md) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Theme.Palette.amber)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(nearMissCountText)
+                    .font(Theme.Typography.rowTitle)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                Text("Experimental vehicle detection")
+                    .font(Theme.Typography.caption)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+            }
+            Spacer()
+        }
+        .padding(Theme.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.Colors.cardSurface)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(nearMissCountText), experimental vehicle detection")
+    }
+
     // MARK: - Sync status row
 
-    private var syncRow: some View {
-        HStack(spacing: Theme.Spacing.md) {
+    private var syncRow: some View {        HStack(spacing: Theme.Spacing.md) {
             Image(systemName: syncVariant.systemImage)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Theme.Colors.textSecondary)
