@@ -1,0 +1,6 @@
+clip_id,t_start_s,t_end_s,label,side,vehicle_class,close_pass,notes
+clip_0001,10.0,15.0,approach,left,car,no,"toy L1: clean match"
+clip_0001,40.0,45.0,approach,center,truck,,"toy L2: detected late"
+clip_0002,20.0,24.0,approach,right,car,no,"toy L3: two predictions near it"
+clip_0002,60.0,64.0,approach,left,bus,,"toy L4: missed"
+clip_0003,30.0,34.0,approach,right,motorcycle,,"toy L5: side mismatch"
