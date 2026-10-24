@@ -114,9 +114,20 @@ struct SettingsViewModelTests {
 
     // MARK: sync + sharing toggles (28f)
 
-    @Test func syncAndSharingAreOffByDefault() {
+    @Test func syncAndSharingAreOnByDefault() {
+        // Hackathon build: both default on (owner decision, October 24, 2026).
         let (defaults, suite) = makeDefaults()
         defer { cleanUp(defaults, suite) }
+        let vm = SettingsViewModel(repository: InMemoryRideRepository(), defaults: defaults)
+        #expect(vm.syncEnabled == true)
+        #expect(vm.shareNewRidesPublicly == true)
+    }
+
+    @Test func anExplicitOffChoiceIsRemembered() {
+        let (defaults, suite) = makeDefaults()
+        defer { cleanUp(defaults, suite) }
+        defaults.set(false, forKey: SettingsViewModel.syncEnabledDefaultsKey)
+        defaults.set(false, forKey: SettingsViewModel.shareNewRidesDefaultsKey)
         let vm = SettingsViewModel(repository: InMemoryRideRepository(), defaults: defaults)
         #expect(vm.syncEnabled == false)
         #expect(vm.shareNewRidesPublicly == false)
@@ -141,6 +152,8 @@ struct SettingsViewModelTests {
     @Test func sharingToggleIsIgnoredWhileSyncOff() {
         let (defaults, suite) = makeDefaults()
         defer { cleanUp(defaults, suite) }
+        defaults.set(false, forKey: SettingsViewModel.syncEnabledDefaultsKey)
+        defaults.set(false, forKey: SettingsViewModel.shareNewRidesDefaultsKey)
         let vm = SettingsViewModel(repository: InMemoryRideRepository(), defaults: defaults)
 
         vm.setShareNewRidesPublicly(true) // sync is off
@@ -151,6 +164,7 @@ struct SettingsViewModelTests {
     @Test func enablingSharingRaisesConfirmationThenApplies() {
         let (defaults, suite) = makeDefaults()
         defer { cleanUp(defaults, suite) }
+        defaults.set(false, forKey: SettingsViewModel.shareNewRidesDefaultsKey)
         let vm = SettingsViewModel(repository: InMemoryRideRepository(), defaults: defaults)
         vm.setSyncEnabled(true)
 

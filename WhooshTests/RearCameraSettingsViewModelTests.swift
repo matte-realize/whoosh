@@ -31,7 +31,12 @@ struct RearCameraSettingsViewModelTests {
     /// acknowledges the explanation.
     @Test func perm1_noRequestAtLaunchExplanationGatesPrompt() async {
         let permission = FakeCameraPermission(status: .notDetermined, grantResult: .authorized)
-        let vm = makeViewModel(permission: permission)
+        // Rear camera defaults ON in the hackathon build; start from a rider
+        // who turned it off to exercise the enable flow.
+        let vm = makeViewModel(
+            permission: permission,
+            store: InMemoryRearCameraSettingsStore(settings: RearCameraSettings(recordingEnabled: false))
+        )
 
         // Construction asked for nothing.
         #expect(permission.requestCount == 0)
@@ -197,11 +202,11 @@ struct RearCameraSettingsViewModelTests {
         #expect(reloaded.rideModeEnabled == false)
     }
 
-    /// Defaults match the spec: recording off, back camera, Standard, ride mode
-    /// on, 10-minute buffer.
+    /// Defaults: recording ON (hackathon build owner decision), back camera,
+    /// Standard, ride mode on, 10-minute buffer.
     @Test func defaultsMatchSpec() {
         let vm = makeViewModel()
-        #expect(vm.settings.recordingEnabled == false)
+        #expect(vm.settings.recordingEnabled == true)
         #expect(vm.settings.cameraPosition == .back)
         #expect(vm.settings.quality == .standard)
         #expect(vm.settings.rideModeEnabled == true)
