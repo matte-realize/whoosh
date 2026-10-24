@@ -56,10 +56,12 @@ final class HapticAudioAlertManager: AlertManager {
         switch kind {
         case .cautionRearVehicle:
             break
-        case .cameraInterrupted, .cameraResumed, .cameraStopped, .clipSaved, .clipNotSaved, .phoneBatteryLow:
-            // Camera status notices go to the eyes-free surfaces (rear-camera
-            // AlertSink fan-out). A rear-mounted phone buzzing helps no one, and
-            // a notice must not use up the rear-vehicle cooldown.
+        case .cameraInterrupted, .cameraResumed, .cameraStopped, .clipSaved, .clipNotSaved, .phoneBatteryLow,
+             .watchDisconnected, .watchReconnected:
+            // Camera/watch status notices go to the eyes-free surfaces (the
+            // rear-camera AlertSink fan-out / phone audio sink). A rear-mounted
+            // phone buzzing helps no one, and a notice must not use up the
+            // rear-vehicle cooldown.
             return
         }
 

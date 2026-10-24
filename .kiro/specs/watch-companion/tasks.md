@@ -221,7 +221,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 4
   - _Parallel:_ Group P1
 
-- [ ] 9. `[iOS]` `[DEMO]` Phone routing additions: `AlertContext`, watch channel, escalation (phone `Metrics/`, test-first)
+- [x] 9. `[iOS]` `[DEMO]` Phone routing additions: `AlertContext`, watch channel, escalation (phone `Metrics/`, test-first)
   - Additive models: `AlertContext` (id, tier, TTL, demo flag, confidence, hint), `AlertTier`,
     `AlertKind.watchDisconnected` / `.watchReconnected`, `WatchChannelState`.
   - Extend the rear-camera `AlertRoutingPolicy` with the watch channel states and the routing table in
@@ -268,7 +268,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 4, 5
   - _Parallel:_ Group P2
 
-- [ ] 13. `[iOS]` `[DEMO]` `WatchRideRemote` and the remote bridge with fakes (test-first)
+- [x] 13. `[iOS]` `[DEMO]` `WatchRideRemote` and the remote bridge with fakes (test-first)
   - `WatchRideRemote` implementing the rear-camera `RideRemoteControlling`: publish via
     `StatusTransportPolicy`, receive commands → dedupe → `RemoteCommandReducer` → `RideRemoteBridge`
     effects → reply with a fresh status. Apply amendments A2–A4 (additive `RideStatus` fields, `commandId` /
@@ -281,7 +281,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 5, 6, 10, 12; rear-camera 13
   - _Parallel:_ Group P2
 
-- [ ] 14. `[iOS]` `[DEMO]` `WatchAlertSink` and fan-out wiring (test-first)
+- [x] 14. `[iOS]` `[DEMO]` `WatchAlertSink` and fan-out wiring (test-first)
   - `WatchAlertSink` (an `AlertSink`): encode the alert, send live with a reply, map the receipt to an
     outcome, never block, surface failures; register it with the rear-camera `FanOutAlertManager`; wire the
     escalation timers (watch acknowledgement timeout 1.5 s) through `AlertOutcomeTracker`; keep the

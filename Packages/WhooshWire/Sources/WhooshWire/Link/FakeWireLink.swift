@@ -86,4 +86,15 @@ public actor FakeWireLink: WireLink {
 
     /// The most recent live send, if any.
     public var lastSent: WireEnvelope? { sent.last }
+
+    /// Set the reply the next `send` returns (actor-isolated setter so a test
+    /// can configure it with `await`).
+    public func setStubbedReply(_ reply: WireEnvelope?) {
+        stubbedReply = reply
+    }
+
+    /// Force every `send` to report `.unreachable`.
+    public func setForceUnreachable(_ value: Bool) {
+        forceUnreachable = value
+    }
 }
