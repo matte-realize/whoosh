@@ -16,8 +16,8 @@ crash subsystem observes it through a read-only context.
 ```
  CrashDetector ──signal──▶ CrashResponseCoordinator ──▶ CrashNotifier ──▶ Edge Function ──▶ SMS provider
  (Noop / Simulator /        (@Observable, MainActor)      (Supabase impl)    (Role C)          (Twilio, etc.)
-  experimental Motion)            │     ▲
-                                   │     └── pure reducer: state × event → state × effects
+  experimental Motion /           │     ▲
+  SafetyKit, entitled)            │     └── pure reducer: state × event → state × effects
                                    ├──▶ CountdownFeedback (audio + speech + haptics)
                                    ├──▶ CrashNotificationScheduler (time-sensitive local notification)
                                    ├──▶ FootageBuffer (Noop now; local-only)
@@ -47,7 +47,7 @@ still confirmed during the relevant task's device check.
 | # | Question | Finding | Status |
 | - | -------- | ------- | ------ |
 | 1 | Can a third-party app send an SMS silently from the user's number? | **No.** `MFMessageComposeViewController` always presents a sheet and requires the rider to tap Send; the app cannot send programmatically or in the background and only learns "sent/cancelled/failed" (queued by Messages, not delivered). Apple has documented `TelephonyMessagingKit` for eligible default-carrier-messaging apps only — treat as **unavailable** to Whoosh. Consequence: automatic notification **requires a backend SMS provider** sending from a provider number with the rider's label in the text. The composer is only a user-initiated **fallback**. | Composer behavior: Established. TelephonyMessagingKit eligibility: **Verify against current Apple docs before relying on it** (we rely on it being unavailable). |
-| 2 | Is Apple's system Crash Detection (iPhone 14+/Apple Watch) exposed to apps? | **Not as a public API to third parties** (it drives Emergency SOS by the OS). Whoosh cannot subscribe to it. Whoosh defines its own `CrashDetector` seam: Noop, a debug simulator, and an experimental heuristic over public Core Motion data (accelerometer/device motion; the public sensor range is limited — roughly low-g relative to a real impact — so a hard impact may saturate or be clipped) combined with a GPS speed-drop and a post-impact stillness check. Expect many false positives (potholes, drops, bumping or removing the phone, a phone falling from a mount) and false negatives. The countdown-and-cancel UX is the mitigation. Copy never claims reliable detection. | **Verify** (API availability and the accelerometer's public range). |
+| 2 | Is Apple's system Crash Detection (iPhone 14+/Apple Watch) exposed to apps? | **Corrected (previously said "not exposed").** Apple's **SafetyKit** framework (iOS 16+) *does* expose crash detection to third-party apps via `SACrashDetectionManager` / `SACrashDetectionEvent`, **gated by the Apple-granted entitlement `com.apple.developer.severe-vehicular-crash-event`** (requested through a form, not self-service). Important constraints: `SACrashDetectionManager.isAvailable` must be checked (not every iPhone supports it); the user must authorize the app (`authorizationStatus` / `requestAuthorization`); **only one app on a device can receive Crash Detection events**; after an event the system **launches the app in the background** and **may report the same event across launches** (dedupe by event date/identity); it targets **severe *vehicular* crashes**, so it may **not** fire for a bicycle fall (**Verify**); Apple recommends testing with the **iOS Simulator**. Responding programmatically uses `SAEmergencyResponseManager`, which needs its **own** entitlement. So Whoosh keeps its `CrashDetector` seam (Noop, debug simulator, experimental Core Motion heuristic) **and adds an entitlement-gated `SafetyKitCrashDetector`** behind the same protocol. The Core Motion heuristic remains the un-entitled, experimental fallback (public sensor range is limited — roughly low-g relative to a real impact — so a hard impact may saturate or be clipped; combined with a GPS speed-drop and post-impact stillness). The countdown-and-cancel UX is the mitigation for all detectors; copy never claims reliable detection. | **Verify against current Apple docs** (entitlement name/process, `isAvailable`/authorization API, single-app-per-device rule, background-launch + re-report behavior, bicycle-crash coverage, Simulator testing). |
 | 3 | What can run without foreground interaction? | The countdown timer and the network send need the process running. The MVP records in the **foreground with the screen on** (idle timer disabled), where timers, audio, haptics, and network all work. If the app is backgrounded or suspended, timers and network are not reliable; a *scheduled local notification* is delivered by the OS even when the app is suspended but can only prompt, not send. A `location` background mode can keep the process alive but has battery, privacy, and App Review cost. See "Execution model" below. | Established; background-mode review implications **Verify**. |
 | 4 | Critical Alerts? | Critical Alerts (bypass Do Not Disturb and the mute switch) require Apple's entitlement approval (`com.apple.developer.usernotifications.critical-alerts`, requested from Apple; intended for health/safety apps). The code change after approval is one notification-content property. v1 uses normal/**time-sensitive** notifications plus in-app audio and haptics; critical alerts are a follow-up requiring an Apple application. | **Verify** (current entitlement process and criteria). |
 | 5 | In-app audio vs. the silent switch | The audible countdown plays through `AVAudioSession` with the **playback** category, which is documented to play regardless of the ring/silent switch while the app is foregrounded and the session is active. Volume cannot be forced; the rider's volume applies. Audio must **never** be the only signal: visual and haptic accompany it. Speech via `AVSpeechSynthesizer` works through the same session. | **Verify on device** (task device check) |
@@ -85,7 +85,7 @@ OPEN for owner review (O1).
 | -------------- | -------- | ----------- | --------------- |
 | `Models/` | `CrashEvent`, `CrashEventState`, countdown-outcome and cancel-reason enums, `EmergencyContact`, `ContactVerification`, `ConsentRecord`, `CrashAlertSettings`, `CountdownState`, `LocationSnapshot`, `CrashAlertRecord`, `AlertAttempt`, `CrashResponseTuning`, `CrashMessageKind` (named to avoid clashing with the existing `AlertKind` in `Services/Alerts`) | Foundation | everything else |
 | `Metrics/` (Foundation-only, pure) | `CrashMessageBuilder`, `E164Normalizer`, `CrashStateMachine` (reducer), `CrashArming`, `LocationSnapshotPolicy`, `RetryPolicy`, `GSM7Sanitizer` | Models | UI, any framework |
-| `Services/Crash/` | `CrashDetector` protocol, `NoopCrashDetector`, `FakeCrashDetector`, `DebugCrashSimulator`, `MotionCrashDetector` (experimental, stretch; the only place that imports Core Motion) | Models | SwiftUI, other services' concrete types |
+| `Services/Crash/` | `CrashDetector` protocol, `NoopCrashDetector`, `FakeCrashDetector`, `DebugCrashSimulator`, `MotionCrashDetector` (experimental, stretch; the only place that imports Core Motion), `SafetyKitCrashDetector` (entitlement-gated; the only place that imports SafetyKit) | Models | SwiftUI, other services' concrete types |
 | `Services/Notification/` | `CrashNotifier` protocol, `NoopCrashNotifier`, `FakeCrashNotifier`, `SupabaseCrashNotifier` (the only crash code that touches the network), `CrashNotificationScheduler` protocol + `UNUserNotificationCenter` impl + fake | Models | SwiftUI |
 | `Services/Contacts/` | `EmergencyContactStore` protocol, `KeychainEmergencyContactStore` (the only place using Keychain APIs), `InMemoryEmergencyContactStore`, `ConsentStore` (protocol + UserDefaults impl + fake) | Models | SwiftUI |
 | `Services/Network/` | `ConnectivityMonitor` protocol, `NWPathConnectivityMonitor`, `FakeConnectivityMonitor`. Makes no requests. | Models | `URLSession` |
@@ -182,7 +182,7 @@ behavior is deterministic in tests.
 
 | Protocol | Members (summary) | Implementations |
 | -------- | ----------------- | --------------- |
-| `CrashDetector` | `onSignal(timestamp, confidence, source, isDrill)` callback on the main actor; `start()` / `stop()`; on-device; never blocks or stops recording | `NoopCrashDetector`, `FakeCrashDetector`, `DebugCrashSimulator`, `MotionCrashDetector` (stretch) |
+| `CrashDetector` | `onSignal(timestamp, confidence, source, isDrill)` callback on the main actor; `start()` / `stop()`; on-device; never blocks or stops recording | `NoopCrashDetector`, `FakeCrashDetector`, `DebugCrashSimulator`, `MotionCrashDetector` (stretch), `SafetyKitCrashDetector` (entitlement-gated) |
 | `RideContext` (read-only) | `isRideActive` and ride state (`recording`/`signalLost` vs. other), `latestAcceptedFix` (coordinates, accuracy, time) or none, `currentRideID?` | `RideSessionBridge` over `RideSessionViewModel`; `FakeRideContext` |
 | `CrashNotifier` | `send(request) async` → per-recipient results or a typed error; `status(crashEventId) async` → per-recipient statuses. Errors are classified `retryable` or `nonRetryable` with a Whoosh error code. **No parameter can carry footage or arbitrary text.** | `NoopCrashNotifier`, `FakeCrashNotifier`, `SupabaseCrashNotifier` |
 | `ConnectivityMonitor` | `isOnline`, `onChange` | `NWPathConnectivityMonitor`, `FakeConnectivityMonitor` |
@@ -315,6 +315,44 @@ Known false negatives: low-speed falls, impacts below the threshold, GPS speed u
 (2) a local-only debug log of candidate triggers during real rides (nothing uploaded);
 (3) measure triggers per hour of riding, record in this document under "Measured results";
 (4) owner sets the acceptance bar (OPEN O9) — nothing is claimed in copy until measured.
+
+---
+
+## SafetyKit crash detector (entitlement-gated; corrects the earlier "not exposed" claim)
+
+An earlier draft said Apple's system Crash Detection is not available to third-party apps. That
+is **wrong**. Apple's **SafetyKit** framework (iOS 16+) exposes crash detection to apps, so this
+spec adds a `SafetyKitCrashDetector` behind the existing `CrashDetector` protocol, **alongside**
+the no-op, the `DebugCrashSimulator`, and the experimental `MotionCrashDetector`. All claims
+below are tagged **Verify against current Apple docs** before the adapter task relies on them.
+
+| Aspect | Design (Verify against current Apple docs) |
+| ------ | ------------------------------------------ |
+| API | `SACrashDetectionManager` delivers `SACrashDetectionEvent`s; `SAEmergencyResponseManager` is the (separately entitled) response API — v1 does **not** use it (Whoosh never auto-contacts emergency services, Req 17). |
+| Entitlement | `com.apple.developer.severe-vehicular-crash-event`, **granted by Apple via a request form** (not self-service). Adds lead time; owned by the `[Owner]` entitlement-application task. The response entitlement is a separate request and is out of scope for v1. |
+| Availability | Check `SACrashDetectionManager.isAvailable` — **not all iPhones support it**; when unavailable the app falls back to the simulator/motion seams with no behavior change. |
+| Authorization | The user must authorize the app (`authorizationStatus` / `requestAuthorization`); requested only when the rider enables crash alerts, with an honest purpose string. |
+| Single app per device | **Only one app on a device can receive Crash Detection events.** The detector surfaces this state so setup can explain it rather than silently never firing. |
+| Background launch + dedupe | After an event the system **launches the app in the background** and **may report the same event across launches**. The adapter dedupes by event date/identity and funnels into the existing `crashEventId`/state-machine idempotency (reducer rows 2–6, 30). |
+| Scope | Targets **severe *vehicular* crashes**; it **may not fire for a bicycle fall** (**Verify**). So it is one more detector, not a replacement for the countdown-and-cancel UX or the experimental heuristic. |
+| Testing | Apple recommends testing crash events with the **iOS Simulator**; the adapter task includes a Simulator-driven test. |
+| Copy | Still no claim of reliable detection; SafetyKit is a better *source*, not a guarantee. |
+
+**Background launch as a partial O1 mitigation (SafetyKit events only).** The owner resolution
+O1 sets v1 to a foreground, screen-awake, client-driven countdown — so a crash while the app is
+closed is a documented limit. For **SafetyKit-detected** events specifically, the OS
+**background-launching** the app after a severe vehicular crash gives Whoosh a chance to run the
+countdown/notify path even if it was not foregrounded, which **partially** mitigates the
+foreground-only limitation **for that event source only**. It does not help motion-heuristic or
+simulator signals, and it does not change v1's documented limits for the general case; the
+server-side countdown (option (d)) remains the v2 answer for a dead/offline phone. The
+notification/countdown path is unchanged; only the *trigger* can now arrive via a background
+launch. (**Verify** the exact background-launch lifecycle and time budget against current docs.)
+
+The `SafetyKitCrashDetector` is off unless the entitlement is granted **and** the device supports
+it **and** the user authorizes; otherwise the app behaves exactly as today (simulator + optional
+motion heuristic). It emits the same `CrashDetector` signal shape (`isDrill = false`,
+`source = "safetykit"`), so the coordinator, reducer, and UI are unchanged.
 
 ---
 
@@ -558,6 +596,8 @@ needs an explicit owner decision before the affected tasks start.
 | D27 | Unknown outcome | Retry once with the same key | Prefer a rare duplicate over silent loss; backend dedupes | **OPEN O5** |
 | D28 | Folder name | `Services/Network/` per owner brief (path monitor only) | Matches the brief; privacy rule keys on API names | Proposed |
 | D29 | Motion detector acceptance bar | Not set | Needs measured data | **OPEN O9** |
+| D30 | SafetyKit crash detection | Add `SafetyKitCrashDetector` behind `CrashDetector`, entitlement-gated (`com.apple.developer.severe-vehicular-crash-event`), `isAvailable`/authorization-checked, single-app-per-device, background-launch dedup; corrects the earlier "not exposed" claim; background launch partially mitigates O1 for SafetyKit events only | Apple *does* expose crash detection via SafetyKit; use it as a better source without changing the workflow | Proposed (**Verify** against current Apple docs; entitlement is an owner application) |
+| D31 | Developer / demo tools ownership | The "Developer / demo tools" toggle and the Simulate-crash entry point move to the new **Demo mode** spec (`../demo-mode/`); crash task 23 points there instead of defining its own toggle | One global demo switch; no duplicate gate | Proposed (see `../demo-mode/`) |
 
 ### Owner resolution (October 24, 2026)
 
@@ -566,7 +606,7 @@ Where this resolution and an "OPEN" row above disagree, this resolution wins.
 
 | # | Resolution |
 | - | ---------- |
-| O1 | v1 = (a) foreground, screen-awake, client-driven countdown + (c) time-sensitive local-notification backup. (d) server-side countdown is the v2 design (task 36). (b) background location is not adopted; revisit in task 35. |
+| O1 | v1 = (a) foreground, screen-awake, client-driven countdown + (c) time-sensitive local-notification backup. (d) server-side countdown is the v2 design (task 36). (b) background location is not adopted; revisit in task 35. **Partial mitigation:** for SafetyKit-detected events only, the OS background-launches the app after a severe vehicular crash (see "SafetyKit crash detector"), so the trigger can arrive without the app being foregrounded; this does not change v1's documented limits for the general case. |
 | O2 | Per-ride cap = 1 **sent** automatic alert. Cancelled countdowns are not capped; the suppression window after a cancel still applies. |
 | O3 | Stale limit 30 min: within it, send with "delayed" wording; after it, never auto-send (mark `stale`, offer the composer fallback). |
 | O4 | Include the rider-tapped manual "Call 911" button; never shown for drills; never triggered automatically. |

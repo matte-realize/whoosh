@@ -16,9 +16,14 @@ struct RideRow: View {
             RouteGlyph(points: ride.points)
 
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                Text(Self.titleText(for: ride.startedAt))
-                    .font(Theme.Typography.rowTitle)
-                    .foregroundStyle(Theme.Colors.textPrimary)
+                HStack(spacing: Theme.Spacing.sm) {
+                    Text(Self.titleText(for: ride.startedAt))
+                        .font(Theme.Typography.rowTitle)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+                    if ride.isDemo {
+                        demoTag
+                    }
+                }
                 Text(subtitle)
                     .font(Theme.Typography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
@@ -46,6 +51,22 @@ struct RideRow: View {
 
     private var syncIconColor: Color { Theme.Colors.textSecondary }
 
+    /// A small "Demo ride" tag (icon + text) so a simulated/seeded ride is never
+    /// confused with a real one (demo-mode Requirement 2.3).
+    private var demoTag: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "wrench.and.screwdriver.fill")
+                .font(.system(size: 9, weight: .bold))
+            Text("Demo ride")
+                .font(.system(size: 10, weight: .semibold))
+        }
+        .foregroundStyle(Theme.Palette.ink)
+        .padding(.horizontal, Theme.Spacing.sm)
+        .padding(.vertical, 2)
+        .background(Theme.Palette.amber)
+        .clipShape(Capsule())
+    }
+
     private var subtitle: String {
         var parts = [
             Formatters.miles(fromMeters: ride.summary.distanceMeters),
@@ -58,7 +79,8 @@ struct RideRow: View {
     }
 
     private var accessibilityText: String {
-        "\(Self.titleText(for: ride.startedAt)), \(subtitle), \(syncVariant.title)"
+        let demo = ride.isDemo ? "Demo ride, " : ""
+        return "\(demo)\(Self.titleText(for: ride.startedAt)), \(subtitle), \(syncVariant.title)"
     }
 
     /// e.g. "Thu, Oct 22 · 5:48 PM" — fixed en_US so it matches the mockup and

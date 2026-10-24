@@ -80,8 +80,8 @@ contract in `.kiro/team/crash-alert-contract.md`. It is **off by default**, **op
 
 ## Rear-mounted camera recording (in scope — next feature, opt-in)
 
-Specified in `.kiro/specs/rear-camera/` (requirements, design, tasks; **draft, awaiting owner
-approval**). The rider clips the phone onto a holder on the back of the seat with the phone's back
+Specified in `.kiro/specs/rear-camera/` (requirements, design, tasks; **approved by the owner,
+October 24, 2026**). The rider clips the phone onto a holder on the back of the seat with the phone's back
 camera facing rearward. Whoosh records the road behind the bike (dashcam-style rolling segments in
 a bounded on-device buffer) while GPS tracks the ride. **Recording ships first, without the vision
 model**; Teammate B's detector later consumes the same frames. This changes earlier assumptions:
@@ -107,6 +107,17 @@ model**; Teammate B's detector later consumes the same frames. This changes earl
   summary.
 
 The MVP ride flow is unchanged when rear camera recording is off.
+
+## Developer/demo mode (off by default)
+
+Specified in `.kiro/specs/demo-mode/`. A single off-by-default Settings toggle that unlocks
+demo tools so the whole app can be shown standing still indoors: a simulated Boston-loop ride
+(through the existing location seam, flagged as a demo ride, excluded from sync), an on-demand
+rear-vehicle alert that bypasses the normal "only while moving" gate, a crash **drill** (the
+real countdown with the "DEMO — NOT REAL" template, Call 911 hidden, no real send), seed/remove
+sample data, and permission/state previews. While on, an unmissable "DEMO MODE" badge appears on
+Home, the ride screen, and the emergency screens. It never sends a real alert, never dials, never
+uploads, and changes nothing when off.
 
 ## Explicitly NOT in the MVP demo
 

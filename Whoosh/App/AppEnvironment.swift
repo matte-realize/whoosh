@@ -38,6 +38,12 @@ final class AppEnvironment {
     /// The Home hub view model (owns its own tracker for authorization).
     let homeViewModel: HomeViewModel
 
+    /// Demo mode's controller (demo-mode tasks 8–9). Built **always** but inert
+    /// while its toggle is off, so the off path is the exact normal path
+    /// (Requirement 9.1). The only composition-root branch on demo state lives
+    /// in `makeRideSession()`.
+    let demo: DemoModeController
+
     /// Builds a fresh `LocationTracking` for a ride session. Injectable so
     /// previews/tests supply a `FakeLocationTracker`.
     private let makeRideTracker: () -> LocationTracking
@@ -66,6 +72,31 @@ final class AppEnvironment {
             calendar: calendar,
             tracker: makeHomeTracker()
         )
+        // Build the demo controller over the same repository/clock/alert seams.
+        // A simulated ride is recorded by a real `RideSessionViewModel` whose
+        // tracker is a `SimulatedRouteTracker` (no mixing with real GPS by
+        // construction, Requirement 5.4); the accuracy comes from the persisted
+        // Settings choice, exactly like a normal ride.
+        let settings = self.settingsViewModel
+        self.demo = DemoModeController(
+            defaults: defaults,
+            clock: clock,
+            alertManager: alertManager,
+            repository: repository,
+            makeSimulatedTracker: { script, factor in
+                SimulatedRouteTracker(script: script, clock: clock, speedFactor: factor)
+            },
+            makeSimulatedSession: { tracker in
+                var tuning = RideTuning()
+                tuning.accuracy = settings.trackingAccuracy
+                return RideSessionViewModel(
+                    tracker: tracker,
+                    clock: clock,
+                    repository: repository,
+                    tuning: tuning
+                )
+            }
+        )
     }
 
     // MARK: - Factories for view models
@@ -73,7 +104,18 @@ final class AppEnvironment {
     /// A fresh ride session, with `RideTuning.accuracy` taken from the persisted
     /// Settings choice so the setting applies to the next ride (Requirement
     /// 14.2). A new tracker is created so the session owns its location stream.
+    ///
+    /// Demo branch (the **only** composition-root branch on demo state): when a
+    /// simulated ride has been requested, the demo controller already owns a
+    /// `SimulatedRouteTracker`-backed session, so return that one — one ride ⇒
+    /// one tracker ⇒ all-scripted or all-real, never mixed (Requirement 5.4).
+    /// With demo mode off (or no simulated ride requested) this returns exactly
+    /// today's `CoreLocationTracker`-backed session, so the off path is the
+    /// identity path (Requirement 9.1).
     func makeRideSession() -> RideSessionViewModel {
+        if let simulated = demo.simulatedSession {
+            return simulated
+        }
         var tuning = RideTuning()
         tuning.accuracy = settingsViewModel.trackingAccuracy
         return RideSessionViewModel(
@@ -96,11 +138,16 @@ final class AppEnvironment {
     /// simply won't persist across launches in that degraded case).
     static func live() -> AppEnvironment {
         let (repository, storageNotice) = Self.makeLiveRepository()
+        let clock = SystemClock()
         return AppEnvironment(
             repository: repository,
-            clock: SystemClock(),
+            clock: clock,
             detector: NoopDetector(),
-            alertManager: StubAlertManager(),
+            // Ship the real alert manager app-wide (D-DM5): it is inert until
+            // `fire(_:)` is called, so normal mode is unchanged (the rear-alert
+            // gate won't call it until a real detector exists), and the demo's
+            // forced-alert path produces real haptics/audio.
+            alertManager: HapticAudioAlertManager(clock: clock),
             calendar: .current,
             defaults: .standard,
             storageNotice: storageNotice,

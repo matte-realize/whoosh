@@ -25,9 +25,14 @@ Three constraints shape everything below (see `design.md` "iOS capability invest
    composer always requires the rider to tap Send. Automatic notification therefore requires a
    **backend SMS provider** sending from a provider number. The composer is only a
    *user-initiated fallback*.
-2. **Apple's system Crash Detection is not available to third-party apps.** Whoosh defines a
-   `CrashDetector` seam, ships a no-op and a debug "Simulate crash" trigger, and treats an
-   on-device Core Motion heuristic as an *experimental*, separately-tasked stretch.
+2. **Apple's system Crash Detection *is* exposed to apps via SafetyKit (iOS 16+), under an
+   Apple-granted entitlement.** (An earlier draft wrongly said it was not available.) Whoosh
+   defines a `CrashDetector` seam and ships a no-op plus a debug "Simulate crash" trigger; it
+   adds an **entitlement-gated `SafetyKitCrashDetector`** (`SACrashDetectionManager` /
+   `SACrashDetectionEvent`, requires `com.apple.developer.severe-vehicular-crash-event`,
+   `isAvailable`/authorization checks, one app per device, background-launch + dedupe, severe
+   *vehicular* scope that may not fire for a bicycle fall — **verify against current Apple docs**)
+   alongside an *experimental* on-device Core Motion heuristic (a separately-tasked stretch).
 3. **The countdown and the send need the app to be running.** v1 is a foreground, screen-awake,
    client-driven countdown (the MVP's ride behavior), with documented limits.
 
@@ -217,7 +222,8 @@ contact knows why they might hear from Whoosh.
 
 ## Requirement 5: Crash detection seam and arming
 
-**Priority:** Demo-critical (seam + simulator); Stretch (experimental heuristic detector)
+**Priority:** Demo-critical (seam + simulator); Stretch (experimental heuristic detector);
+Future-seam (entitlement-gated SafetyKit detector)
 
 **User story:** As a developer, I want a clean seam so different crash detectors — including a
 future better one — can plug in without touching the ride engine or the alert workflow.
@@ -251,6 +257,20 @@ future better one — can plug in without touching the ride engine or the alert 
 7. Detector implementations SHALL NOT access the camera. (Camera-based crash cues are
    `Future-seam`, owned by the detection teammate behind this same protocol.)
 8. A detector failure or absence SHALL NOT affect ride recording.
+9. The system MAY include an **entitlement-gated `SafetyKitCrashDetector`** behind the same
+   `CrashDetector` protocol, using Apple's SafetyKit (`SACrashDetectionManager` /
+   `SACrashDetectionEvent`). IF the `com.apple.developer.severe-vehicular-crash-event`
+   entitlement is granted, `SACrashDetectionManager.isAvailable` is true, and the user has
+   authorized the app, THEN SafetyKit events SHALL emit a `CrashDetector` signal
+   (`source = "safetykit"`, `isDrill = false`) that flows through the same coordinator, reducer,
+   and countdown as any other detector; OTHERWISE the app SHALL behave exactly as without it
+   (no change). The adapter SHALL dedupe events that the system re-reports across background
+   launches (idempotent on the crash event), SHALL NOT use `SAEmergencyResponseManager` (Whoosh
+   never auto-contacts emergency services, Requirement 17), and SHALL be labeled a better
+   *source*, never a reliability guarantee. All SafetyKit claims are marked **verify against
+   current Apple docs**; SafetyKit targets severe *vehicular* crashes and may not fire for a
+   bicycle fall. The OS background-launch after a SafetyKit event is a **partial** mitigation of
+   the foreground-only limitation (Requirement 13.2) for SafetyKit-detected events only.
 
 ## Requirement 6: Crash event lifecycle and duplicate prevention
 

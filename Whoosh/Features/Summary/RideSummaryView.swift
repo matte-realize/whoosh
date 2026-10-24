@@ -57,10 +57,28 @@ struct RideSummaryView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-            Text(titleText)
-                .font(Theme.Typography.title)
-                .foregroundStyle(Theme.Colors.textPrimary)
-                .accessibilityAddTraits(.isHeader)
+            HStack(spacing: Theme.Spacing.sm) {
+                Text(titleText)
+                    .font(Theme.Typography.title)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
+                if ride.isDemo {
+                    // A "Demo ride" tag so a simulated ride is never confused
+                    // with a real one (demo-mode Requirement 2.3).
+                    HStack(spacing: 3) {
+                        Image(systemName: "wrench.and.screwdriver.fill")
+                            .font(.system(size: 10, weight: .bold))
+                        Text("Demo ride")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .foregroundStyle(Theme.Palette.ink)
+                    .padding(.horizontal, Theme.Spacing.sm)
+                    .padding(.vertical, 3)
+                    .background(Theme.Palette.amber)
+                    .clipShape(Capsule())
+                    .accessibilityLabel("Demo ride")
+                }
+            }
             Text(subtitleText)
                 .font(Theme.Typography.caption)
                 .foregroundStyle(Theme.Colors.textSecondary)

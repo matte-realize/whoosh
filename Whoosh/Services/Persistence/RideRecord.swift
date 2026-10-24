@@ -27,6 +27,12 @@ final class RideRecord {
     /// `.localOnly`. An unrecognized value also maps to `.localOnly` at the
     /// repository boundary.
     var syncStatusRaw: String = SyncStatus.localOnly.rawValue
+    /// Whether this ride was produced by demo mode (demo-mode spec, task 3).
+    /// Stored with a default of `false` so existing stores migrate without a
+    /// schema change: any record written before demo mode shipped reads back as
+    /// a normal (non-demo) ride. Demo rides are excluded from sync and from the
+    /// Home This-Week stats (O-DM2).
+    var isDemo: Bool = false
 
     init(
         id: UUID,
@@ -36,7 +42,8 @@ final class RideRecord {
         activeDuration: TimeInterval,
         averageSpeed: Double,
         encodedPoints: Data,
-        syncStatusRaw: String = SyncStatus.localOnly.rawValue
+        syncStatusRaw: String = SyncStatus.localOnly.rawValue,
+        isDemo: Bool = false
     ) {
         self.id = id
         self.startedAt = startedAt
@@ -46,5 +53,6 @@ final class RideRecord {
         self.averageSpeed = averageSpeed
         self.encodedPoints = encodedPoints
         self.syncStatusRaw = syncStatusRaw
+        self.isDemo = isDemo
     }
 }

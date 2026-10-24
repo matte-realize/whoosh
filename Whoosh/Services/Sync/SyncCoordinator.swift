@@ -61,6 +61,9 @@ final class SyncCoordinator {
     /// is enabled) and records the outcome as the ride's `syncStatus`.
     func rideDidFinish(_ ride: Ride) async {
         guard service.isEnabled else { return }
+        // Demo rides are never uploaded (demo-mode spec Req 9.3); their local
+        // sync status is left untouched.
+        guard !ride.isDemo else { return }
         await upload(ride)
     }
 
@@ -94,9 +97,10 @@ final class SyncCoordinator {
     func retryPending() async {
         guard service.isEnabled else { return }
 
-        // Uploads: retry rides left pending by an earlier failure.
+        // Uploads: retry rides left pending by an earlier failure. Demo rides
+        // are never uploaded (demo-mode spec Req 9.3), even if marked pending.
         let rides = (try? repository.allRides()) ?? []
-        for ride in rides where ride.syncStatus == .pending {
+        for ride in rides where ride.syncStatus == .pending && !ride.isDemo {
             await upload(ride)
         }
 
