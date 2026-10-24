@@ -1,0 +1,31 @@
+# Xcode / Swift
+build/
+DerivedData/
+*.xcuserstate
+*.xcscmblueprint
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# CocoaPods / Carthage (if ever used)
+Pods/
+Carthage/Build/
+
+# macOS
+.DS_Store
+
+# Secrets (Supabase URL/anon key). Commit Secrets.example.xcconfig instead.
+Secrets.xcconfig
+.env
+.env.*
+!.env.example
+
+# Keep Kiro configuration and project artifacts in the repo.
+# (Do NOT ignore .kiro — steering, specs, and hooks are intentionally tracked.)
