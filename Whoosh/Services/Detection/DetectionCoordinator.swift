@@ -78,6 +78,32 @@ final class DetectionCoordinator {
     private var autoPinsThisRide = 0
     private var isRegistered = false
 
+    // MARK: - Detection event observation (for near-miss logging)
+
+    /// A simple main-actor hook fired for **every** detection the coordinator
+    /// handles, before the alert/near-miss/pin routing runs. The parallel
+    /// `NearMissRecorder` branch subscribes here (or via `detectionEvents`) to
+    /// log near-miss events without the coordinator depending on it. The event
+    /// is the raw `HazardDetection`; subscribers never see footage and nothing
+    /// leaves the device.
+    var onDetection: ((HazardDetection) -> Void)?
+
+    /// An `AsyncStream` of the same detections as `onDetection`, for callers that
+    /// prefer to `for await` them (e.g. a `NearMissRecorder` running its own
+    /// task). Multiple calls each get an independent stream; a finished stream
+    /// detaches automatically. Yields happen on the main actor.
+    func detectionEvents() -> AsyncStream<HazardDetection> {
+        AsyncStream { continuation in
+            let id = UUID()
+            eventContinuations[id] = continuation
+            continuation.onTermination = { [weak self] _ in
+                Task { @MainActor [weak self] in self?.eventContinuations[id] = nil }
+            }
+        }
+    }
+
+    private var eventContinuations: [UUID: AsyncStream<HazardDetection>.Continuation] = [:]
+
     init(
         detector: HazardDetector,
         pipeline: FramePipeline?,
@@ -175,6 +201,14 @@ final class DetectionCoordinator {
     // MARK: - Detection handling
 
     private func handle(_ detection: HazardDetection) {
+        // Fan the raw detection out to any near-miss logging observers first;
+        // they get every detection the coordinator handles. Footage never
+        // leaves the device — observers see only the value-type event.
+        onDetection?(detection)
+        for continuation in eventContinuations.values {
+            continuation.yield(detection)
+        }
+
         routeAlert(detection)
         routeNearMiss(detection)
     }

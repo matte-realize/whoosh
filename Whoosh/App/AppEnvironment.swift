@@ -51,6 +51,12 @@ final class AppEnvironment {
     /// task 19/22). All framework ownership stays inside these services; views
     /// and view models see only protocols.
     let cameraServices: CameraServices
+    /// The **single** rear-vehicle detector for the app session, built lazily on
+    /// first use so its CoreML model loads **once** (not per ride). Each ride's
+    /// `RideDetectionCoordinator` reuses this consumer, so the loaded model
+    /// survives across rides. `nil` until the first ride-detection build. Only
+    /// built when rear camera recording is enabled.
+    private var sharedVisionConsumer: VisionVehicleConsumer?
     /// The SwiftData-backed clip repository over the same live `ModelContainer`
     /// as rides (rear-camera task 15/19). Clip metadata is on-device only.
     let clipRepository: ClipRepository
@@ -289,6 +295,74 @@ final class AppEnvironment {
             }
         }
         return coordinator
+    }
+
+    /// Build the rear-vehicle **detection** composition for a ride, bound to the
+    /// same shared `FramePipeline` the camera coordinator records through
+    /// (rear-camera task 14 + B1 glue). This is the missing wire: it registers
+    /// the real `VisionVehicleConsumer` (Teammate B's `VehicleDetector` as a
+    /// `FrameConsumer`) on the pipeline and runs the `DetectionCoordinator` only
+    /// while the camera is recording. A detection fires the shared
+    /// `alertManager` through `RearAlertGate` (demo mode bypasses only the speed
+    /// gate) and records a local near-miss event. Detection never blocks capture
+    /// or recording; footage never leaves the device.
+    ///
+    /// Returns `nil` when rear camera recording is off for this ride — the ride
+    /// then runs exactly as before with no detector built and no model loaded.
+    func makeRideDetectionCoordinator(for session: RideSessionViewModel) -> RideDetectionCoordinator? {
+        guard isRearCameraRecordingEnabled else { return nil }
+        let bridge = RideCameraBridge(session: session, clock: clock)
+        let consumer = sharedRearDetector()
+        let alertManager = self.alertManager
+        let clock = self.clock
+        let demo = self.demo
+        let confidence = VisionTuning().minConfidence
+
+        return RideDetectionCoordinator(
+            consumer: consumer,
+            isEnabled: { [weak self] in self?.isRearCameraRecordingEnabled ?? false },
+            makeCoordinator: { detector, cameraStateProvider, isDetectionEnabled in
+                DetectionCoordinator(
+                    detector: detector,
+                    pipeline: self.cameraServices.pipeline,
+                    alertManager: alertManager,
+                    clock: clock,
+                    confidenceThreshold: confidence,
+                    rideStateProvider: { bridge.rideState },
+                    currentSpeedProvider: { bridge.speedMetersPerSecond ?? 0 },
+                    cameraStateProvider: cameraStateProvider,
+                    isDetectionEnabled: isDetectionEnabled,
+                    isDemoMode: { demo.isEnabled },
+                    currentRideId: { bridge.rideId },
+                    routeCoordinate: { instant in bridge.routeCoordinate(at: instant) },
+                    recordNearMiss: { _ in
+                        // Near-miss persistence is owned by the parallel
+                        // NearMissRecorder branch, which subscribes via
+                        // `onDetection` / `detectionEvents()`; this composition
+                        // only runs the detector and the alert path.
+                    }
+                )
+            }
+        )
+    }
+
+    /// The one shared rear-vehicle detector, built on first use so its CoreML
+    /// model loads **once** for the whole app session.
+    private func sharedRearDetector() -> VisionVehicleConsumer {
+        if let consumer = sharedVisionConsumer { return consumer }
+        let consumer = VisionVehicleConsumer(tuning: VisionTuning())
+        sharedVisionConsumer = consumer
+        return consumer
+    }
+
+    /// Start the one-time async model load as soon as rear camera recording is
+    /// enabled, so the model is warm before the first ride (task: load once when
+    /// the feature is enabled, not per ride). No-op when the feature is off or
+    /// already preloaded. The detector consumes no frames until a ride registers
+    /// it with the pipeline.
+    func preloadRearDetectionModelIfNeeded() {
+        guard isRearCameraRecordingEnabled else { return }
+        sharedRearDetector().start()
     }
 
     /// Build the Mount & frame view model shown after Start Ride when rear

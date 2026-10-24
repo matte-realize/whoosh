@@ -215,7 +215,7 @@ path is unchanged.
   - _Parallel:_ Group P2 (needs the pure policies from 10)
   - _Note:_ the watch app is task 34; WatchConnectivity is not imported anywhere in this spec.
 
-- [ ] 14. `[iOS]` `[IMPORTANT]` Update the `HazardDetector` seam docs; `DetectionCoordinator` (test-first)
+- [x] 14. `[iOS]` `[IMPORTANT]` Update the `HazardDetector` seam docs; `DetectionCoordinator` (test-first)
   - Update doc comments on `HazardDetector` and `NoopDetector` to the new contract (frames only via
     `FrameConsumer`; no capture ownership; permission belongs to rear camera recording). The
     `HazardDetection` struct is **not** changed.
@@ -224,6 +224,18 @@ path is unchanged.
     detection is enabled; routes detections to `NearMissPolicy`, alerts, and pinning via protocols).
   - Unit tests: registration lifecycle, no registration while the camera is off, detection routing
     with fakes, `Noop` stays inert.
+  - _Done (detection now runs during rides):_ added `RideDetectionCoordinator` (owns the shared
+    `VisionVehicleConsumer`, loads the CoreML model **once** when rear camera recording is enabled,
+    builds the `DetectionCoordinator` over the same `FramePipeline` the camera records through, and
+    drives register/start ↔ remove/stop from the live camera recording state — pause/interruption/
+    stop/failure tear it down). Wired into `AppEnvironment.makeRideDetectionCoordinator(for:)` +
+    `preloadRearDetectionModelIfNeeded()` and `WhooshApp.beginRide`/`clearRideSession`/`onLaunch`.
+    Exposed a detection state (`DetectionState`, via `VisionVehicleConsumer.ModelLoadState`) surfaced
+    on the ride-screen camera chip (on / model loading / unavailable), and a detection-events seam
+    (`DetectionCoordinator.onDetection` + `detectionEvents()` `AsyncStream`) for the parallel
+    `NearMissRecorder`. Tests: `RideDetectionCoordinatorTests` (register on record / unregister on
+    pause/interruption/stop/failure, disabled never registers, chip loading→unavailable),
+    `DetectionCoordinatorEventsTests` (hook + stream).
   - _Requirements:_ 4.9, 15.1, 15.4, 15.5
   - _Depends on:_ 10, 11, 12
   - _Parallel:_ Group P2b

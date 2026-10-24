@@ -14,6 +14,9 @@ struct StateChip: View {
         case signalLost
         case gpsReady
         case rearDetectionOff
+        case rearDetectionOn
+        case rearDetectionLoading
+        case rearDetectionUnavailable
         case synced
         case pending
         case onDevice
@@ -29,6 +32,9 @@ struct StateChip: View {
             case .signalLost: return "Signal lost"
             case .gpsReady: return "GPS ready"
             case .rearDetectionOff: return "Rear detection off"
+            case .rearDetectionOn: return "Rear detection on"
+            case .rearDetectionLoading: return "Detection loading"
+            case .rearDetectionUnavailable: return "Detection unavailable"
             case .synced: return "Synced"
             case .pending: return "Pending"
             case .onDevice: return "On device"
@@ -46,6 +52,9 @@ struct StateChip: View {
             case .signalLost: return "exclamationmark.triangle.fill"
             case .gpsReady: return "dot.radiowaves.left.and.right"
             case .rearDetectionOff: return "eye.slash"
+            case .rearDetectionOn: return "eye"
+            case .rearDetectionLoading: return "eye.trianglebadge.exclamationmark"
+            case .rearDetectionUnavailable: return "eye.slash"
             case .synced: return "checkmark.icloud"
             case .pending: return "clock"
             case .onDevice: return "iphone"
@@ -94,6 +103,9 @@ struct StateChip: View {
         case .signalLost: return Theme.Palette.ink
         case .gpsReady: return Theme.Colors.positive
         case .rearDetectionOff: return Theme.Colors.rideSecondaryText
+        case .rearDetectionOn: return Theme.Colors.positive
+        case .rearDetectionLoading: return Theme.Palette.amber
+        case .rearDetectionUnavailable: return Theme.Palette.amber
         case .synced: return Theme.Colors.positive
         case .pending: return Theme.Palette.amber
         case .onDevice: return Theme.Colors.textSecondary

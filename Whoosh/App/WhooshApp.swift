@@ -45,7 +45,11 @@ struct WhooshApp: App {
     /// The ride-mode controller for the active ride (rear-camera task 21). `nil`
     /// unless ride mode is on for this ride.
     @State private var rideModeController: RideModeController?
-
+    /// The rear-vehicle detection composition for the active ride. `nil` when
+    /// rear camera recording is off for this ride. It registers the vision
+    /// detector on the shared frame pipeline and runs it only while recording;
+    /// its `detectionState` drives the ride-screen camera chip.
+    @State private var rideDetection: RideDetectionCoordinator?
     @Environment(\.scenePhase) private var scenePhase
 
     /// Routes pushed on the Home-rooted stack.
@@ -221,6 +225,7 @@ struct WhooshApp: App {
                     viewModel: session,
                     crashAlertsOn: environment.crash.isFeatureOn,
                     cameraState: cameraCoordinator?.state,
+                    detectionState: rideDetection?.detectionState,
                     onSaveClip: cameraCoordinator == nil ? nil : { cameraCoordinator?.saveClip() ?? .nothingToSave }
                 )
                 .interactiveDismissDisabled()
@@ -331,23 +336,39 @@ struct WhooshApp: App {
 
         let coordinator = environment.makeCameraCoordinator(for: session)
         cameraCoordinator = coordinator
-        coordinator.rideStarted()
+
+        // Rear-vehicle detection on the SAME frame pipeline the camera records
+        // through: load the model once (it was preloaded when the feature was
+        // enabled) and run the detector only while recording. A detection fires
+        // the shared alert manager; detection never blocks capture or the ride.
+        let detection = environment.makeRideDetectionCoordinator(for: session)
+        rideDetection = detection
+        detection?.beginRide()
 
         // Ride mode (dim, touch-locked) when the rider left it on in Settings.
+        var rideMode: RideModeController?
         if environment.rearCameraSettingsViewModel.settings.rideModeEnabled {
             let controller = environment.makeRideModeController(
                 isRideActive: { [weak session] in session?.rideState.isActive ?? false }
             )
             rideModeController = controller
             controller.rideStarted()
-            // Reflect camera trouble as the amber dot in ride mode.
-            coordinator.onStateChange = { [weak controller] state in
-                controller?.setTrouble(!state.isRecording && state != .off)
-            }
+            rideMode = controller
             coordinator.onClipSaved = { [weak controller] saved in
                 controller?.showToast(saved ? .clipSaved : .clipNotSaved)
             }
         }
+
+        // One state-change fan-out: drive detection start/stop from the live
+        // camera state, and (when present) reflect camera trouble as the amber
+        // dot in ride mode. Detection tears down on pause/interruption/stop/
+        // failure because those are not `.recording`/`.degraded`.
+        coordinator.onStateChange = { [weak rideMode] state in
+            detection?.cameraStateChanged(state)
+            rideMode?.setTrouble(!state.isRecording && state != .off)
+        }
+
+        coordinator.rideStarted()
     }
 
     /// "Done" on the finished-ride summary: upload it (no-op while sync is off),
@@ -368,6 +389,8 @@ struct WhooshApp: App {
     private func clearRideSession() {
         cameraCoordinator?.rideEnded()
         cameraCoordinator = nil
+        rideDetection?.endRide()
+        rideDetection = nil
         rideModeController?.rideEnded()
         rideModeController = nil
         environment.clearRideSession()
@@ -383,6 +406,9 @@ struct WhooshApp: App {
         // auto-send on relaunch (Requirement 13.5).
         environment.crash.reconcileOnLaunch()
         checkForInterruptedRide()
+        // Warm the rear-vehicle detection model once if the feature is on, so it
+        // is ready before the first ride (no-op when rear camera is off).
+        environment.preloadRearDetectionModelIfNeeded()
     }
 
     private func handleScenePhase(_ phase: ScenePhase) {

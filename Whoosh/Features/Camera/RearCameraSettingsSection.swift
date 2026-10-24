@@ -2,10 +2,12 @@ import SwiftUI
 
 /// The "Rear camera" Settings section (rear-camera spec Requirement 18.1, 2.1–2.7;
 /// task 20). Realises the rows the design lists: a "Record rear camera" toggle
-/// (off by default; enabling shows the first-enable explanation, then the
-/// permission prompt), a camera choice (Back / Front), Quality (Standard /
-/// Efficient), Ride mode, Buffer length, clip storage used, and — when access is
-/// denied/restricted — a calm explanation with an "Open Settings" button.
+/// (on by default for the hackathon build; see the privacy steering "Hackathon
+/// build defaults" note — enabling from off shows the first-enable explanation,
+/// then the permission prompt), a camera choice (Back / Front), Quality
+/// (Standard / Efficient), Ride mode, Buffer length, clip storage used, and —
+/// when access is denied/restricted — a calm explanation with an "Open Settings"
+/// button.
 ///
 /// The view is dumb: it observes `RearCameraSettingsViewModel` and sends intents.
 /// It imports no AVFoundation (the `CameraPermission` seam owns that).
