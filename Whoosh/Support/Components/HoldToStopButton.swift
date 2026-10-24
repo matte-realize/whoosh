@@ -7,10 +7,11 @@ import UIKit
 /// screen (Requirements 3.4 / 3.9, mockups 2/3).
 ///
 /// Ending a ride requires an explicit ~1 second hold so an accidental bump can't
-/// stop a ride. A linear progress fill rises from the bottom while the gesture
-/// is in flight; releasing before the threshold cancels with **no state change**
-/// (the ride keeps recording). A quick tap does nothing but briefly shows a
-/// "Hold to stop" hint. Completing the hold fires `onStop` exactly once.
+/// stop a ride. The fill rises from the bottom in step with how long the finger
+/// has actually been down (`HoldProgress`), and drops back the moment it lifts.
+/// Releasing before the threshold, or sliding off the control, cancels with
+/// **no state change**; a quick tap only shows a brief "Hold to stop" hint.
+/// Completing the hold fires `onStop` exactly once.
 ///
 /// Accessibility: the control carries the label "Stop ride, press and hold" and
 /// an `accessibilityAction(named: "Stop ride")` custom action that calls
@@ -25,13 +26,20 @@ struct HoldToStopButton: View {
     /// How long the user must hold before the ride stops.
     var holdDuration: TimeInterval = 1.0
 
-    @State private var progress: CGFloat = 0
-    @State private var isHolding = false
-    @State private var showTapHint = false
-    /// Guards against firing `onStop` more than once per hold.
+    /// When the current press began; `nil` while not pressed.
+    @State private var pressStart: Date?
+    /// Set once the finger slides too far, so the rest of that drag is ignored.
+    @State private var movedOff = false
+    /// Guards against firing `onStop` more than once per press.
     @State private var didFire = false
+    @State private var completionTask: Task<Void, Never>?
+    @State private var showTapHint = false
 
     private let size: CGFloat = 78
+    /// How far the finger may slide before the press counts as abandoned.
+    private let maxDistance: CGFloat = 40
+    /// Releases shorter than this read as a tap and show the hint.
+    private let tapThreshold: TimeInterval = 0.3
 
     var body: some View {
         ZStack {
@@ -43,11 +51,13 @@ struct HoldToStopButton: View {
                         .strokeBorder(Theme.Colors.recordingDot, lineWidth: 1.5)
                 )
 
-            // Hold progress: a lime-tinted fill rising from the bottom.
-            GeometryReader { geo in
-                Theme.Colors.recordingDot.opacity(0.35)
-                    .frame(height: geo.size.height * progress)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
+            // Hold progress, redrawn every frame only while pressed.
+            TimelineView(.animation(paused: pressStart == nil)) { context in
+                GeometryReader { geo in
+                    Theme.Colors.recordingDot.opacity(0.35)
+                        .frame(height: geo.size.height * fill(at: context.date))
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                }
             }
             .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.pill))
 
@@ -66,6 +76,7 @@ struct HoldToStopButton: View {
         .contentShape(RoundedRectangle(cornerRadius: Theme.Radius.pill))
         .gesture(holdGesture)
         .overlay(alignment: .top) { tapHint }
+        .onDisappear { completionTask?.cancel() }
         .accessibilityElement()
         .accessibilityLabel("Stop ride, press and hold")
         .accessibilityAddTraits(.isButton)
@@ -74,57 +85,67 @@ struct HoldToStopButton: View {
         }
     }
 
+    private func fill(at date: Date) -> CGFloat {
+        CGFloat(HoldProgress.progress(pressStart: pressStart, now: date, holdDuration: holdDuration))
+    }
+
     // MARK: - Gesture
 
     private var holdGesture: some Gesture {
-        // A long-press gesture drives start/cancel; an animated progress fill
-        // runs for `holdDuration`, and a timer fires completion. Using the
-        // gesture's `onEnded`/pressing state keeps early-release a clean cancel.
-        LongPressGesture(minimumDuration: holdDuration, maximumDistance: 40)
-            .onEnded { _ in
-                complete()
+        DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                let distance = hypot(value.translation.width, value.translation.height)
+                if distance > maxDistance {
+                    if pressStart != nil {
+                        movedOff = true
+                        cancelHold(showHint: false)
+                    }
+                    return
+                }
+                if pressStart == nil, !movedOff, !didFire {
+                    beginHold()
+                }
             }
-            .simultaneously(with:
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        if !isHolding { beginHold() }
-                    }
-                    .onEnded { _ in
-                        // Released: if the hold hadn't completed, cancel it.
-                        if !didFire { cancelHold() }
-                    }
-            )
+            .onEnded { _ in
+                if pressStart != nil, !didFire {
+                    let held = Date().timeIntervalSince(pressStart ?? Date())
+                    cancelHold(showHint: held < tapThreshold)
+                }
+                movedOff = false
+                didFire = false
+            }
     }
 
     private func beginHold() {
-        isHolding = true
-        didFire = false
+        let start = Date()
+        pressStart = start
         showTapHint = false
         impact()
-        withAnimation(.linear(duration: holdDuration)) {
-            progress = 1
+        completionTask?.cancel()
+        completionTask = Task {
+            try? await Task.sleep(for: .seconds(holdDuration))
+            // Only complete if this same press is still down and the hold is
+            // genuinely full (an early release clears `pressStart`).
+            guard !Task.isCancelled, pressStart == start,
+                  HoldProgress.isComplete(pressStart: start, now: Date(), holdDuration: holdDuration)
+            else { return }
+            completeHold()
         }
     }
 
-    private func complete() {
-        guard isHolding, !didFire else { return }
+    private func completeHold() {
+        guard pressStart != nil, !didFire else { return }
         didFire = true
-        isHolding = false
+        pressStart = nil
         success()
         onStop()
-        // Reset the fill after firing.
-        withAnimation(.easeOut(duration: 0.2)) { progress = 0 }
     }
 
-    private func cancelHold() {
-        // Early release before the threshold: cancel, no state change.
-        let completed = progress >= 1
-        isHolding = false
-        if !completed {
-            withAnimation(.easeOut(duration: 0.2)) { progress = 0 }
-            // A very short press reads as a tap: show a brief hint.
-            flashTapHint()
-        }
+    private func cancelHold(showHint: Bool) {
+        completionTask?.cancel()
+        completionTask = nil
+        pressStart = nil
+        if showHint { flashTapHint() }
     }
 
     private func flashTapHint() {
