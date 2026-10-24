@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react";
 import { Bars, type Bar } from "./Bars";
 import { Ring } from "./Ring";
+import {
+  countByBlock,
+  countByYear,
+  loadCityCrashes,
+  monthYear,
+  streetName,
+  type LoadCityCrashesResult,
+} from "@/lib/cityCrashes";
 import { loadIncidentCells, type LoadIncidentsResult } from "@/lib/incidents";
 import { loadRides, type LoadRidesResult } from "@/lib/rides";
 import { formatDistance } from "@/lib/units";
@@ -29,10 +37,11 @@ function bucketFor(hour: number): string {
   return BUCKETS.find((bucket) => h >= bucket.from && h < bucket.to)?.label ?? "Night";
 }
 
-/** Charts computed from the shared rides and incident areas the page already loaded. */
+/** Charts computed from the shared rides, incident areas, and city crash records the page already loaded. */
 export default function CommunityInsights() {
   const [rides, setRides] = useState<LoadRidesResult | null>(null);
   const [cells, setCells] = useState<LoadIncidentsResult | null>(null);
+  const [crashes, setCrashes] = useState<LoadCityCrashesResult | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,18 +51,22 @@ export default function CommunityInsights() {
     loadIncidentCells().then((loaded) => {
       if (!cancelled) setCells(loaded);
     });
+    loadCityCrashes().then((loaded) => {
+      if (!cancelled) setCrashes(loaded);
+    });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  if (rides === null || cells === null) {
+  if (rides === null || cells === null || crashes === null) {
     return <div className="skeleton skeleton--panel insights-skeleton" aria-busy="true" />;
   }
 
   const rideList = rides.ok ? rides.rides : [];
   const cellList = cells.ok ? cells.cells : [];
-  if (rideList.length === 0 && cellList.length === 0) return null;
+  const crashList = crashes.ok ? crashes.points : [];
+  if (rideList.length === 0 && cellList.length === 0 && crashList.length === 0) return null;
 
   const timeBars: Bar[] = BUCKETS.map((bucket) => ({ label: bucket.label, value: 0 }));
   for (const ride of rideList) {
@@ -84,12 +97,29 @@ export default function CommunityInsights() {
     .sort((a, b) => b[1] - a[1])
     .map(([kind, count]) => ({ label: kind === "vehicle" ? "Unspecified" : kind[0].toUpperCase() + kind.slice(1), value: count }));
 
+  const dataThrough = crashes.ok ? crashes.sources.find((source) => source.data_through)?.data_through ?? null : null;
+  const throughYear = dataThrough ? Number(dataThrough.slice(0, 4)) : null;
+  const yearRows = countByYear(crashList);
+  const yearBars: Bar[] = yearRows.map(({ year, count }) => ({
+    label: year === throughYear && dataThrough && !dataThrough.endsWith("-12-31") ? `${year}*` : String(year),
+    value: count,
+  }));
+  const blockRows = countByBlock(crashList);
+  // When every record is on one street (the Mass Ave snapshot), name it once in the heading.
+  const streets = new Set(crashList.map((point) => point.street));
+  const oneStreet = streets.size === 1 && crashList[0]?.street ? streetName(crashList[0].street) : null;
+  const blockBars: Bar[] = blockRows.slice(0, 5).map(({ label, count }) => ({
+    label: oneStreet && label.startsWith(`${oneStreet}, `) ? label.slice(oneStreet.length + 2) : label,
+    value: count,
+  }));
+  const topFiveShare = crashList.length > 0 ? blockRows.slice(0, 5).reduce((sum, row) => sum + row.count, 0) / crashList.length : 0;
+
   return (
     <section className="insights card" aria-labelledby="insights-heading">
       <div className="section-head">
         <div>
           <p className="eyebrow">Insights</p>
-          <h2 id="insights-heading">What riders are sharing</h2>
+          <h2 id="insights-heading">What riders share, next to what the city records</h2>
         </div>
       </div>
 
@@ -130,6 +160,29 @@ export default function CommunityInsights() {
           <div className="insight">
             <h3>Longest shared rides</h3>
             <Bars bars={distanceBars} tone="blue" label="Longest shared rides by distance" />
+          </div>
+        ) : null}
+
+        {yearBars.length > 0 ? (
+          <div className="insight">
+            <h3>City-reported bike crashes, by year</h3>
+            <Bars bars={yearBars} tone="amber" label="City-reported bike crashes per year, Boston time" />
+            <p className="note note--small">
+              {crashList.length} records in total.
+              {dataThrough ? ` * Partial year: data through ${monthYear(dataThrough)}.` : ""} With counts
+              this small, a change from one year to the next is mostly chance.
+            </p>
+          </div>
+        ) : null}
+
+        {blockBars.length > 0 ? (
+          <div className="insight">
+            <h3>{oneStreet ? `${oneStreet} blocks` : "Blocks"} with the most city-reported bike crashes</h3>
+            <Bars bars={blockBars} tone="amber" stacked label="Blocks with the most city-reported bike crashes" />
+            <p className="note note--small">
+              These 5 of {blockRows.length} blocks hold {Math.round(topFiveShare * 100)}% of the {crashList.length}{" "}
+              records. Counts, not rates: busier blocks see more riders.
+            </p>
           </div>
         ) : null}
 

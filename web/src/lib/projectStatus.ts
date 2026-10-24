@@ -75,6 +75,12 @@ export const FEATURES: Feature[] = [
     statusNote: "On the ride map, with sample reports.",
   },
   {
+    name: "Real crash history",
+    summary: "Bike crashes the City of Boston has published, on the same map as riders' close calls.",
+    status: "preview",
+    statusNote: "On the ride map: 65 city-reported bike crashes on Mass Ave since 2015, public data.",
+  },
+  {
     name: "See it in action",
     summary: "A 3D simulation of a ride, showing when and how the heads-up works.",
     status: "preview",

@@ -16,8 +16,9 @@ export default function DashboardPage() {
         <p className="eyebrow">Ride map</p>
         <h1>Shared by Whoosh riders</h1>
         <p className="subtitle">
-          Rides and close calls that riders chose to share, along Massachusetts Avenue. Only what riders
-          share is shown.
+          Rides and close calls that riders chose to share along Massachusetts Avenue in Boston,
+          next to the bike crashes the City of Boston has published for the same street. Only what
+          riders share is shown.
         </p>
       </header>
       <StatsPanel />

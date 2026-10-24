@@ -428,6 +428,19 @@ p {
   border: 2px solid var(--signal-red);
 }
 
+.swatch--city {
+  width: 14px;
+  height: 14px;
+  background: rgb(255 176 32 / 30%);
+  border: 1.5px solid var(--signal-amber);
+}
+
+.source-note a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .link-button {
   padding: 0;
   border: 0;
@@ -1947,6 +1960,16 @@ p {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.bars--stacked li {
+  grid-template-columns: 1fr auto;
+  row-gap: 4px;
+}
+
+.bars--stacked .bars__label {
+  grid-column: 1 / -1;
+  white-space: normal;
 }
 
 .bars__track {

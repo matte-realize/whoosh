@@ -61,3 +61,34 @@ export interface PublicStats {
   mapped_incidents: number;
   incident_cells: number;
 }
+
+/**
+ * One row of the `public_crash_points` view: a crash record published by a city. Real public
+ * data, not rider data. For Boston, the time is when responders were dispatched.
+ */
+export interface CityCrashPoint {
+  source: string;
+  source_record_id: string;
+  /** ISO 8601 timestamp. */
+  occurred_at: string;
+  /** The most vulnerable person involved. */
+  mode: "bike" | "ped" | "mv";
+  street: string | null;
+  cross_street_1: string | null;
+  cross_street_2: string | null;
+  latitude: number;
+  longitude: number;
+}
+
+/** One row of the `public_data_sources` view, shown as attribution. */
+export interface CityDataSource {
+  key: string;
+  name: string;
+  publisher: string;
+  url: string;
+  license: string;
+  /** ISO date. */
+  retrieved_on: string;
+  /** ISO date: the last day the source covers, if it says. */
+  data_through: string | null;
+}

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import type { CrashSpot } from "@/lib/cityCrashes";
 import { thinRoute } from "@/lib/geo";
 import type { IncidentCell, Ride } from "@/lib/types";
 
@@ -36,26 +37,45 @@ function dateLabel(iso: string): string {
 interface CommunityMapProps {
   rides: Ride[];
   cells: IncidentCell[];
+  /** Real city crash records, grouped by published location. */
+  crashSpots: CrashSpot[];
   showRoutes: boolean;
   showIncidents: boolean;
+  showCityCrashes: boolean;
+}
+
+const CITY_CRASH_COLOR = "#ffb020";
+
+function crashLabel(spot: CrashSpot): string {
+  const years = spot.firstYear === spot.lastYear ? `${spot.firstYear}` : `${spot.firstYear} to ${spot.lastYear}`;
+  const noun = spot.count === 1 ? "bike crash" : "bike crashes";
+  return `${spot.label}: ${spot.count} city-reported ${noun}, ${years}. Last: ${spot.lastMonth}.`;
 }
 
 /**
- * One map with every shared route and the incident cells. The parent turns each layer on or off;
+ * One map with every shared route, the incident cells, and the city's crash records. The parent turns each layer on or off;
  * that only adds or removes the layer, so the map and its tiles are not rebuilt.
  * Client-only; import through CommunityMapClient. Uses the canvas renderer for speed.
  */
-export default function CommunityMap({ rides, cells, showRoutes, showIncidents }: CommunityMapProps) {
+export default function CommunityMap({
+  rides,
+  cells,
+  crashSpots,
+  showRoutes,
+  showIncidents,
+  showCityCrashes,
+}: CommunityMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const routesRef = useRef<L.LayerGroup | null>(null);
   const incidentsRef = useRef<L.LayerGroup | null>(null);
-  const visibleRef = useRef({ showRoutes, showIncidents });
+  const crashesRef = useRef<L.LayerGroup | null>(null);
+  const visibleRef = useRef({ showRoutes, showIncidents, showCityCrashes });
 
   // Build the map when the data changes.
   useEffect(() => {
     const container = containerRef.current;
-    if (container === null || (rides.length === 0 && cells.length === 0)) return;
+    if (container === null || (rides.length === 0 && cells.length === 0 && crashSpots.length === 0)) return;
 
     const map = L.map(container, { preferCanvas: true, scrollWheelZoom: false });
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -103,6 +123,23 @@ export default function CommunityMap({ rides, cells, showRoutes, showIncidents }
         .addTo(incidents);
     }
 
+    // City crashes: smaller, outlined circles in amber, drawn under the rider layers.
+    const crashes = L.layerGroup();
+    for (const spot of crashSpots) {
+      const point: L.LatLngTuple = [spot.latitude, spot.longitude];
+      bounds.extend(point);
+      L.circleMarker(point, {
+        radius: Math.min(16, 4 + Math.sqrt(spot.count) * 3),
+        color: CITY_CRASH_COLOR,
+        weight: 1.5,
+        fillColor: CITY_CRASH_COLOR,
+        fillOpacity: 0.25,
+      })
+        .bindTooltip(textNode(crashLabel(spot)))
+        .addTo(crashes);
+    }
+
+    if (visibleRef.current.showCityCrashes) crashes.addTo(map);
     if (visibleRef.current.showRoutes) routes.addTo(map);
     if (visibleRef.current.showIncidents) incidents.addTo(map);
     if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
@@ -110,37 +147,40 @@ export default function CommunityMap({ rides, cells, showRoutes, showIncidents }
     mapRef.current = map;
     routesRef.current = routes;
     incidentsRef.current = incidents;
+    crashesRef.current = crashes;
 
     return () => {
       map.remove();
       mapRef.current = null;
       routesRef.current = null;
       incidentsRef.current = null;
+      crashesRef.current = null;
     };
-  }, [rides, cells]);
+  }, [rides, cells, crashSpots]);
 
   // Show or hide layers without rebuilding the map.
   useEffect(() => {
-    visibleRef.current = { showRoutes, showIncidents };
+    visibleRef.current = { showRoutes, showIncidents, showCityCrashes };
     const map = mapRef.current;
     if (map === null) return;
     const pairs: [L.LayerGroup | null, boolean][] = [
       [routesRef.current, showRoutes],
       [incidentsRef.current, showIncidents],
+      [crashesRef.current, showCityCrashes],
     ];
     for (const [layer, show] of pairs) {
       if (layer === null) continue;
       if (show && !map.hasLayer(layer)) layer.addTo(map);
       if (!show && map.hasLayer(layer)) map.removeLayer(layer);
     }
-  }, [showRoutes, showIncidents]);
+  }, [showRoutes, showIncidents, showCityCrashes]);
 
   return (
     <div
       ref={containerRef}
       className="ride-map community-map"
       role="region"
-      aria-label="Map of all shared routes and incident reports. Click the map to zoom with the scroll wheel."
+      aria-label="Map of shared routes, rider incident reports, and city-reported bike crashes. Click the map to zoom with the scroll wheel."
     />
   );
 }
