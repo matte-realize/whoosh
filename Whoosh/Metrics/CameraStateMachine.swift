@@ -246,6 +246,9 @@ enum CameraStateMachine {
             return noOp(state)
         }
         guard context.rideActive else { return noOp(state) }
+        // Never restart capture without camera permission (it may have been
+        // revoked while recording was stopped for heat, storage or battery).
+        guard context.permission.canStartCapture else { return noOp(state) }
         guard let profile = context.resolvedProfile else { return noOp(state) }
         return .init(state: .preparing, effects: [.startSession(profile), .publishStatus])
     }
@@ -304,6 +307,7 @@ enum CameraStateMachine {
     ) -> CameraReduction {
         guard case .failed = state else { return noOp(state) }
         guard context.rideActive, context.failedRetryCount < 3 else { return noOp(state) }
+        guard context.permission.canStartCapture else { return noOp(state) }
         guard let profile = context.resolvedProfile else { return noOp(state) }
         return .init(state: .preparing, effects: [.startSession(profile), .publishStatus])
     }

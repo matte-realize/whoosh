@@ -65,6 +65,7 @@ final class FakeSegmentRecorder: SegmentRecording {
     }
 
     func append(_ frame: CameraCaptureFrame) {
+        appendedFrames.append(frame)
         if openSegmentStart == nil { openSegmentStart = frame.capturedAt }
         if frame.isDiscontinuity && !framesInOpenSegment.isEmpty {
             nextSegmentHasGapBefore = true

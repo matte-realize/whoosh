@@ -119,7 +119,9 @@ nonisolated enum FrameDropPolicy {
         let interval = 1.0 / clampedFps
         let threshold = jitterTolerance * interval
 
-        if delta >= threshold {
+        // Inclusive boundary; the epsilon absorbs floating-point error
+        // (0.9 × 0.1 is 0.09000000000000001, which would drop a frame at 0.09).
+        if delta >= threshold - 1e-9 {
             return .deliver()
         }
         return .drop(.rate)

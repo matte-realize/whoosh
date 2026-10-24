@@ -18,6 +18,16 @@ import Testing
 /// The pipeline runs consumers on their own driver tasks off the main actor;
 /// `quiesce()` gives deterministic drain points without real sleeps.
 struct FramePipelineTests {
+    /// Yields until `condition` holds. Consumers and lifecycle callbacks run on
+    /// detached tasks, so tests wait for the effect rather than guessing how
+    /// many yields it takes; bounded so a real bug fails instead of hanging.
+    private func eventually(_ condition: () -> Bool) async {
+        for _ in 0..<10_000 {
+            if condition() { return }
+            await Task.yield()
+        }
+    }
+
     private func makeFormat() -> VideoFrame.Format {
         VideoFrame.Format(width: 64, height: 48, pixelFormat: kCVPixelFormatType_32BGRA, framesPerSecond: 30)
     }
@@ -64,8 +74,12 @@ struct FramePipelineTests {
 
         let source = FakeCameraSource(sink: pipeline, framesPerSecond: 30)
         source.start()
-        source.emitBurst(count: 10, framesPerSecond: 30)
-        await pipeline.quiesce()
+        // Pace like a real camera (one frame per interval): a back-to-back
+        // synchronous burst would legitimately busy-drop in the latest-wins slot.
+        for i in 0..<10 {
+            source.emit(presentationTime: Double(i) / 30.0)
+            await pipeline.quiesce()
+        }
 
         // Delivered in offer order (monotonic sequence), none reordered.
         #expect(consumer.receivedSequences == Array(0..<10))
@@ -121,8 +135,12 @@ struct FramePipelineTests {
 
         let source = FakeCameraSource(sink: pipeline)
         source.start()
+        // Pace like a real camera: wait until the fast consumer has taken each
+        // frame before the next arrives. The slow one (20 ms per frame) falls
+        // behind and busy-drops; it must never hold the fast one back.
         for i in 0..<30 {
             source.emit(presentationTime: Double(i) / 30.0)
+            await eventually { fast.receivedSequences.count == i + 1 }
         }
         await pipeline.quiesce()
 
@@ -176,16 +194,19 @@ struct FramePipelineTests {
         pipeline.register(consumer)
         let source = FakeCameraSource(sink: pipeline, framesPerSecond: 30)
         source.start()
-        source.emitBurst(count: 90, framesPerSecond: 30) // 3 s
-        await pipeline.quiesce()
+        // Paced like a real camera (3 s at 30 fps) so every drop is a rate drop;
+        // a synchronous burst would add scheduling-dependent busy-drops.
+        for i in 0..<90 {
+            source.emit(presentationTime: Double(i) / 30.0)
+            await pipeline.quiesce()
+        }
 
         let stats = pipeline.stats.first { $0.consumerID == "capped" }!
         #expect(stats.offered == 90)
-        #expect(stats.rateDropped > 0)
-        #expect(stats.delivered + stats.rateDropped + stats.busyDropped == 90)
-        // ~10 fps over 3 s ≈ 30 delivered.
-        #expect(stats.delivered >= 28)
-        #expect(stats.delivered <= 31)
+        #expect(stats.busyDropped == 0)
+        #expect(stats.delivered + stats.rateDropped == 90)
+        // 10 fps over 3 s: every third frame.
+        #expect(stats.delivered == 30)
         source.stop()
     }
 
@@ -244,15 +265,12 @@ struct FramePipelineTests {
         let consumer = RecordingFrameStats(consumerID: "life")
         pipeline.register(consumer)
         pipeline.start(format: makeFormat())
-        // Let the detached start-notification task run.
-        await Task.yield()
-        await Task.yield()
+        await eventually { consumer.startedFormats.count == 1 }
         #expect(consumer.startedFormats.count == 1)
         #expect(consumer.startedFormats.first?.width == 64)
 
         pipeline.stop()
-        await Task.yield()
-        await Task.yield()
+        await eventually { consumer.stopCount >= 1 }
         #expect(consumer.stopCount >= 1)
     }
 
