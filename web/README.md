@@ -38,6 +38,16 @@ optional sound, and a "Show detector mistakes" mode with missed vehicles and fal
 - The simulated detector knows every vehicle's exact position. Its thresholds are illustrative,
   not the real app's tuning, and the page says so.
 
+### Fonts
+
+Barlow (body text) and Barlow Condensed (headings, labels, numbers), both under the SIL Open
+Font License, loaded with `next/font/google` in `src/app/layout.tsx`. Next downloads them the
+first time you run `pnpm dev` or `pnpm build` and then serves them from this site, so visitors'
+browsers never contact Google. That first run needs internet access. To build with no network
+(for example in a sandbox), use the webpack bundler with mocked font responses:
+`NEXT_FONT_GOOGLE_MOCKED_RESPONSES=<mock file> next build --webpack`. That checks the build only;
+the text then falls back to system fonts.
+
 ### Interface notes
 
 - Light and dark themes follow the system setting. All animation (scroll reveal, count-up,
