@@ -1,0 +1,336 @@
+import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
+
+/// The always-dark, full-screen active-ride screen (Requirement 5, mockups 2/3).
+///
+/// Presented by the composition root as a **non-dismissible full-screen cover**
+/// while a ride is active; the only way out is the press-and-hold Stop (or its
+/// VoiceOver custom action). Shows the live route (`RouteMapView` in `.live`
+/// mode), a state chip (Recording / Paused, icon + text), an inert "Rear
+/// detection off" chip, and a bottom dark sheet with at most three numbers —
+/// ride time (huge, ticking every second via `TimelineView`), distance, and
+/// speed — plus a lime Pause/Resume pill and the red `HoldToStopButton`.
+///
+/// When the session's banner is `signalLost` an amber "GPS signal lost" banner
+/// appears; a `permissionRevoked` banner uses the same calm styling with copy
+/// that the ride is saved-and-stoppable. Keeps the screen awake while visible
+/// (`isIdleTimerDisabled`). State is always icon + text, never color alone.
+///
+/// Per the layering table this view touches no framework service types — it
+/// reads the injected `RideSessionViewModel` and renders maps through the
+/// `RouteMapView` wrapper (the single MapKit touchpoint).
+struct ActiveRideView: View {
+    let viewModel: RideSessionViewModel
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            Theme.Colors.rideBackground.ignoresSafeArea()
+
+            // Live map fills the top; the sheet overlaps its bottom.
+            RouteMapView(
+                points: viewModel.points,
+                mode: .live,
+                currentLocation: viewModel.points.last
+            )
+            .ignoresSafeArea(edges: .top)
+
+            topChrome
+            bottomSheet
+        }
+        .preferredColorScheme(.dark)
+        .onAppear { setIdleTimer(disabled: true) }
+        .onDisappear { setIdleTimer(disabled: false) }
+        .onChange(of: viewModel.banner) { _, banner in
+            announceBanner(banner)
+        }
+        .onChange(of: viewModel.rideState) { _, state in
+            announceRideState(state)
+        }
+    }
+
+    // MARK: - VoiceOver announcements (Requirement 10.3)
+
+    /// Post a VoiceOver announcement when a state banner appears so a
+    /// non-visual user hears the signal-lost / permission-revoked change.
+    private func announceBanner(_ banner: RideBanner?) {
+        guard let banner else { return }
+        let message: String?
+        switch banner {
+        case .signalLost:
+            message = "GPS signal lost. Your ride continues and resumes automatically."
+        case .permissionRevoked:
+            message = "Location access turned off. Your ride is saved. Hold Stop to finish."
+        case .permissionNeeded, .failed:
+            message = nil
+        }
+        if let message { postAnnouncement(message) }
+    }
+
+    /// Announce pause/resume transitions (icon + text is also on-screen).
+    private func announceRideState(_ state: RideState) {
+        switch state {
+        case .paused:
+            postAnnouncement("Ride paused")
+        case .recording:
+            postAnnouncement("Recording")
+        default:
+            break
+        }
+    }
+
+    private func postAnnouncement(_ message: String) {
+        #if canImport(UIKit)
+        UIAccessibility.post(notification: .announcement, argument: message)
+        #endif
+    }
+
+    // MARK: - Top chrome (chips + banner)
+
+    private var topChrome: some View {
+        VStack(spacing: Theme.Spacing.sm) {
+            if let banner = viewModel.banner, banner.isBannerWorthy {
+                RideBannerView(banner: banner)
+            } else {
+                HStack(alignment: .top) {
+                    stateChip
+                    Spacer()
+                }
+            }
+            Spacer()
+            HStack {
+                StateChip(variant: .rearDetectionOff, scheme: .dark)
+                Spacer()
+            }
+        }
+        .padding(Theme.Spacing.lg)
+        .padding(.bottom, 300) // keep chrome above the bottom sheet
+    }
+
+    private var stateChip: some View {
+        StateChip(variant: viewModel.rideState == .paused ? .paused : .recording, scheme: .dark)
+    }
+
+    // MARK: - Bottom sheet (metrics + controls)
+
+    private var bottomSheet: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            VStack(spacing: Theme.Spacing.md) {
+                Capsule()
+                    .fill(Theme.Colors.rideChipStroke)
+                    .frame(width: 32, height: 4)
+                    .padding(.top, Theme.Spacing.md)
+
+                rideTime
+                metricsRow
+                controls
+
+                Text("Hold Stop to end ride")
+                    .font(.system(size: 10))
+                    .foregroundStyle(Theme.Colors.rideSecondaryText)
+                    .padding(.bottom, Theme.Spacing.lg)
+            }
+            .frame(maxWidth: .infinity)
+            .background(Theme.Colors.rideCard)
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        }
+        .ignoresSafeArea(edges: .bottom)
+    }
+
+    /// Ride time ticks every second off a `TimelineView` reading the pure
+    /// `activeDuration(at:)`; it freezes automatically while paused because the
+    /// view model's active duration excludes paused spans.
+    private var rideTime: some View {
+        VStack(spacing: Theme.Spacing.xs) {
+            Text("RIDE TIME")
+                .font(.system(size: 10, weight: .semibold))
+                .tracking(1)
+                .foregroundStyle(Theme.Colors.rideSecondaryText)
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                Text(Formatters.duration(viewModel.activeDuration(at: context.date)))
+                    .font(Theme.Typography.metric(50))
+                    .foregroundStyle(.white)
+                    .accessibilityLabel("Ride time \(Formatters.duration(viewModel.activeDuration(at: context.date)))")
+            }
+        }
+    }
+
+    private var metricsRow: some View {
+        HStack(alignment: .top, spacing: 0) {
+            metric(
+                value: milesValue,
+                unit: "mi",
+                label: "DISTANCE",
+                accessibility: "Distance \(Formatters.miles(fromMeters: viewModel.distanceMeters))"
+            )
+            Rectangle()
+                .fill(Theme.Colors.rideChipStroke)
+                .frame(width: 1, height: 42)
+            metric(
+                value: speedValue,
+                unit: "mph",
+                label: "SPEED",
+                accessibility: speedAccessibility
+            )
+        }
+        .padding(.horizontal, Theme.Spacing.lg)
+    }
+
+    private func metric(value: String, unit: String, label: String, accessibility: String) -> some View {
+        VStack(spacing: Theme.Spacing.xs) {
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(value)
+                    .font(Theme.Typography.metric(26))
+                    .foregroundStyle(.white)
+                Text(unit)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Theme.Colors.rideSecondaryText)
+            }
+            Text(label)
+                .font(.system(size: 9, weight: .semibold))
+                .tracking(1)
+                .foregroundStyle(Theme.Colors.rideSecondaryText)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibility)
+    }
+
+    private var controls: some View {
+        HStack(spacing: Theme.Spacing.md) {
+            Button(action: togglePause) {
+                HStack(spacing: Theme.Spacing.sm) {
+                    Image(systemName: isPaused ? "play.fill" : "pause.fill")
+                        .font(.system(size: 17, weight: .bold))
+                    Text(isPaused ? "Resume" : "Pause")
+                        .font(.system(size: 17, weight: .bold))
+                }
+                .foregroundStyle(Theme.Palette.ink)
+                .frame(maxWidth: .infinity)
+                .frame(height: Theme.Size.minTouchTarget)
+                .background(Theme.Palette.lime)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isPaused ? "Resume ride" : "Pause ride")
+
+            HoldToStopButton(onStop: { viewModel.stop() })
+                .frame(width: 78, height: Theme.Size.minTouchTarget)
+        }
+        .padding(.horizontal, Theme.Spacing.lg)
+    }
+
+    // MARK: - Derived display values
+
+    private var isPaused: Bool { viewModel.rideState == .paused }
+
+    /// Distance always has a value; shown in miles.
+    private var milesValue: String {
+        numberOnly(Formatters.miles(fromMeters: viewModel.distanceMeters), unit: "mi")
+    }
+
+    /// Speed shows an em dash while paused or signal-lost (no current fix),
+    /// matching mockup 3, otherwise the latest point's instantaneous speed.
+    private var speedValue: String {
+        guard viewModel.rideState == .recording,
+              let speed = viewModel.points.last?.speedMetersPerSecond,
+              speed >= 0 else {
+            return "—"
+        }
+        return numberOnly(Formatters.mph(fromMetersPerSecond: speed), unit: "mph")
+    }
+
+    private var speedAccessibility: String {
+        if speedValue == "—" { return "Speed unavailable" }
+        return "Speed \(speedValue) miles per hour"
+    }
+
+    /// Strips the trailing unit so the big number and the muted unit render
+    /// separately (the formatters append the unit for single-string callers).
+    private func numberOnly(_ formatted: String, unit: String) -> String {
+        formatted
+            .replacingOccurrences(of: " \(unit)", with: "")
+    }
+
+    private func togglePause() {
+        if isPaused {
+            viewModel.resume()
+        } else {
+            viewModel.pause()
+        }
+    }
+
+    private func setIdleTimer(disabled: Bool) {
+        #if canImport(UIKit)
+        UIApplication.shared.isIdleTimerDisabled = disabled
+        #endif
+    }
+}
+
+// MARK: - Banner
+
+/// The amber signal-lost / permission-revoked banner (mockup 3). Calm, icon +
+/// text, never implies the ride stopped.
+private struct RideBannerView: View {
+    let banner: RideBanner
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Theme.Spacing.md) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Theme.Palette.ink)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Theme.Palette.ink)
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.Palette.ink.opacity(0.75))
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(Theme.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.Palette.amber)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). \(subtitle)")
+    }
+
+    private var title: String {
+        switch banner {
+        case .signalLost: return "GPS signal lost"
+        case .permissionRevoked: return "Location access turned off"
+        default: return ""
+        }
+    }
+
+    private var subtitle: String {
+        switch banner {
+        case .signalLost: return "Your ride continues. Resuming…"
+        case .permissionRevoked: return "Your ride is saved. Hold Stop to finish."
+        default: return ""
+        }
+    }
+}
+
+private extension RideBanner {
+    /// Only the on-screen banner cases render in the top chrome; `.failed` and
+    /// `.permissionNeeded` are handled by the composition root / Home.
+    var isBannerWorthy: Bool {
+        switch self {
+        case .signalLost, .permissionRevoked: return true
+        case .permissionNeeded, .failed: return false
+        }
+    }
+}
+
+#Preview("Recording") {
+    ActiveRideView(viewModel: PreviewSeed.activeRideViewModel(state: .recording))
+}
+
+#Preview("Paused") {
+    ActiveRideView(viewModel: PreviewSeed.activeRideViewModel(state: .paused))
+}

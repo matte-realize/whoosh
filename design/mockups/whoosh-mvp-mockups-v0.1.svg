@@ -1,0 +1,460 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1440" viewBox="0 0 1320 1440" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <clipPath id="screen"><rect width="280" height="600" rx="36"/></clipPath>
+    <clipPath id="mapcard"><rect x="16" y="104" width="248" height="190" rx="16"/></clipPath>
+    <clipPath id="histcard"><rect x="16" y="134" width="248" height="248" rx="16"/></clipPath>
+
+    <g id="sb-light" fill="#0B0F14">
+      <text x="30" y="25" font-size="13" font-weight="600">9:41</text>
+      <rect x="104" y="10" width="72" height="22" rx="11" fill="#000"/>
+      <rect x="204" y="21" width="3" height="4" rx="1"/><rect x="209" y="19" width="3" height="6" rx="1"/>
+      <rect x="214" y="17" width="3" height="8" rx="1"/><rect x="219" y="15" width="3" height="10" rx="1"/>
+      <rect x="228" y="14" width="22" height="11" rx="3" fill="none" stroke="#0B0F14" stroke-width="1.2"/>
+      <rect x="230" y="16" width="14" height="7" rx="1.5"/><rect x="251" y="17.5" width="1.6" height="4" rx="0.8"/>
+    </g>
+    <g id="sb-dark" fill="#FFFFFF">
+      <text x="30" y="25" font-size="13" font-weight="600">9:41</text>
+      <rect x="104" y="10" width="72" height="22" rx="11" fill="#000"/>
+      <rect x="204" y="21" width="3" height="4" rx="1"/><rect x="209" y="19" width="3" height="6" rx="1"/>
+      <rect x="214" y="17" width="3" height="8" rx="1"/><rect x="219" y="15" width="3" height="10" rx="1"/>
+      <rect x="228" y="14" width="22" height="11" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1.2"/>
+      <rect x="230" y="16" width="14" height="7" rx="1.5"/><rect x="251" y="17.5" width="1.6" height="4" rx="0.8"/>
+    </g>
+
+    <g id="map-dark">
+      <rect width="280" height="360" fill="#141A22"/>
+      <g stroke="#1F2833" stroke-width="8" stroke-linecap="round" fill="none">
+        <path d="M-20 90 L300 60"/><path d="M-20 170 L300 150"/><path d="M-20 255 L300 238"/>
+        <path d="M40 -10 L70 370"/><path d="M130 -10 L150 370"/><path d="M220 -10 L235 370"/>
+      </g>
+      <path d="M-20 210 L300 185" stroke="#2A3542" stroke-width="13" fill="none"/>
+      <text x="262" y="178" font-size="9" fill="#6B7888" text-anchor="end">Mass Ave</text>
+      <path d="M-20 300 C 60 282 140 330 300 292 L300 370 L-20 370 Z" fill="#17304A"/>
+      <text x="196" y="330" font-size="10" fill="#4F7397" font-style="italic">Charles River</text>
+    </g>
+
+    <g id="i-synced" fill="none" stroke="#0B0F14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.5 13h7.5a3 3 0 0 0 .4-6 4 4 0 0 0-7.7-1A3.5 3.5 0 0 0 4.5 13z"/>
+      <path d="M6.2 9.6l1.5 1.5 2.8-2.8"/>
+    </g>
+    <g id="i-pending" fill="none" stroke="#5B6472" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="8" cy="8" r="6.2"/><path d="M8 4.8V8l2.4 1.6"/>
+    </g>
+    <g id="i-device" fill="none" stroke="#5B6472" stroke-width="1.5" stroke-linecap="round">
+      <rect x="4.5" y="1.5" width="7" height="13" rx="1.8"/><path d="M7 12.2h2"/>
+    </g>
+
+    <g id="thumb-a"><rect width="40" height="40" rx="9" fill="#141A22"/><path d="M9 32 L11 22 L23 20 L22 12 L32 9" fill="none" stroke="#C8F135" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g id="thumb-b"><rect width="40" height="40" rx="9" fill="#141A22"/><path d="M7 13 C 15 32, 25 6, 33 28" fill="none" stroke="#C8F135" stroke-width="2.5" stroke-linecap="round"/></g>
+    <g id="thumb-c"><rect width="40" height="40" rx="9" fill="#141A22"/><path d="M6 30 H14 V16 H26 L28 9 H34" fill="none" stroke="#C8F135" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g id="thumb-d"><rect width="40" height="40" rx="9" fill="#141A22"/><path d="M11 30 V14 L28 11 L30 28 Z" fill="none" stroke="#C8F135" stroke-width="2.5" stroke-linejoin="round"/></g>
+    <g id="thumb-e"><rect width="40" height="40" rx="9" fill="#141A22"/><path d="M6 22 C 12 8, 20 34, 26 18 S 34 10, 35 14" fill="none" stroke="#C8F135" stroke-width="2.5" stroke-linecap="round"/></g>
+  </defs>
+
+  <rect width="1320" height="1440" fill="#E9EBEF"/>
+  <text x="40" y="56" font-size="26" font-weight="800" fill="#0B0F14">Whoosh iOS · MVP mockups v0.1</text>
+  <text x="40" y="82" font-size="13" fill="#5B6472">iPhone 14 · iOS 17 · SwiftUI · light app chrome, dark ride screens · US units · Supabase sync opt-in</text>
+
+  <!-- ============ 1 · HOME ============ -->
+  <g transform="translate(40,150)">
+    <text x="0" y="-38" font-size="14" font-weight="700" fill="#0B0F14">1 · Home</text>
+    <text x="0" y="-20" font-size="11" fill="#5B6472">Start Ride in thumb zone · recent rides · week stats</text>
+    <rect x="-6" y="-6" width="292" height="612" rx="42" fill="#0B0F14"/>
+    <g clip-path="url(#screen)">
+      <rect width="280" height="600" fill="#F4F5F7"/>
+      <use href="#sb-light"/>
+      <text x="20" y="72" font-size="27" font-weight="800" fill="#0B0F14" letter-spacing="-0.6">whoosh</text>
+      <path d="M118 58h20M122 66h13" stroke="#C8F135" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="248" cy="62" r="17" fill="#FFFFFF"/>
+      <path d="M240 57h16M240 67h16" stroke="#0B0F14" stroke-width="1.8" stroke-linecap="round"/>
+      <circle cx="244" cy="57" r="2.6" fill="#FFFFFF" stroke="#0B0F14" stroke-width="1.6"/>
+      <circle cx="252" cy="67" r="2.6" fill="#FFFFFF" stroke="#0B0F14" stroke-width="1.6"/>
+      <text x="20" y="94" font-size="13" fill="#5B6472">Ready to ride?</text>
+
+      <rect x="16" y="108" width="248" height="96" rx="18" fill="#FFFFFF"/>
+      <text x="32" y="132" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">THIS WEEK</text>
+      <text x="32" y="167" font-size="30" font-weight="700" fill="#0B0F14">12.4<tspan font-size="15" font-weight="600" fill="#5B6472" dx="4">mi</tspan></text>
+      <text x="32" y="189" font-size="11" fill="#5B6472">3 rides · 1h 02m</text>
+      <g>
+        <rect x="170" y="173" width="8" height="3" rx="1.5" fill="#E3E6EB"/>
+        <rect x="183" y="156" width="8" height="20" rx="2" fill="#0B0F14"/>
+        <rect x="196" y="173" width="8" height="3" rx="1.5" fill="#E3E6EB"/>
+        <rect x="209" y="144" width="8" height="32" rx="2" fill="#0B0F14"/>
+        <rect x="222" y="162" width="8" height="14" rx="2" fill="#0B0F14"/>
+        <rect x="235" y="173" width="8" height="3" rx="1.5" fill="#E3E6EB"/>
+        <rect x="248" y="173" width="8" height="3" rx="1.5" fill="#E3E6EB"/>
+        <g font-size="8" fill="#5B6472" text-anchor="middle">
+          <text x="174" y="190">M</text><text x="187" y="190">T</text><text x="200" y="190">W</text>
+          <text x="213" y="190">T</text><text x="226" y="190">F</text><text x="239" y="190">S</text><text x="252" y="190">S</text>
+        </g>
+      </g>
+
+      <text x="20" y="234" font-size="15" font-weight="700" fill="#0B0F14">Recent rides</text>
+      <text x="260" y="234" font-size="13" font-weight="600" fill="#3A4250" text-anchor="end">See all ›</text>
+      <rect x="16" y="246" width="248" height="60" rx="16" fill="#FFFFFF"/>
+      <use href="#thumb-a" x="26" y="256"/>
+      <text x="78" y="271" font-size="13" font-weight="600" fill="#0B0F14">Thu, Oct 22 · 5:48 PM</text>
+      <text x="78" y="290" font-size="11" fill="#5B6472">5.32 mi · 24:18 · 13.1 mph</text>
+      <use href="#i-synced" x="238" y="268"/>
+      <rect x="16" y="314" width="248" height="60" rx="16" fill="#FFFFFF"/>
+      <use href="#thumb-b" x="26" y="324"/>
+      <text x="78" y="339" font-size="13" font-weight="600" fill="#0B0F14">Tue, Oct 20 · 7:12 AM</text>
+      <text x="78" y="358" font-size="11" fill="#5B6472">3.85 mi · 19:40 · 11.7 mph</text>
+      <use href="#i-pending" x="238" y="336"/>
+
+      <rect x="16.5" y="388.5" width="247" height="62" rx="16" fill="none" stroke="#C9CED6" stroke-dasharray="4 4"/>
+      <rect x="30" y="410" width="22" height="16" rx="4" fill="none" stroke="#5B6472" stroke-width="1.8"/>
+      <circle cx="41" cy="418" r="4" fill="none" stroke="#5B6472" stroke-width="1.8"/>
+      <text x="64" y="415" font-size="13" font-weight="600" fill="#0B0F14">Rear vehicle detection</text>
+      <text x="64" y="434" font-size="11" fill="#5B6472">Experimental · coming soon</text>
+
+      <rect x="16" y="484" width="248" height="66" rx="33" fill="#C8F135"/>
+      <path d="M80 506 L80 528 L98 517 Z" fill="#0B0F14"/>
+      <text x="108" y="524" font-size="19" font-weight="700" fill="#0B0F14">Start Ride</text>
+      <circle cx="108" cy="568" r="3.5" fill="#2FB344"/>
+      <text x="117" y="572" font-size="11" fill="#5B6472">GPS ready</text>
+      <rect x="93" y="586" width="94" height="4" rx="2" fill="#0B0F14"/>
+    </g>
+  </g>
+
+  <!-- ============ 2 · RECORDING ============ -->
+  <g transform="translate(360,150)">
+    <text x="0" y="-38" font-size="14" font-weight="700" fill="#0B0F14">2 · Recording</text>
+    <text x="0" y="-20" font-size="11" fill="#5B6472">Three glanceable numbers · hold to stop</text>
+    <rect x="-6" y="-6" width="292" height="612" rx="42" fill="#0B0F14"/>
+    <g clip-path="url(#screen)">
+      <rect width="280" height="600" fill="#0B0F14"/>
+      <use href="#map-dark"/>
+      <path d="M63 280 L57 204 L141 197 L138 160 L196 156" fill="none" stroke="#0B0F14" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M63 280 L57 204 L141 197 L138 160 L196 156" fill="none" stroke="#C8F135" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="63" cy="280" r="6" fill="#FFFFFF" stroke="#0B0F14" stroke-width="2"/>
+      <circle cx="196" cy="156" r="22" fill="#C8F135" opacity="0.18"/>
+      <circle cx="196" cy="156" r="9" fill="#FFFFFF"/>
+      <circle cx="196" cy="156" r="5.5" fill="#C8F135"/>
+      <use href="#sb-dark"/>
+      <rect x="16" y="48" width="118" height="34" rx="17" fill="#0B0F14" fill-opacity="0.88" stroke="#2A3542"/>
+      <circle cx="36" cy="65" r="5" fill="#E5484D"/>
+      <text x="48" y="70" font-size="13" font-weight="700" fill="#FFFFFF">Recording</text>
+      <circle cx="248" cy="65" r="17" fill="#0B0F14" fill-opacity="0.88" stroke="#2A3542"/>
+      <path d="M240 66 L256 58 L249 74 L247.5 67.5 Z" fill="#C8F135"/>
+      <rect x="16" y="300" width="124" height="26" rx="13" fill="#0B0F14" fill-opacity="0.88" stroke="#2A3542"/>
+      <rect x="25" y="309" width="12" height="9" rx="2" fill="none" stroke="#8A94A3" stroke-width="1.4"/>
+      <path d="M23 306 L39 321" stroke="#8A94A3" stroke-width="1.4" stroke-linecap="round"/>
+      <text x="44" y="317" font-size="11" fill="#8A94A3">Rear detection off</text>
+
+      <rect x="0" y="340" width="280" height="290" rx="28" fill="#11161D"/>
+      <rect x="124" y="350" width="32" height="4" rx="2" fill="#2A3542"/>
+      <text x="140" y="378" font-size="10" font-weight="600" fill="#8A94A3" letter-spacing="1" text-anchor="middle">RIDE TIME</text>
+      <text x="140" y="428" font-size="50" font-weight="700" fill="#FFFFFF" text-anchor="middle">24:18</text>
+      <text x="75" y="470" font-size="26" font-weight="700" fill="#FFFFFF" text-anchor="middle">5.32<tspan font-size="13" font-weight="600" fill="#8A94A3" dx="3">mi</tspan></text>
+      <text x="75" y="488" font-size="9" font-weight="600" fill="#8A94A3" letter-spacing="1" text-anchor="middle">DISTANCE</text>
+      <path d="M140 448 V490" stroke="#2A3542"/>
+      <text x="205" y="470" font-size="26" font-weight="700" fill="#FFFFFF" text-anchor="middle">13.1<tspan font-size="13" font-weight="600" fill="#8A94A3" dx="3">mph</tspan></text>
+      <text x="205" y="488" font-size="9" font-weight="600" fill="#8A94A3" letter-spacing="1" text-anchor="middle">SPEED</text>
+      <rect x="16" y="506" width="160" height="60" rx="30" fill="#C8F135"/>
+      <rect x="62" y="525" width="6" height="22" rx="2" fill="#0B0F14"/>
+      <rect x="72" y="525" width="6" height="22" rx="2" fill="#0B0F14"/>
+      <text x="88" y="543" font-size="17" font-weight="700" fill="#0B0F14">Pause</text>
+      <rect x="186" y="506" width="78" height="60" rx="30" fill="#2A1517" stroke="#E5484D" stroke-width="1.5"/>
+      <rect x="217" y="516" width="16" height="16" rx="3" fill="#E5484D"/>
+      <text x="225" y="554" font-size="11" font-weight="600" fill="#FF8A8D" text-anchor="middle">Hold</text>
+      <text x="140" y="580" font-size="10" fill="#8A94A3" text-anchor="middle">Hold Stop to end ride</text>
+      <rect x="93" y="586" width="94" height="4" rx="2" fill="#FFFFFF"/>
+    </g>
+  </g>
+
+  <!-- ============ 3 · SIGNAL LOST ============ -->
+  <g transform="translate(680,150)">
+    <text x="0" y="-38" font-size="14" font-weight="700" fill="#0B0F14">3 · GPS signal lost</text>
+    <text x="0" y="-20" font-size="11" fill="#5B6472">Calm banner · ride keeps recording · Paused reuses layout</text>
+    <rect x="-6" y="-6" width="292" height="612" rx="42" fill="#0B0F14"/>
+    <g clip-path="url(#screen)">
+      <rect width="280" height="600" fill="#0B0F14"/>
+      <use href="#map-dark"/>
+      <rect width="280" height="345" fill="#000000" opacity="0.35"/>
+      <path d="M63 280 L57 204 L141 197 L138 160 L170 158" fill="none" stroke="#0B0F14" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M63 280 L57 204 L141 197 L138 160 L170 158" fill="none" stroke="#C8F135" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+      <circle cx="63" cy="280" r="6" fill="#FFFFFF" stroke="#0B0F14" stroke-width="2"/>
+      <circle cx="170" cy="158" r="14" fill="none" stroke="#F5A524" stroke-width="2" stroke-dasharray="4 4"/>
+      <circle cx="170" cy="158" r="4" fill="#F5A524"/>
+      <use href="#sb-dark"/>
+      <rect x="16" y="48" width="248" height="58" rx="16" fill="#F5A524"/>
+      <path d="M38 63 L48 81 L28 81 Z" fill="none" stroke="#0B0F14" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M38 69 V74" stroke="#0B0F14" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="38" cy="77.5" r="1.1" fill="#0B0F14"/>
+      <text x="60" y="72" font-size="14" font-weight="700" fill="#0B0F14">GPS signal lost</text>
+      <text x="60" y="91" font-size="11" fill="#3B2A05">Your ride continues. Resuming…</text>
+      <rect x="16" y="300" width="124" height="26" rx="13" fill="#0B0F14" fill-opacity="0.88" stroke="#2A3542"/>
+      <rect x="25" y="309" width="12" height="9" rx="2" fill="none" stroke="#8A94A3" stroke-width="1.4"/>
+      <path d="M23 306 L39 321" stroke="#8A94A3" stroke-width="1.4" stroke-linecap="round"/>
+      <text x="44" y="317" font-size="11" fill="#8A94A3">Rear detection off</text>
+
+      <rect x="0" y="340" width="280" height="290" rx="28" fill="#11161D"/>
+      <rect x="124" y="350" width="32" height="4" rx="2" fill="#2A3542"/>
+      <text x="140" y="378" font-size="10" font-weight="600" fill="#8A94A3" letter-spacing="1" text-anchor="middle">RIDE TIME</text>
+      <text x="140" y="428" font-size="50" font-weight="700" fill="#FFFFFF" text-anchor="middle">31:07</text>
+      <text x="75" y="470" font-size="26" font-weight="700" fill="#FFFFFF" text-anchor="middle">6.10<tspan font-size="13" font-weight="600" fill="#8A94A3" dx="3">mi</tspan></text>
+      <text x="75" y="488" font-size="9" font-weight="600" fill="#8A94A3" letter-spacing="1" text-anchor="middle">DISTANCE</text>
+      <path d="M140 448 V490" stroke="#2A3542"/>
+      <text x="205" y="470" font-size="26" font-weight="700" fill="#5B6472" text-anchor="middle">—<tspan font-size="13" font-weight="600" fill="#8A94A3" dx="3">mph</tspan></text>
+      <text x="205" y="488" font-size="9" font-weight="600" fill="#8A94A3" letter-spacing="1" text-anchor="middle">SPEED</text>
+      <rect x="16" y="506" width="160" height="60" rx="30" fill="#C8F135"/>
+      <rect x="62" y="525" width="6" height="22" rx="2" fill="#0B0F14"/>
+      <rect x="72" y="525" width="6" height="22" rx="2" fill="#0B0F14"/>
+      <text x="88" y="543" font-size="17" font-weight="700" fill="#0B0F14">Pause</text>
+      <rect x="186" y="506" width="78" height="60" rx="30" fill="#2A1517" stroke="#E5484D" stroke-width="1.5"/>
+      <rect x="217" y="516" width="16" height="16" rx="3" fill="#E5484D"/>
+      <text x="225" y="554" font-size="11" font-weight="600" fill="#FF8A8D" text-anchor="middle">Hold</text>
+      <text x="140" y="580" font-size="10" fill="#8A94A3" text-anchor="middle">Hold Stop to end ride</text>
+      <rect x="93" y="586" width="94" height="4" rx="2" fill="#FFFFFF"/>
+    </g>
+  </g>
+
+  <!-- ============ 4 · SUMMARY ============ -->
+  <g transform="translate(1000,150)">
+    <text x="0" y="-38" font-size="14" font-weight="700" fill="#0B0F14">4 · Ride summary</text>
+    <text x="0" y="-20" font-size="11" fill="#5B6472">Reused for history detail · shows sync status</text>
+    <rect x="-6" y="-6" width="292" height="612" rx="42" fill="#0B0F14"/>
+    <g clip-path="url(#screen)">
+      <rect width="280" height="600" fill="#F4F5F7"/>
+      <use href="#sb-light"/>
+      <text x="20" y="70" font-size="22" font-weight="700" fill="#0B0F14">Ride complete</text>
+      <text x="20" y="91" font-size="12" fill="#5B6472">Thu, Oct 22 · 5:48 – 6:15 PM</text>
+      <circle cx="248" cy="63" r="16" fill="#FFFFFF"/>
+      <circle cx="241" cy="63" r="1.8" fill="#0B0F14"/><circle cx="248" cy="63" r="1.8" fill="#0B0F14"/><circle cx="255" cy="63" r="1.8" fill="#0B0F14"/>
+
+      <g clip-path="url(#mapcard)">
+        <rect x="16" y="104" width="248" height="190" fill="#E6EAEE"/>
+        <g stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" fill="none">
+          <path d="M0 150 L300 135"/><path d="M0 214 L300 200"/>
+          <path d="M70 90 L90 310"/><path d="M150 90 L165 310"/><path d="M220 90 L232 310"/>
+        </g>
+        <path d="M0 185 L300 168" stroke="#FFFFFF" stroke-width="11" fill="none"/>
+        <path d="M0 262 C 80 248 160 285 300 255 L300 310 L0 310 Z" fill="#BFD6EA"/>
+        <text x="176" y="285" font-size="9" fill="#557A9C" font-style="italic">Charles River</text>
+        <path d="M86 258 L83 180 L156 176 L153 142 L228 139" fill="none" stroke="#0B0F14" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M86 258 L83 180 L156 176 L153 142 L228 139" fill="none" stroke="#C8F135" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="86" cy="258" r="6" fill="#FFFFFF" stroke="#0B0F14" stroke-width="2.5"/>
+        <circle cx="228" cy="139" r="7" fill="#0B0F14"/>
+        <circle cx="228" cy="139" r="3" fill="#C8F135"/>
+      </g>
+
+      <rect x="16" y="306" width="248" height="74" rx="16" fill="#FFFFFF"/>
+      <text x="32" y="330" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">DISTANCE</text>
+      <text x="32" y="367" font-size="32" font-weight="700" fill="#0B0F14">5.32<tspan font-size="15" font-weight="600" fill="#5B6472" dx="4">mi</tspan></text>
+      <rect x="16" y="388" width="120" height="68" rx="16" fill="#FFFFFF"/>
+      <text x="30" y="410" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">RIDE TIME</text>
+      <text x="30" y="440" font-size="22" font-weight="700" fill="#0B0F14">24:18</text>
+      <rect x="144" y="388" width="120" height="68" rx="16" fill="#FFFFFF"/>
+      <text x="158" y="410" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">AVG SPEED</text>
+      <text x="158" y="440" font-size="22" font-weight="700" fill="#0B0F14">13.1<tspan font-size="12" font-weight="600" fill="#5B6472" dx="3">mph</tspan></text>
+
+      <rect x="16" y="464" width="248" height="48" rx="14" fill="#FFFFFF"/>
+      <use href="#i-synced" x="30" y="479"/>
+      <text x="56" y="485" font-size="12" font-weight="600" fill="#0B0F14">Synced to Whoosh map</text>
+      <text x="56" y="501" font-size="10.5" fill="#5B6472">Start and end trimmed for privacy</text>
+      <rect x="16" y="522" width="248" height="54" rx="27" fill="#C8F135"/>
+      <text x="140" y="555" font-size="17" font-weight="700" fill="#0B0F14" text-anchor="middle">Done</text>
+      <rect x="93" y="586" width="94" height="4" rx="2" fill="#0B0F14"/>
+    </g>
+  </g>
+
+  <!-- ============ 5 · HISTORY ============ -->
+  <g transform="translate(40,820)">
+    <text x="0" y="-38" font-size="14" font-weight="700" fill="#0B0F14">5 · History</text>
+    <text x="0" y="-20" font-size="11" fill="#5B6472">Most recent first · sync status · swipe to delete</text>
+    <rect x="-6" y="-6" width="292" height="612" rx="42" fill="#0B0F14"/>
+    <g clip-path="url(#screen)">
+      <rect width="280" height="600" fill="#F4F5F7"/>
+      <use href="#sb-light"/>
+      <path d="M25 44 L19 50 L25 56" fill="none" stroke="#0B0F14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="30" y="55" font-size="15" font-weight="600" fill="#0B0F14">Home</text>
+      <text x="20" y="94" font-size="28" font-weight="700" fill="#0B0F14">Rides</text>
+      <text x="20" y="124" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">OCTOBER 2026</text>
+      <text x="260" y="124" font-size="10" fill="#5B6472" text-anchor="end">4 rides · 18.7 mi</text>
+
+      <rect x="16" y="134" width="248" height="248" rx="16" fill="#FFFFFF"/>
+      <use href="#thumb-a" x="26" y="145"/>
+      <text x="78" y="161" font-size="13" font-weight="600" fill="#0B0F14">Thu, Oct 22 · 5:48 PM</text>
+      <text x="78" y="179" font-size="11" fill="#5B6472">5.32 mi · 24:18</text>
+      <use href="#i-synced" x="238" y="157"/>
+      <path d="M78 196 H264" stroke="#EEF0F3"/>
+      <use href="#thumb-b" x="26" y="207"/>
+      <text x="78" y="223" font-size="13" font-weight="600" fill="#0B0F14">Tue, Oct 20 · 7:12 AM</text>
+      <text x="78" y="241" font-size="11" fill="#5B6472">3.85 mi · 19:40</text>
+      <use href="#i-pending" x="238" y="219"/>
+      <path d="M78 258 H264" stroke="#EEF0F3"/>
+      <use href="#thumb-c" x="26" y="269"/>
+      <text x="78" y="285" font-size="13" font-weight="600" fill="#0B0F14">Sun, Oct 18 · 10:05 AM</text>
+      <text x="78" y="303" font-size="11" fill="#5B6472">8.14 mi · 41:52</text>
+      <use href="#i-device" x="238" y="281"/>
+      <path d="M78 320 H264" stroke="#EEF0F3"/>
+      <g clip-path="url(#histcard)">
+        <rect x="188" y="320" width="76" height="62" fill="#D32F2F"/>
+        <path d="M219 335h14 M223.5 335v-2.5h5v2.5 M221 337.5l1 11h8l1-11" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="226" y="367" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Delete</text>
+        <g transform="translate(-76,0)">
+          <rect x="16" y="320" width="248" height="62" fill="#FFFFFF"/>
+          <use href="#thumb-d" x="26" y="331"/>
+          <text x="78" y="347" font-size="13" font-weight="600" fill="#0B0F14">Fri, Oct 16 · 6:30 PM</text>
+          <text x="78" y="365" font-size="11" fill="#5B6472">1.40 mi · 8:11</text>
+          <use href="#i-synced" x="238" y="343"/>
+        </g>
+      </g>
+
+      <use href="#i-synced" x="20" y="394"/>
+      <text x="40" y="406" font-size="10.5" fill="#5B6472">Synced</text>
+      <use href="#i-pending" x="94" y="394"/>
+      <text x="114" y="406" font-size="10.5" fill="#5B6472">Pending</text>
+      <use href="#i-device" x="174" y="394"/>
+      <text x="194" y="406" font-size="10.5" fill="#5B6472">On device</text>
+
+      <text x="20" y="440" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">SEPTEMBER 2026</text>
+      <rect x="16" y="450" width="248" height="62" rx="16" fill="#FFFFFF"/>
+      <use href="#thumb-e" x="26" y="461"/>
+      <text x="78" y="477" font-size="13" font-weight="600" fill="#0B0F14">Sat, Sep 27 · 9:20 AM</text>
+      <text x="78" y="495" font-size="11" fill="#5B6472">12.60 mi · 1:02:44</text>
+      <use href="#i-synced" x="238" y="473"/>
+      <text x="140" y="548" font-size="10.5" fill="#5B6472" text-anchor="middle">Swipe left on a ride to delete it</text>
+      <rect x="93" y="586" width="94" height="4" rx="2" fill="#0B0F14"/>
+    </g>
+  </g>
+
+  <!-- ============ 6 · LOCATION DENIED ============ -->
+  <g transform="translate(360,820)">
+    <text x="0" y="-38" font-size="14" font-weight="700" fill="#0B0F14">6 · Location denied</text>
+    <text x="0" y="-20" font-size="11" fill="#5B6472">Never a dead end · Settings link · history still open</text>
+    <rect x="-6" y="-6" width="292" height="612" rx="42" fill="#0B0F14"/>
+    <g clip-path="url(#screen)">
+      <rect width="280" height="600" fill="#F4F5F7"/>
+      <use href="#sb-light"/>
+      <circle cx="140" cy="170" r="46" fill="#FFFFFF"/>
+      <path d="M121 168 L159 152 L143 190 L139 172 Z" fill="#0B0F14" stroke="#0B0F14" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M120 146 L160 196" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+      <path d="M120 146 L160 196" stroke="#0B0F14" stroke-width="3" stroke-linecap="round"/>
+      <text x="140" y="254" font-size="20" font-weight="700" fill="#0B0F14" text-anchor="middle">Location is off</text>
+      <g font-size="13" fill="#5B6472" text-anchor="middle">
+        <text x="140" y="282">Whoosh needs your location to record</text>
+        <text x="140" y="300">your route and draw your ride map.</text>
+        <text x="140" y="328">Your location stays on this iPhone</text>
+        <text x="140" y="346">unless you turn on ride sync.</text>
+      </g>
+      <rect x="16" y="372" width="248" height="86" rx="16" fill="#FFFFFF"/>
+      <g font-size="12" fill="#0B0F14">
+        <circle cx="38" cy="394" r="9" fill="#F4F5F7"/><text x="38" y="398" font-weight="700" text-anchor="middle">1</text>
+        <text x="56" y="398">Open Settings</text>
+        <circle cx="38" cy="418" r="9" fill="#F4F5F7"/><text x="38" y="422" font-weight="700" text-anchor="middle">2</text>
+        <text x="56" y="422">Tap Location</text>
+        <circle cx="38" cy="442" r="9" fill="#F4F5F7"/><text x="38" y="446" font-weight="700" text-anchor="middle">3</text>
+        <text x="56" y="446">Choose “While Using the App”</text>
+      </g>
+      <rect x="16" y="474" width="248" height="56" rx="28" fill="#C8F135"/>
+      <text x="140" y="508" font-size="17" font-weight="700" fill="#0B0F14" text-anchor="middle">Open Settings</text>
+      <text x="140" y="562" font-size="14" font-weight="600" fill="#0B0F14" text-anchor="middle">View past rides</text>
+      <rect x="93" y="586" width="94" height="4" rx="2" fill="#0B0F14"/>
+    </g>
+  </g>
+
+  <!-- ============ 7 · SETTINGS ============ -->
+  <g transform="translate(680,820)">
+    <text x="0" y="-38" font-size="14" font-weight="700" fill="#0B0F14">7 · Settings</text>
+    <text x="0" y="-20" font-size="11" fill="#5B6472">Sync is opt-in · camera video never uploaded</text>
+    <rect x="-6" y="-6" width="292" height="612" rx="42" fill="#0B0F14"/>
+    <g clip-path="url(#screen)">
+      <rect width="280" height="600" fill="#F4F5F7"/>
+      <use href="#sb-light"/>
+      <path d="M25 44 L19 50 L25 56" fill="none" stroke="#0B0F14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="30" y="55" font-size="15" font-weight="600" fill="#0B0F14">Home</text>
+      <text x="20" y="94" font-size="28" font-weight="700" fill="#0B0F14">Settings</text>
+
+      <text x="20" y="124" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">CLOUD SYNC</text>
+      <rect x="16" y="134" width="248" height="144" rx="16" fill="#FFFFFF"/>
+      <text x="32" y="163" font-size="13" font-weight="600" fill="#0B0F14">Sync rides to Whoosh map</text>
+      <rect x="214" y="146" width="42" height="26" rx="13" fill="#C8F135" stroke="#0B0F14" stroke-opacity="0.15"/>
+      <circle cx="243" cy="159" r="11" fill="#FFFFFF" stroke="#0B0F14" stroke-opacity="0.12"/>
+      <path d="M32 182 H264" stroke="#EEF0F3"/>
+      <text x="32" y="211" font-size="13" fill="#0B0F14">Privacy zone</text>
+      <text x="250" y="211" font-size="13" fill="#5B6472" text-anchor="end">0.1 mi  ›</text>
+      <path d="M32 230 H264" stroke="#EEF0F3"/>
+      <text x="32" y="259" font-size="13" fill="#0B0F14">Identity</text>
+      <text x="250" y="259" font-size="13" fill="#5B6472" text-anchor="end">Anonymous</text>
+      <g font-size="10" fill="#5B6472">
+        <text x="20" y="296">Uploads finished rides (stats + route) so they</text>
+        <text x="20" y="310">appear on the Whoosh website. Camera video is</text>
+        <text x="20" y="324">never uploaded. Off by default.</text>
+      </g>
+
+      <text x="20" y="352" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">RIDE</text>
+      <rect x="16" y="362" width="248" height="96" rx="16" fill="#FFFFFF"/>
+      <text x="32" y="391" font-size="13" fill="#0B0F14">Units</text>
+      <text x="250" y="391" font-size="13" fill="#5B6472" text-anchor="end">Miles · mph</text>
+      <path d="M32 410 H264" stroke="#EEF0F3"/>
+      <text x="32" y="439" font-size="13" fill="#0B0F14">GPS accuracy</text>
+      <text x="250" y="439" font-size="13" fill="#5B6472" text-anchor="end">High  ›</text>
+
+      <text x="20" y="484" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">SAFETY · EXPERIMENTAL</text>
+      <rect x="16" y="494" width="248" height="48" rx="16" fill="#FFFFFF"/>
+      <text x="32" y="523" font-size="13" fill="#8A94A3">Rear vehicle detection</text>
+      <rect x="210" y="507" width="42" height="22" rx="11" fill="#F4F5F7"/>
+      <text x="231" y="522" font-size="10" font-weight="600" fill="#5B6472" text-anchor="middle">Soon</text>
+      <text x="140" y="570" font-size="14" font-weight="600" fill="#C62828" text-anchor="middle">Delete all rides</text>
+      <rect x="93" y="586" width="94" height="4" rx="2" fill="#0B0F14"/>
+    </g>
+  </g>
+
+  <!-- ============ 8 · DESIGN SYSTEM ============ -->
+  <g transform="translate(1000,820)">
+    <text x="0" y="-38" font-size="14" font-weight="700" fill="#0B0F14">Design system</text>
+    <text x="0" y="-20" font-size="11" fill="#5B6472">Tokens, components, principles</text>
+    <rect x="0" y="0" width="280" height="600" rx="24" fill="#FFFFFF"/>
+    <text x="20" y="36" font-size="16" font-weight="700" fill="#0B0F14">Whoosh UI kit</text>
+
+    <text x="20" y="64" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">COLOR</text>
+    <rect x="20" y="74" width="40" height="40" rx="10" fill="#0B0F14"/>
+    <rect x="72" y="74" width="40" height="40" rx="10" fill="#C8F135"/>
+    <rect x="124" y="74" width="40" height="40" rx="10" fill="#F5A524"/>
+    <rect x="176" y="74" width="40" height="40" rx="10" fill="#D32F2F"/>
+    <rect x="228.5" y="74.5" width="39" height="39" rx="10" fill="#F4F5F7" stroke="#E3E6EB"/>
+    <g font-size="9" font-weight="600" fill="#0B0F14">
+      <text x="20" y="130">Ink</text><text x="72" y="130">Lime</text><text x="124" y="130">Amber</text><text x="176" y="130">Alert</text><text x="228" y="130">Mist</text>
+    </g>
+    <g font-size="8" fill="#5B6472">
+      <text x="20" y="142">#0B0F14</text><text x="72" y="142">#C8F135</text><text x="124" y="142">#F5A524</text><text x="176" y="142">#D32F2F</text><text x="228" y="142">#F4F5F7</text>
+    </g>
+
+    <text x="20" y="172" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">TYPE · SF PRO</text>
+    <text x="20" y="212" font-size="34" font-weight="700" fill="#0B0F14">24:18</text>
+    <text x="260" y="206" font-size="9" fill="#5B6472" text-anchor="end">Ride metric · bold, tabular</text>
+    <text x="20" y="244" font-size="20" font-weight="700" fill="#0B0F14">Ride complete</text>
+    <text x="260" y="242" font-size="9" fill="#5B6472" text-anchor="end">Title</text>
+    <text x="20" y="270" font-size="12" fill="#0B0F14">5.32 mi · 24:18 · 13.1 mph</text>
+    <text x="260" y="270" font-size="9" fill="#5B6472" text-anchor="end">Body</text>
+
+    <text x="20" y="306" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">COMPONENTS</text>
+    <rect x="20" y="318" width="116" height="40" rx="20" fill="#C8F135"/>
+    <text x="78" y="343" font-size="13" font-weight="700" fill="#0B0F14" text-anchor="middle">Start Ride</text>
+    <rect x="144" y="318" width="116" height="40" rx="20" fill="#0B0F14"/>
+    <circle cx="166" cy="338" r="4.5" fill="#E5484D"/>
+    <text x="178" y="343" font-size="12" font-weight="700" fill="#FFFFFF">Recording</text>
+    <rect x="20" y="370" width="92" height="26" rx="13" fill="#F5A524"/>
+    <path d="M33 377 L38.5 387 L27.5 387 Z" fill="none" stroke="#0B0F14" stroke-width="1.4" stroke-linejoin="round"/>
+    <text x="44" y="387" font-size="11" font-weight="600" fill="#0B0F14">Signal lost</text>
+    <rect x="118" y="370" width="72" height="26" rx="13" fill="#E3E6EB"/>
+    <rect x="128" y="377" width="3" height="12" rx="1" fill="#0B0F14"/><rect x="134" y="377" width="3" height="12" rx="1" fill="#0B0F14"/>
+    <text x="143" y="387" font-size="11" font-weight="600" fill="#0B0F14">Paused</text>
+    <rect x="196" y="370" width="66" height="26" rx="13" fill="#F4F5F7"/>
+    <use href="#i-synced" x="200" y="375"/>
+    <text x="219" y="387" font-size="11" font-weight="600" fill="#0B0F14">Synced</text>
+
+    <text x="20" y="428" font-size="10" font-weight="600" fill="#5B6472" letter-spacing="0.8">PRINCIPLES</text>
+    <g font-size="11" fill="#0B0F14">
+      <text x="20" y="452">• Three numbers max while riding</text>
+      <text x="20" y="472">• Controls in the thumb zone, 60pt+ targets</text>
+      <text x="20" y="492">• Icon + text for every state, not color alone</text>
+      <text x="20" y="512">• Hold to stop, so a bump can't end a ride</text>
+      <text x="20" y="532">• Dark ride screen: high contrast, OLED-friendly</text>
+      <text x="20" y="552">• Lime is for actions; data uses ink on light</text>
+      <text x="20" y="572">• Honest copy: detection is experimental</text>
+    </g>
+  </g>
+</svg>

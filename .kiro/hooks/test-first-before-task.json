@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "test-first-before-task",
+      "description": "Before each spec task starts, remind the agent of the spec's working rules so tasks stay small, test-first, and within the steering documents.",
+      "trigger": "PreTaskExec",
+      "action": {
+        "type": "agent",
+        "prompt": "Before writing code for this task: (1) re-read .kiro/steering/tech.md and .kiro/steering/privacy.md and the requirement numbers listed in the task's _Requirements:_ line; (2) if the task is marked (test-first), write the failing Swift Testing tests from those acceptance criteria first and confirm they fail; (3) keep Models/Metrics Foundation-only and put all framework access behind the service protocols from design.md; (4) change only files this task needs; (5) when done, report files changed and the test results, and do not tick the task if scripts/test.sh is not green."
+      }
+    }
+  ]
+}

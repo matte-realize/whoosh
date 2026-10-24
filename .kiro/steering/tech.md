@@ -8,8 +8,15 @@
   - Enables the Observation framework (`@Observable`), modern MapKit SwiftUI APIs,
     and SwiftData. Chosen to reduce boilerplate during a hackathon.
   - Primary demo device: iPhone 14. iOS 17 keeps teammates' older phones supported.
-- **IDE / project:** Xcode 26.5 with a standard, committed `.xcodeproj` (no XcodeGen).
-  The iOS owner is the only person editing the project file, so merge conflicts are unlikely.
+- **IDE / project:** Xcode 26.5. The committed `Whoosh.xcodeproj` is the source of truth and
+  can be opened directly. _Amended:_ the original "no XcodeGen" decision is revised —
+  [XcodeGen](https://github.com/yonaskolb/XcodeGen) is used **only as a one-time generator**
+  from a repo-root `project.yml` (which documents the build settings in one place); the
+  generated `.xcodeproj` is committed. Sources use Xcode's file-system-synchronized groups
+  (`type: syncedFolder`), so new `.swift` files under `Whoosh/` or `WhooshTests/` are compiled
+  automatically without regenerating. Regenerate only when `project.yml` settings change
+  (`xcodegen generate`). The iOS owner is the only person editing the project, so merge
+  conflicts are unlikely.
 - **Apple Developer account:** available. Use it for on-device installs, entitlements, and
   capabilities (e.g., background location later) without free-account limits.
 - **Concurrency:** Xcode 26 defaults. Default actor isolation = `MainActor`, Approachable

@@ -1,0 +1,2 @@
+# Service protocols + implementations + fakes live here (Location, Persistence,
+# Sync, Detection, Alerts). Added in later tasks; placeholder keeps the folder.

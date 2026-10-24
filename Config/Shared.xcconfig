@@ -1,0 +1,7 @@
+// Shared.xcconfig — base build configuration for the Whoosh app target.
+//
+// Secrets (Supabase URL + anon key) are NOT committed. They live in a
+// gitignored Secrets.xcconfig alongside this file. The optional include below
+// pulls them in when present; the app still builds without it (sync is opt-in
+// and off by default in the MVP). See Secrets.example.xcconfig for the keys.
+#include? "Secrets.xcconfig"

@@ -1,6 +1,6 @@
 # Supabase Contract — Whoosh
 
-**Status: DRAFT.** Owned by Role C. The iOS app implements sync (tasks 21–23) only after
+**Status: DRAFT.** Owned by Role C. The iOS app implements sync (tasks 26–28) only after
 this is marked **Agreed** by C and the iOS owner. Change it through a quick review, then
 bump the version.
 

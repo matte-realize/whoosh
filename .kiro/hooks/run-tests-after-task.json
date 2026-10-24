@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "run-tests-after-task",
+      "description": "After each spec task finishes, run the unit test suite so no task is marked done on a red build (definition of done in tasks.md).",
+      "trigger": "PostTaskExec",
+      "action": {
+        "type": "command",
+        "command": "scripts/test.sh"
+      }
+    }
+  ]
+}
