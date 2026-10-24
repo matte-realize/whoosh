@@ -35,8 +35,12 @@ struct CrashCountdownViewTests {
         #expect(h.coordinator.remainingSeconds == 30)
         h.clock.advance(by: 10)
         #expect(h.coordinator.remainingSeconds == 20)
-        h.clock.advance(by: 20)
-        #expect(h.coordinator.remainingSeconds == 0)
+        // Partial seconds round up, so the last second still reads 1.
+        h.clock.advance(by: 19.5)
+        #expect(h.coordinator.remainingSeconds == 1)
+        // At the deadline the expiry fires and the event leaves the countdown.
+        h.clock.advance(by: 0.5)
+        #expect(h.coordinator.remainingSeconds == nil)
     }
 
     @Test func remainingSecondsNilWhenNotCountingDown() {
