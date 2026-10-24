@@ -26,6 +26,11 @@ struct HomeView: View {
     var onOpenSettings: () -> Void = {}
     var onSelectRide: (Ride) -> Void = { _ in }
 
+    /// Whether crash alerts are set up and on, for the small status chip
+    /// (Requirement 18.6). `nil` hides the chip (feature not set up / MVP
+    /// previews); a non-nil value shows the on/off chip.
+    var crashAlertsOn: Bool?
+
     /// Used to deep-link to this app's Settings page (injected so previews/tests
     /// don't touch `UIApplication`).
     var openAppSettings: () -> Void = {
@@ -181,7 +186,12 @@ struct HomeView: View {
                 viewModel.requestLocationIfNeeded()
                 onStartRide()
             }
-            StateChip(variant: .gpsReady)
+            HStack(spacing: Theme.Spacing.sm) {
+                StateChip(variant: .gpsReady)
+                if let crashAlertsOn {
+                    CrashAlertStateChip(isOn: crashAlertsOn)
+                }
+            }
         }
         .padding(.top, Theme.Spacing.sm)
     }

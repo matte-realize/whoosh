@@ -53,7 +53,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
 
 ## Phase 1 — Pure core (no frameworks, test-first)
 
-- [ ] 1. `[iOS]` `[DEMO]` Domain models and tuning constants (Foundation only)
+- [x] 1. `[iOS]` `[DEMO]` Domain models and tuning constants (Foundation only)
   - Add `CrashEvent`, `CrashEventState`, cancel/outcome reason enums, `EmergencyContact`,
     `ContactVerification`, `ConsentRecord`, `CrashAlertSettings`, `CountdownState` (absolute
     deadline, derived `remaining`), `LocationSnapshot`, `CrashAlertRecord`, `AlertAttempt`,
@@ -64,7 +64,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 6.1, 6.2, 6.8, 7.2, 8.2, 11.1, 11.2
   - _Depends on:_ 0
 
-- [ ] 2. `[iOS]` `[DEMO]` Update `scripts/privacy-check.sh` for the new feature
+- [x] 2. `[iOS]` `[DEMO]` Update `scripts/privacy-check.sh` for the new feature
   - Rule 1: allow network API names in `Services/Notification` as well as `Services/Sync`;
     change the message to "no network unless ride sync or crash alerts is enabled".
   - Add rules from `design.md` "Privacy and network invariants": provider-credential patterns
@@ -84,7 +84,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Note:_ this edits `scripts/`, which the spec-writing job did not touch; do it as the first
     code-adjacent commit so every later task is guarded.
 
-- [ ] 3. `[iOS]` `[DEMO]` Phone normalization and GSM-7 sanitizer (test-first)
+- [x] 3. `[iOS]` `[DEMO]` Phone normalization and GSM-7 sanitizer (test-first)
   - `E164Normalizer`: US/Canada NANP only; strip punctuation and a leading `1`/`+1`; reject
     invalid area/exchange codes and N11/non-geographic patterns; clear error cases.
   - `GSM7Sanitizer`: map smart quotes/dashes, strip unsupported characters and emoji, collapse
@@ -94,7 +94,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 2.3, 2.4, 2.9, 10.3
   - _Depends on:_ 1
 
-- [ ] 4. `[iOS]` `[DEMO]` `CrashMessageBuilder` with golden tests (test-first)
+- [x] 4. `[iOS]` `[DEMO]` `CrashMessageBuilder` with golden tests (test-first)
   - Pure builder per `design.md` "Message template" and contract Appendix A: kinds
     `crash_alert`, `drill`, `test`, `intro`, `all_clear`; time/offset formatting with a fixed
     English locale; location block variants; age/accuracy formatting; delay clause; returns text,
@@ -107,7 +107,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Note:_ golden strings are copied from the contract appendix; any wording change bumps
     `templateVersion` in both places.
 
-- [ ] 5. `[iOS]` `[DEMO]` Pure policies: location snapshot, retry/stale, arming (test-first)
+- [x] 5. `[iOS]` `[DEMO]` Pure policies: location snapshot, retry/stale, arming (test-first)
   - `LocationSnapshotPolicy`: current (≤ 10 s) / last known / unavailable (none or older than
     30 min); send-time refresh picks the newer fix.
   - `RetryPolicy`: backoff 5/15/30/60 s then 60 s, max 6 attempts, stale-limit check.
@@ -116,7 +116,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 5.4, 7.2, 7.3, 7.4, 12.1, 12.2, 12.5
   - _Depends on:_ 1
 
-- [ ] 6. `[iOS]` `[DEMO]` `CrashStateMachine` pure reducer (test-first)
+- [x] 6. `[iOS]` `[DEMO]` `CrashStateMachine` pure reducer (test-first)
   - Implement the transition function (state × event × context → state × effects as data) for
     all 34 rows of the design's transition table, including: suppression window, per-ride cap
     counting *sent* only, cancel-vs-deadline tie (expiry wins), non-cancellable in-flight send,
@@ -128,7 +128,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
 
 ## Phase 2 — Seams, fakes, and stores
 
-- [ ] 7. `[iOS]` `[DEMO]` Detector, footage, and ride-context seams with fakes (test-first)
+- [x] 7. `[iOS]` `[DEMO]` Detector, footage, and ride-context seams with fakes (test-first)
   - `CrashDetector` (+ `NoopCrashDetector`, `FakeCrashDetector` that emits on command with
     confidence/source/`isDrill`); `FootageBuffer` (+ `NoopFootageBuffer`, `FakeFootageBuffer`);
     read-only `RideContext` (+ `FakeRideContext`: ride state, freshest accepted fix, optional ride id).
@@ -138,7 +138,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 5.1, 5.2, 5.7, 5.8, 7.5, 7.6, 7.7, 7.8, 19.1
   - _Depends on:_ 1
 
-- [ ] 8. `[iOS]` `[DEMO]` Notifier, scheduler, feedback, and connectivity protocols with fakes (test-first)
+- [x] 8. `[iOS]` `[DEMO]` Notifier, scheduler, feedback, and connectivity protocols with fakes (test-first)
   - `CrashNotifier` (send + status; typed retryable/non-retryable errors with Whoosh error
     codes; **no field that can carry footage or free text**), `NoopCrashNotifier`,
     `FakeCrashNotifier` (scriptable success, per-code failure, timeout, delayed delivery status,
@@ -148,7 +148,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 8.5, 8.7, 9.2, 9.3, 9.8, 12.1, 13.3, 19.1
   - _Depends on:_ 1
 
-- [ ] 9. `[iOS]` `[DEMO]` Stores: contacts, consent/settings, crash records — protocols and in-memory fakes (test-first)
+- [x] 9. `[iOS]` `[DEMO]` Stores: contacts, consent/settings, crash records — protocols and in-memory fakes (test-first)
   - `EmergencyContactStore` (+ `InMemory`): add/update/remove/removeAll, max 3, editing a number
     resets verification, orphan purge hook.
   - `ConsentStore` (+ UserDefaults implementation + in-memory) and `CrashAlertSettings`
@@ -160,7 +160,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 2.2, 2.5, 2.6, 2.10, 3.1, 3.6, 3.7, 11.1, 11.5, 11.9
   - _Depends on:_ 1, 5
 
-- [ ] 10. `[iOS]` `[DEMO]` SwiftData `CrashAlertRepository` (test-first)
+- [x] 10. `[iOS]` `[DEMO]` SwiftData `CrashAlertRepository` (test-first)
   - `CrashAlertRecordEntity` (`@Model`; attempts encoded as a blob like ride points) and
     `SwiftDataCrashAlertRepository` with the same contract as the in-memory fake.
   - Tests against an in-memory `ModelContainer`: save/list ordering/get/delete/deleteAll/purge,
@@ -170,7 +170,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 11.1, 11.3, 11.5, 11.9
   - _Depends on:_ 9
 
-- [ ] 11. `[iOS]` `[DEMO]` `KeychainEmergencyContactStore` (test-first where possible)
+- [x] 11. `[iOS]` `[DEMO]` `KeychainEmergencyContactStore` (test-first where possible)
   - Single Keychain item (JSON blob), accessibility `AfterFirstUnlockThisDeviceOnly`, no
     iCloud sync; fresh-install marker in app-container storage and orphan purge on first launch;
     errors map to "no contacts" without crashing. Only file allowed to use Keychain APIs.
@@ -183,7 +183,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
 
 ## Phase 3 — Coordinator and ride integration
 
-- [ ] 12. `[iOS]` `[DEMO]` `CrashResponseCoordinator` core flow (test-first)
+- [x] 12. `[iOS]` `[DEMO]` `CrashResponseCoordinator` core flow (test-first)
   - `@Observable`, MainActor coordinator composing the reducer with all seams, `Clock`, and an
     injectable ID factory: detector signal → evidence capture (timestamp, UTC offset, location
     snapshot, footage preserve) → countdown with absolute deadline (timer via `Clock`, feedback
@@ -196,7 +196,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 5.3, 5.4, 6.1–6.9, 7.1–7.4, 8.1–8.4, 8.8–8.11, 9.1, 9.4–9.7, 11.1, 17.1, 19.2–19.4, 19.6
   - _Depends on:_ 4, 5, 6, 7, 8, 9
 
-- [ ] 13. `[iOS]` `[DEMO]` Coordinator: failures, offline queue, stale, composer-fallback state, polling (test-first)
+- [x] 13. `[iOS]` `[DEMO]` Coordinator: failures, offline queue, stale, composer-fallback state, polling (test-first)
   - Offline at expiry → `queuedOffline`, retry on connectivity restore and backoff, delayed
     wording, stale limit → `stale`; retryable vs non-retryable error handling per the contract
     table; unknown-outcome single retry (O5); partial per-recipient failure; status polling
@@ -208,7 +208,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 4.5, 9.3–9.5, 11.2, 11.4, 11.8, 12.1–12.10, 14.10, 19.5, 19.7
   - _Depends on:_ 12
 
-- [ ] 14. `[iOS]` `[DEMO]` Coordinator: persistence and relaunch recovery (test-first)
+- [x] 14. `[iOS]` `[DEMO]` Coordinator: persistence and relaunch recovery (test-first)
   - Persist state and deadline on every transition; on launch reconcile via
     `CrashAlertRepository.activeEvent()`: countdown with time left resumes; deadline passed →
     `recoveryPrompted`; `sending` resumes with the same `crashEventId`; `queuedOffline` resumes
@@ -219,7 +219,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 6.3, 13.4, 13.5, 13.6, 19.6
   - _Depends on:_ 12, 13
 
-- [ ] 15. `[iOS]` `[DEMO]` `RideSessionBridge` and arming wiring (test-first)
+- [x] 15. `[iOS]` `[DEMO]` `RideSessionBridge` and arming wiring (test-first)
   - Observe `RideSessionViewModel` (`rideState`, `points`) via Observation tracking and publish
     `RideContext`; start/stop the detector when `CrashArming` flips; **no change to ride
     internals** (if O7 approved: add only a read-only `currentRideID` accessor).
@@ -232,7 +232,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
 
 ## Phase 4 — UI (thin views over tested view models)
 
-- [ ] 16. `[iOS]` `[DEMO]` Emergency setup hub and contact editor
+- [x] 16. `[iOS]` `[DEMO]` Emergency setup hub and contact editor
   - `Support/Representables/ContactPickerView` (ContactsUI) and `MessageComposeView` (MessageUI)
     wrappers; `EmergencySetupView` + view model (rider label, contact list with verification
     state, entry points); `ContactEditorView` + view model (picker or manual entry, E.164
@@ -243,7 +243,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 2.1–2.10, 18.5
   - _Depends on:_ 3, 9, 11
 
-- [ ] 17. `[iOS]` `[DEMO]` Consent screen and flow
+- [x] 17. `[iOS]` `[DEMO]` Consent screen and flow
   - `ConsentView` + view model: plain-language "what is / isn't sent", precise-location and
     not-privacy-zone-trimmed notice, SMS-not-encrypted notice, STOP explanation, foreground-only
     limitation, **live message preview** from `CrashMessageBuilder`, two controls (data-use
@@ -255,7 +255,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 1.1–1.4, 3.1–3.8, 13.2, 13.3, 13.7, 16.5, 16.8
   - _Depends on:_ 4, 9, 16
 
-- [ ] 18. `[iOS]` `[DEMO]` Intro and test message flow
+- [x] 18. `[iOS]` `[DEMO]` Intro and test message flow
   - `TestAlertView` + view model: offer intro on contact add; "Send a test" per contact;
     per-contact progress (queued → sent → delivered / undelivered / failed with plain reason);
     cooldown and quota messages; offline explanation; trial-restriction explanation; contact
@@ -264,7 +264,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 4.1–4.8, 2.5, 15.6
   - _Depends on:_ 8, 13, 16, 17
 
-- [ ] 19. `[iOS]` `[DEMO]` `SystemCountdownFeedback` (audio + speech + haptics)
+- [x] 19. `[iOS]` `[DEMO]` `SystemCountdownFeedback` (audio + speech + haptics)
   - `AVAudioSession` playback category (ducking), spoken prompts, per-second tone in the last 10
     s, warning haptics once per second, idempotent `end`, session released on end/cancel; failures
     degrade silently to visual-only. Only file allowed to touch `AVAudioSession`.
@@ -273,7 +273,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 8.5, 8.6, 8.7
   - _Depends on:_ 8
 
-- [ ] 20. `[iOS]` `[DEMO]` Countdown takeover and root host
+- [x] 20. `[iOS]` `[DEMO]` Countdown takeover and root host
   - `CrashCountdownView` (very large numeral, headline with icon, sentence with contact labels,
     **≥ 80 pt full-width "I'm OK — Cancel"**, separate "Send now", manual "Call 911" hidden
     for drills, fine print) and `CrashCountdownHost` as a root overlay above the
@@ -286,7 +286,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 8.1–8.4, 8.6, 8.8, 8.9, 8.12, 17.2, 17.3, 18.1–18.4
   - _Depends on:_ 12, 19
 
-- [ ] 21. `[iOS]` `[DEMO]` Status screen, composer fallback, manual 911, local notifications
+- [x] 21. `[iOS]` `[DEMO]` Status screen, composer fallback, manual 911, local notifications
   - `CrashAlertStatusView`: per-contact status with icon + text, queued/stale/failed banners,
     **"Tap to text <contact> now"** composer fallback (prefilled by the builder with delay
     wording; Copy/Share when `canSendText` is false), "I'm OK — cancel alert" (queued only),
@@ -299,7 +299,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 8.11, 11.6, 11.7, 12.1, 12.3, 12.8, 12.9, 13.3, 17.2, 17.3
   - _Depends on:_ 13, 16, 20
 
-- [ ] 22. `[iOS]` `[IMPORTANT]` Crash alert log, Settings entry, and state chips
+- [x] 22. `[iOS]` `[IMPORTANT]` Crash alert log, Settings entry, and state chips
   - `CrashAlertLogView` + view model (most-recent-first, icon + text, detail, delete one/all
     with real deletion, footage-reference delete when present); Settings → "Crash alerts" row
     pushing the setup hub; small "Crash alerts on/off" chip on Home and the ride screen
@@ -308,7 +308,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 7.9, 11.5, 11.7, 11.9, 16.7, 18.6
   - _Depends on:_ 10, 16
 
-- [ ] 23. `[iOS]` `[DEMO]` Simulate crash (drill) and developer tools
+- [x] 23. `[iOS]` `[DEMO]` Simulate crash (drill) and developer tools
   - `DebugCrashSimulator`; Settings → Crash alerts → "Developer / demo tools" toggle revealing
     **Simulate crash**; drills run the real coordinator and notifier with the `drill` template,
     hide Call 911, are labeled in the log, do not consume the real-alert cap, and obey the
@@ -317,7 +317,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 5.3, 17.3, 19.9
   - _Depends on:_ 12, 20
 
-- [ ] 24. `[iOS]` `[DEMO]` `NWPathConnectivityMonitor`
+- [x] 24. `[iOS]` `[DEMO]` `NWPathConnectivityMonitor`
   - Wrap `NWPathMonitor` behind `ConnectivityMonitor`; makes no requests; delivers changes on the
     main actor; used only as a retry trigger (request outcomes remain ground truth).
   - _Verify (device):_ airplane mode on/off changes `isOnline` and triggers the queued retry.
@@ -340,7 +340,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 3.9, 9.2, 9.3, 14.1–14.5, 14.7, 14.10, 16.2, 16.3
   - _Depends on:_ 8, 13, C1, C4, C5, C6
 
-- [ ] 26. `[iOS]` `[DEMO]` Composition root, project capability, and app wiring
+- [x] 26. `[iOS]` `[DEMO]` Composition root, project capability, and app wiring
   - `AppEnvironment`: build the coordinator, bridge, stores, repository (add the crash record
     entity to the `ModelContainer`), notifier (Noop when crash alerts are off or the contract is
     not wired; Supabase when enabled), feedback, scheduler, connectivity; `preview(…)` uses fakes.
@@ -354,7 +354,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 1.5, 13.1, 13.4, 16.2
   - _Depends on:_ 10, 14, 15, 20, 21, 22, 23, 24
 
-- [ ] 27. `[iOS]` `[DEMO]` Integration tests, manual QA checklist, Tier 0 device run
+- [x] 27. `[iOS]` `[DEMO]` Integration tests, manual QA checklist, Tier 0 device run
   - End-to-end tests over the real coordinator + bridge + real `RideSessionViewModel` with fakes
     (full ride → detector signal → countdown → expire → sent/queued/failed → record/log).
   - Create `.kiro/specs/crash-response/manual-qa.md` (same format as the MVP checklist):
@@ -362,6 +362,9 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
     Motion, backgrounding mid-countdown, notification backup, composer fallback, airplane mode,
     Keychain reinstall purge, Call 911 confirmation (not completed), drill hides 911.
   - Run the **Tier 0** demo script on the iPhone 14 and tick the checklist.
+  - _Pending device check:_ the integration tests and `manual-qa.md` (including the Tier 0 demo
+    script) are done; the on-device Tier 0 run on the iPhone 14 is still to be completed by the
+    owner and ticked in `manual-qa.md`.
   - _Requirements:_ 19.1–19.11, 12.10
   - _Depends on:_ 26
 
@@ -374,7 +377,7 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Requirements:_ 4.3, 9.1–9.5, 14.1–14.9, 15.4, 19.11
   - _Depends on:_ 25, 26, 27, C10
 
-- [ ] 29. `[iOS]` `[IMPORTANT]` Resilience, accessibility, and privacy compliance pass
+- [x] 29. `[iOS]` `[IMPORTANT]` Resilience, accessibility, and privacy compliance pass
   - Accessibility: VoiceOver on every emergency screen, countdown announcements, Dynamic Type at
     accessibility sizes, Reduce Motion, contrast, ≥ 60/80 pt targets, icon + text statuses.
   - Privacy: confirm no network while crash alerts and ride sync are both off; contacts only in

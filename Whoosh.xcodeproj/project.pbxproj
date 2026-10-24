@@ -26,9 +26,7 @@
 		F53B401EC804049925172FD7 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Models/.gitkeep,
 				Services/.gitkeep,
-				Support/.gitkeep,
 			);
 			target = 36CA87AA39F4DA21168149E4 /* Whoosh */;
 		};
@@ -298,6 +296,7 @@
 			baseConfigurationReference = 1ED3E3C78DD70D553B209950 /* Shared.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/Whoosh.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = Z87CXCTTK6;
@@ -341,6 +340,7 @@
 			baseConfigurationReference = 1ED3E3C78DD70D553B209950 /* Shared.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/Whoosh.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = Z87CXCTTK6;

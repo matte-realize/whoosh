@@ -25,6 +25,11 @@ struct WhooshApp: App {
     /// Set once if local storage degraded to a non-persistent store; shown as a
     /// calm, dismissible notice (Requirement 11.4).
     @State private var storageNoticePresented = false
+    /// Presents the crash-alert status screen after a backup-notification tap
+    /// (crash-response task 26, Requirement 13.3). Prompt-only; nothing automatic.
+    @State private var crashStatusPresented = false
+    /// Routes crash backup-notification taps to the status screen.
+    @State private var notificationRouter = CrashNotificationRouter()
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -33,6 +38,7 @@ struct WhooshApp: App {
         case history
         case settings
         case summary(Ride)
+        case crashAlerts
     }
 
     var body: some Scene {
@@ -43,12 +49,23 @@ struct WhooshApp: App {
                     onStartRide: startRide,
                     onOpenHistory: { path.append(.history) },
                     onOpenSettings: { path.append(.settings) },
-                    onSelectRide: { path.append(.summary($0)) }
+                    onSelectRide: { path.append(.summary($0)) },
+                    crashAlertsOn: environment.crash.isFeatureOn
                 )
                 .navigationDestination(for: Route.self, destination: destination)
             }
             .fullScreenCover(isPresented: coverBinding) {
                 coverContent
+            }
+            // The crash-countdown takeover is mounted as a root-level overlay
+            // ABOVE the NavigationStack AND the active-ride full-screen cover
+            // (design D25): it must appear from Home (drills) and from the ride
+            // screen, and cannot be swiped away.
+            .crashCountdownHost(coordinator: environment.crash.coordinator)
+            .sheet(isPresented: $crashStatusPresented) {
+                NavigationStack {
+                    CrashAlertStatusView(coordinator: environment.crash.coordinator)
+                }
             }
             .alert(
                 "Finish your interrupted ride?",
@@ -68,9 +85,15 @@ struct WhooshApp: App {
             } message: {
                 Text(environment.storageNotice ?? "")
             }
-            .onAppear(perform: checkForInterruptedRide)
+            .onAppear(perform: onLaunch)
             .onChange(of: scenePhase) { _, phase in
-                if phase != .active { rideSession?.persistSnapshot() }
+                handleScenePhase(phase)
+            }
+            .onChange(of: notificationRouter.shouldOpenStatus) { _, shouldOpen in
+                if shouldOpen {
+                    crashStatusPresented = true
+                    notificationRouter.shouldOpenStatus = false
+                }
             }
         }
     }
@@ -86,9 +109,34 @@ struct WhooshApp: App {
                 onSelectRide: { path.append(.summary($0)) }
             )
         case .settings:
-            SettingsView(viewModel: environment.settingsViewModel)
+            SettingsView(
+                viewModel: environment.settingsViewModel,
+                onOpenCrashAlerts: { path.append(.crashAlerts) }
+            )
         case .summary(let ride):
             RideSummaryView(ride: ride, presentation: .historyDetail)
+        case .crashAlerts:
+            EmergencySetupHostView(
+                contactStore: environment.crash.contactStore,
+                consentStore: environment.crash.consentStore,
+                settingsStore: environment.crash.settingsStore,
+                notifier: environment.crash.noopNotifier,
+                connectivity: environment.crash.connectivity,
+                scheduler: environment.crash.scheduler,
+                repository: environment.crash.repository,
+                clock: environment.clock,
+                isMessagingConnected: environment.crash.isMessagingConnected,
+                onConsentRevoked: {
+                    // Revoking disarms immediately and cancels any queued unsent
+                    // alert (Requirement 3.7).
+                    environment.crash.coordinator.consentRevoked()
+                    environment.crash.reevaluateArming()
+                }
+            )
+            .onDisappear {
+                // Contacts / consent / toggle may have changed in setup; re-arm.
+                environment.crash.reevaluateArming()
+            }
         }
     }
 
@@ -118,7 +166,7 @@ struct WhooshApp: App {
                 finishedRide: session.finishedRide
             ) {
             case .activeRide:
-                ActiveRideView(viewModel: session)
+                ActiveRideView(viewModel: session, crashAlertsOn: environment.crash.isFeatureOn)
                     .interactiveDismissDisabled()
             case .summary(let ride):
                 NavigationStack {
@@ -131,7 +179,7 @@ struct WhooshApp: App {
                 .interactiveDismissDisabled()
             case .none:
                 // Nothing to show; dismiss by clearing the session next runloop.
-                Color.clear.onAppear { rideSession = nil }
+                Color.clear.onAppear { clearRideSession() }
             }
         }
     }
@@ -147,17 +195,45 @@ struct WhooshApp: App {
     /// "Done" on the finished-ride summary: clear the session (dismisses the
     /// cover) and refresh Home so the new ride appears in stats/recent.
     private func finishRide() {
-        rideSession = nil
+        clearRideSession()
         environment.homeViewModel.load()
+    }
+
+    /// Clear the ride session and detach the crash bridge (disarms detection).
+    private func clearRideSession() {
+        environment.clearRideSession()
+        rideSession = nil
+    }
+
+    // MARK: - Launch
+
+    private func onLaunch() {
+        notificationRouter.install()
+        // Reconcile any persisted active crash event (task 14): resume a live
+        // countdown, prompt for recovery past a deadline, or mark stale — never
+        // auto-send on relaunch (Requirement 13.5).
+        environment.crash.reconcileOnLaunch()
+        checkForInterruptedRide()
+    }
+
+    private func handleScenePhase(_ phase: ScenePhase) {
+        if phase == .active {
+            environment.crash.coordinator.enterForeground()
+        } else {
+            rideSession?.persistSnapshot()
+            environment.crash.coordinator.enterBackground()
+        }
     }
 
     // MARK: - Interrupted-ride recovery (task 21 / 3.6)
 
     private func checkForInterruptedRide() {
         // Use a throwaway session purely to query the repository for an
-        // unfinished ride; it owns no live tracking until `start()`.
+        // unfinished ride; it owns no live tracking until `start()`. Detach the
+        // crash bridge the probe attached, since we are not starting a ride.
         let probe = environment.makeRideSession()
         interruptedRide = probe.recoverInterruptedRide()
+        environment.clearRideSession()
         // Surface the non-fatal storage notice once, if storage degraded.
         if environment.storageNotice != nil { storageNoticePresented = true }
     }
@@ -165,6 +241,7 @@ struct WhooshApp: App {
     private func saveInterrupted(_ ride: Ride) {
         let session = environment.makeRideSession()
         session.finalizeRecoveredRide(ride)
+        environment.clearRideSession()
         interruptedRide = nil
         environment.homeViewModel.load()
     }

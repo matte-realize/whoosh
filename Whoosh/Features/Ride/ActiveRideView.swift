@@ -24,6 +24,11 @@ import UIKit
 struct ActiveRideView: View {
     let viewModel: RideSessionViewModel
 
+    /// Whether crash alerts are set up and on, for the small dark status chip
+    /// on the ride screen (Requirement 18.6). `nil` hides it (feature not set
+    /// up / MVP previews); it adds no fourth ride number.
+    var crashAlertsOn: Bool?
+
     var body: some View {
         ZStack(alignment: .top) {
             Theme.Colors.rideBackground.ignoresSafeArea()
@@ -101,6 +106,9 @@ struct ActiveRideView: View {
             Spacer()
             HStack {
                 StateChip(variant: .rearDetectionOff, scheme: .dark)
+                if let crashAlertsOn {
+                    CrashAlertStateChip(isOn: crashAlertsOn, scheme: .dark)
+                }
                 Spacer()
             }
         }
