@@ -38,6 +38,10 @@ struct WhooshApp: App {
     /// The Mount & frame view model, presented after Start Ride when rear camera
     /// recording is on (rear-camera task 22). `nil` when not framing.
     @State private var mountAndFrame: MountAndFrameViewModel?
+    /// The pre-ride "Connect your watch" step shown before Mount & frame when a
+    /// watch is paired and the rider hasn't suppressed it (owner request). `nil`
+    /// when not showing. Skipped entirely when no watch is paired.
+    @State private var watchConnectStep: WatchConnectStepViewModel?
     /// The camera recording coordinator for the active ride (rear-camera task
     /// 19). `nil` when the camera is off for this ride. Drives recording with
     /// the ride; a camera failure never affects the ride or GPS.
@@ -98,6 +102,25 @@ struct WhooshApp: App {
             .fullScreenCover(isPresented: mountAndFrameBinding) {
                 if let mountAndFrame {
                     MountAndFrameView(viewModel: mountAndFrame)
+                }
+            }
+            // Pre-ride "Connect your watch" step: shown before Mount & frame when
+            // a watch is paired and not suppressed (owner request). Continue
+            // proceeds to the normal ride setup; Skip does the same but marks the
+            // watch skipped for this ride.
+            .fullScreenCover(isPresented: watchConnectStepBinding) {
+                if let watchConnectStep {
+                    WatchConnectStepView(
+                        viewModel: watchConnectStep,
+                        onContinue: {
+                            self.watchConnectStep = nil
+                            proceedToRideSetup()
+                        },
+                        onSkip: {
+                            self.watchConnectStep = nil
+                            proceedToRideSetup()
+                        }
+                    )
                 }
             }
             // The crash-countdown takeover is mounted as a root-level overlay
@@ -166,6 +189,7 @@ struct WhooshApp: App {
                 viewModel: environment.settingsViewModel,
                 rearCamera: environment.rearCameraSettingsViewModel,
                 demo: environment.demo,
+                watchReadiness: environment.makeWatchReadinessViewModel(),
                 onOpenCrashAlerts: { crashAlertsPresented = true }
             )
             .sheet(isPresented: $crashAlertsPresented, onDismiss: {
@@ -298,6 +322,13 @@ struct WhooshApp: App {
         )
     }
 
+    private var watchConnectStepBinding: Binding<Bool> {
+        Binding(
+            get: { watchConnectStep != nil },
+            set: { if !$0 { watchConnectStep = nil } }
+        )
+    }
+
     // MARK: - Near misses
 
     /// The locally stored near-miss events for a ride (rear-camera Req 15, task
@@ -309,10 +340,23 @@ struct WhooshApp: App {
 
     // MARK: - Ride lifecycle
 
-    /// Start Ride from Home. When rear camera recording is on, go through Mount
-    /// & frame first (frame the camera, then start with or without the camera).
-    /// Otherwise start a normal ride immediately — the MVP path is unchanged.
+    /// Start Ride from Home. If an Apple Watch is paired (and the rider hasn't
+    /// suppressed it), show the compact "Connect your watch" step first (owner
+    /// request); otherwise go straight to ride setup. With no watch the ride
+    /// flow is unchanged.
     private func startRide() {
+        guard environment.shouldPresentWatchConnectStep else {
+            proceedToRideSetup()
+            return
+        }
+        watchConnectStep = environment.makeWatchConnectStepViewModel()
+    }
+
+    /// Continue into the ride after the (optional) watch step. When rear camera
+    /// recording is on, go through Mount & frame first (frame the camera, then
+    /// start with or without the camera). Otherwise start a normal ride
+    /// immediately — the MVP path is unchanged.
+    private func proceedToRideSetup() {
         guard environment.isRearCameraRecordingEnabled else {
             beginRide(withCamera: false)
             return
