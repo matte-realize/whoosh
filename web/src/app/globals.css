@@ -4,15 +4,15 @@
    prefers-reduced-motion. Status and selection are never shown by color alone.
    ========================================================================== */
 
-/* Dark, data-first theme in the style of fitness wearables: near-black surfaces, high-contrast
-   numbers, and a few bright signal colors. Colors are our own, not any brand's. */
+/* Dark, data-first theme in the style of fitness wearables: true-black page, near-black cards,
+   high-contrast numbers, and a few bright signal colors. Colors are our own, not any brand's. */
 :root {
-  --bg: #060708;
-  --surface: #111315;
-  --surface-2: #1a1d20;
-  --text: #f4f6f8;
-  --muted: #98a1ab;
-  --border: #262a2f;
+  --bg: #000000;
+  --surface: #0d0f10;
+  --surface-2: #17191b;
+  --text: #f5f7f8;
+  --muted: #8f99a3;
+  --border: #22262a;
   --accent: #2df5a8;
   --accent-strong: #7dffcb;
   --accent-soft: rgb(45 245 168 / 12%);
@@ -2299,4 +2299,442 @@ p {
     opacity: 0;
     transform: translate(-50%, 8px);
   }
+}
+
+/* ---------- Data visuals: rings, bars, big numbers ---------- */
+
+.ring {
+  --tone: var(--accent);
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin: 0;
+  text-align: center;
+}
+
+.ring--blue {
+  --tone: var(--signal-blue);
+}
+
+.ring--amber {
+  --tone: var(--signal-amber);
+}
+
+.ring--red {
+  --tone: var(--signal-red);
+}
+
+.ring--violet {
+  --tone: #b48cff;
+}
+
+.ring__dial {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.ring__dial svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.ring__track {
+  fill: none;
+  stroke: var(--surface-2);
+}
+
+.ring__fill {
+  fill: none;
+  stroke: var(--tone);
+  stroke-linecap: round;
+  stroke-dashoffset: var(--ring-offset);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--tone) 55%, transparent));
+  animation: ring-fill 1.1s var(--ease) both;
+}
+
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: var(--ring-c);
+  }
+}
+
+.ring__value {
+  position: relative;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ring figcaption {
+  display: grid;
+  gap: 2px;
+}
+
+.ring__label {
+  color: var(--tone);
+  font-size: 0.6875rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ring__caption {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.bars {
+  --tone: var(--signal-blue);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.bars--green {
+  --tone: var(--accent);
+}
+
+.bars--amber {
+  --tone: var(--signal-amber);
+}
+
+.bars--red {
+  --tone: var(--signal-red);
+}
+
+.bars--violet {
+  --tone: #b48cff;
+}
+
+.bars li {
+  display: grid;
+  grid-template-columns: 92px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8125rem;
+}
+
+.bars__label {
+  color: var(--muted);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bars__track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--surface-2);
+}
+
+.bars__fill {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: 5px;
+  background: var(--tone);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--tone) 50%, transparent);
+  transform-origin: left;
+  animation: bar-grow 0.9s var(--ease) both;
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.bars__value {
+  min-width: 52px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Insights on the ride map */
+
+.insights {
+  margin-top: 32px;
+}
+
+.insights-skeleton {
+  margin-top: 32px;
+  min-height: 260px;
+}
+
+.insights__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.insight {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #070809;
+}
+
+.insight h3 {
+  margin: 0 0 16px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.insight__rings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 16px;
+}
+
+/* Rings on a ride */
+
+.ride-rings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 18px;
+  margin: 14px 0 6px;
+  padding: 18px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #070809;
+}
+
+.ride-detail .eyebrow {
+  margin-bottom: 4px;
+}
+
+/* Big numbers on the home page */
+
+.bignums__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.bignum {
+  --tone: var(--accent);
+  padding: 26px 24px;
+  border-right: 1px solid var(--border);
+}
+
+.bignum:last-child {
+  border-right: 0;
+}
+
+.bignum--blue {
+  --tone: var(--signal-blue);
+}
+
+.bignum--amber {
+  --tone: var(--signal-amber);
+}
+
+.bignum--red {
+  --tone: var(--signal-red);
+}
+
+.bignum dt {
+  color: var(--tone);
+  font-size: 0.6875rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bignum dd {
+  margin: 6px 0 4px;
+  font-size: clamp(3rem, 6vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.bignum__unit {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 0.35em;
+  letter-spacing: 0;
+}
+
+.bignum p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 960px) {
+  .bignum {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+/* Concept ride summary */
+
+.concept {
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 360px);
+  align-items: center;
+  gap: 40px;
+}
+
+@media (max-width: 860px) {
+  .concept {
+    grid-template-columns: 1fr;
+  }
+}
+
+.concept__list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.concept__list li {
+  padding: 12px 14px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--muted);
+}
+
+.concept__list strong {
+  color: var(--text);
+}
+
+.concept__phone {
+  justify-self: center;
+  width: 100%;
+  max-width: 340px;
+  padding: 26px 22px 22px;
+  border: 2px solid #26292d;
+  border-radius: 40px;
+  background: linear-gradient(180deg, #0b0c0d, #000);
+  box-shadow: 0 30px 70px rgb(0 0 0 / 60%), 0 0 0 8px #0b0c0d, 0 0 0 9px #26292d;
+  text-align: center;
+}
+
+.concept__phone p {
+  margin: 0;
+}
+
+.concept__tag {
+  display: inline-block;
+  margin-bottom: 14px !important;
+  padding: 3px 10px;
+  border: 1px dashed var(--muted);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.concept__title {
+  font-size: 1.375rem;
+  font-weight: 900;
+}
+
+.concept__sub {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.concept__ring {
+  display: grid;
+  place-items: center;
+  margin: 20px 0 16px;
+}
+
+.concept__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.concept__stats div {
+  padding: 12px 4px;
+}
+
+.concept__stats div + div {
+  border-left: 1px solid var(--border);
+}
+
+.concept__stats dt {
+  color: var(--muted);
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.concept__stats dd {
+  margin: 4px 0 0;
+  font-size: 1.25rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.concept__cues {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  font-size: 0.8125rem;
+}
+
+.concept__cues li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.concept__dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--signal-red);
+  box-shadow: 0 0 8px var(--signal-red);
+}
+
+/* Section headings: a thin rule under the eyebrow, like a data report */
+.project .eyebrow::after,
+.dashboard .eyebrow::after {
+  content: "";
+  width: 28px;
+  height: 2px;
+  margin-left: 4px;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0.6;
 }

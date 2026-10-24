@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import CommunityInsights from "@/components/CommunityInsights";
 import CommunityMapSection from "@/components/CommunityMapSection";
 import Dashboard from "@/components/Dashboard";
 import StatsPanel from "@/components/StatsPanel";
@@ -21,6 +22,7 @@ export default function DashboardPage() {
       </header>
       <StatsPanel />
       <CommunityMapSection />
+      <CommunityInsights />
       <section className="rides-section card" aria-labelledby="rides-heading">
         <div className="section-head">
           <h2 id="rides-heading">Shared rides</h2>

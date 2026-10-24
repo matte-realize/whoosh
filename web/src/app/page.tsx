@@ -5,6 +5,7 @@ import { Icon, type IconName } from "@/components/Icon";
 import IntroFilm from "@/components/IntroFilm";
 import { LogoMark } from "@/components/Logo";
 import { Reveal } from "@/components/Reveal";
+import { Ring } from "@/components/Ring";
 import StatsPanel from "@/components/StatsPanel";
 import { STATUS_CHECKED_ON } from "@/lib/projectStatus";
 
@@ -33,6 +34,14 @@ const BENEFITS: { icon: IconName; title: string; body: string }[] = [
   { icon: "lock", title: "Private by default", body: "No account, no email. Your rides stay yours." },
   { icon: "map", title: "Better streets, together", body: "Share close calls to show where riding needs to get safer." },
   { icon: "clock", title: "Every ride, saved", body: "Distance, time and route for every ride, right on your phone." },
+];
+
+/** Facts about how Whoosh is designed. None of these is a performance claim. */
+const BIG_NUMBERS: { label: string; value: string; unit?: string; detail: string; tone: string }[] = [
+  { label: "Extra gear", value: "0", detail: "Just the phone you already own and a bike mount.", tone: "green" },
+  { label: "Accounts needed", value: "0", detail: "No email, no password, no profile.", tone: "blue" },
+  { label: "Privacy trim", value: "160", unit: "m", detail: "Cut from both ends of every route you share.", tone: "amber" },
+  { label: "Riders to map a close call", value: "2+", detail: "A spot shows only once several riders report it.", tone: "red" },
 ];
 
 const PRIVACY: string[] = [
@@ -129,6 +138,83 @@ export default function HomePage() {
                 </li>
               ))}
             </ol>
+          </section>
+        </Reveal>
+
+        <Reveal className="section">
+          <section className="bignums" aria-labelledby="bignums-heading">
+            <h2 id="bignums-heading" className="visually-hidden">
+              Whoosh by the numbers
+            </h2>
+            <dl className="bignums__grid">
+              {BIG_NUMBERS.map((item) => (
+                <div key={item.label} className={`bignum bignum--${item.tone}`}>
+                  <dt>{item.label}</dt>
+                  <dd>
+                    {item.value}
+                    {item.unit ? <span className="bignum__unit">{item.unit}</span> : null}
+                  </dd>
+                  <p>{item.detail}</p>
+                </div>
+              ))}
+            </dl>
+          </section>
+        </Reveal>
+
+        <Reveal className="section">
+          <section className="concept" aria-labelledby="concept-heading">
+            <div className="concept__text">
+              <p className="eyebrow">After every ride</p>
+              <h2 id="concept-heading">Your ride, at a glance</h2>
+              <p className="lead">
+                When you stop, Whoosh shows how far you went, how long you were moving, and every
+                heads-up it gave you, all without leaving your phone.
+              </p>
+              <ul className="concept__list">
+                <li>
+                  <strong>Moving time</strong> counts only the time you were rolling, not red lights.
+                </li>
+                <li>
+                  <strong>Heads-ups</strong> lists each car that came up behind you, and on which side.
+                </li>
+                <li>
+                  <strong>Your route</strong> stays on your phone unless you choose to share it.
+                </li>
+              </ul>
+            </div>
+            <div className="concept__phone" aria-label="Concept design of the ride summary screen, with example numbers">
+              <p className="concept__tag">Concept design · example ride</p>
+              <p className="concept__title">Evening ride</p>
+              <p className="concept__sub">Mass Ave · Cambridge to Back Bay</p>
+              <div className="concept__ring">
+                <Ring value={0.92} display="92%" label="Moving" caption="24 of 26 minutes" tone="green" size={176} />
+              </div>
+              <dl className="concept__stats">
+                <div>
+                  <dt>Distance</dt>
+                  <dd>4.2 mi</dd>
+                </div>
+                <div>
+                  <dt>Avg speed</dt>
+                  <dd>10.5 mph</dd>
+                </div>
+                <div>
+                  <dt>Heads-ups</dt>
+                  <dd>3</dd>
+                </div>
+              </dl>
+              <ul className="concept__cues">
+                <li>
+                  <span className="concept__dot" aria-hidden="true" /> 6:12 pm · Car on your left
+                </li>
+                <li>
+                  <span className="concept__dot" aria-hidden="true" /> 6:19 pm · Bus on your left
+                </li>
+                <li>
+                  <span className="concept__dot" aria-hidden="true" /> 6:27 pm · Car directly behind
+                </li>
+              </ul>
+            </div>
           </section>
         </Reveal>
 

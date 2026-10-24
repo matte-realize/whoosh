@@ -61,6 +61,11 @@ export default function Dashboard() {
   }
 
   const selected = sorted.find((ride) => ride.id === selectedId) ?? sorted[0];
+  const bests = {
+    distance_m: Math.max(0, ...sorted.map((ride) => ride.distance_m)),
+    active_duration_s: Math.max(0, ...sorted.map((ride) => ride.active_duration_s)),
+    avg_speed_mps: Math.max(0, ...sorted.map((ride) => ride.avg_speed_mps)),
+  };
 
   return (
     <>
@@ -93,7 +98,7 @@ export default function Dashboard() {
             </div>
             <RideList rides={sorted} selectedId={selected.id} onSelect={setSelectedId} />
           </nav>
-          <RideDetail ride={selected} />
+          <RideDetail ride={selected} bests={bests} />
         </div>
       )}
     </>
