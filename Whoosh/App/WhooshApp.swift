@@ -35,6 +35,17 @@ struct WhooshApp: App {
     /// stack crashes SwiftUI (AnyNavigationPath comparisonTypeMismatch).
     @State private var crashAlertsPresented = false
 
+    /// The Mount & frame view model, presented after Start Ride when rear camera
+    /// recording is on (rear-camera task 22). `nil` when not framing.
+    @State private var mountAndFrame: MountAndFrameViewModel?
+    /// The camera recording coordinator for the active ride (rear-camera task
+    /// 19). `nil` when the camera is off for this ride. Drives recording with
+    /// the ride; a camera failure never affects the ride or GPS.
+    @State private var cameraCoordinator: CameraRecordingCoordinator?
+    /// The ride-mode controller for the active ride (rear-camera task 21). `nil`
+    /// unless ride mode is on for this ride.
+    @State private var rideModeController: RideModeController?
+
     @Environment(\.scenePhase) private var scenePhase
 
     /// Routes pushed on the Home-rooted stack.
@@ -53,7 +64,8 @@ struct WhooshApp: App {
                     onOpenHistory: { path.append(.history) },
                     onOpenSettings: { path.append(.settings) },
                     onSelectRide: { path.append(.summary($0)) },
-                    crashAlertsOn: environment.crash.isFeatureOn
+                    crashAlertsOn: environment.crash.isFeatureOn,
+                    rearCameraOn: environment.isRearCameraRecordingEnabled
                 )
                 .navigationDestination(for: Route.self, destination: destination)
             }
@@ -70,6 +82,14 @@ struct WhooshApp: App {
             }
             .fullScreenCover(isPresented: coverBinding) {
                 coverContent
+            }
+            // Mount & frame: shown after Start Ride when rear camera recording
+            // is on (rear-camera task 22). "Start ride" begins the ride with the
+            // camera; "Ride without camera" starts a normal ride.
+            .fullScreenCover(isPresented: mountAndFrameBinding) {
+                if let mountAndFrame {
+                    MountAndFrameView(viewModel: mountAndFrame)
+                }
             }
             // The crash-countdown takeover is mounted as a root-level overlay
             // ABOVE the NavigationStack AND the active-ride full-screen cover
@@ -197,22 +217,42 @@ struct WhooshApp: App {
                 finishedRide: session.finishedRide
             ) {
             case .activeRide:
-                ActiveRideView(viewModel: session, crashAlertsOn: environment.crash.isFeatureOn)
-                    .interactiveDismissDisabled()
-                    .overlay(alignment: .top) {
-                        if environment.demo.badgeVisible {
-                            // Positioned at the top so it never obscures the
-                            // three metrics or the hold-to-stop control.
-                            DemoBadge(scheme: .dark)
-                                .padding(.top, Theme.Spacing.sm)
-                        }
+                ActiveRideView(
+                    viewModel: session,
+                    crashAlertsOn: environment.crash.isFeatureOn,
+                    cameraState: cameraCoordinator?.state,
+                    onSaveClip: cameraCoordinator == nil ? nil : { cameraCoordinator?.saveClip() ?? .nothingToSave }
+                )
+                .interactiveDismissDisabled()
+                .overlay(alignment: .top) {
+                    if environment.demo.badgeVisible {
+                        // Positioned at the top so it never obscures the
+                        // three metrics or the hold-to-stop control.
+                        DemoBadge(scheme: .dark)
+                            .padding(.top, Theme.Spacing.sm)
                     }
-                    .overlay(alignment: .bottomTrailing) {
-                        if environment.demo.badgeVisible {
-                            RideScreenDemoMenu(controller: environment.demo)
-                                .padding(Theme.Spacing.lg)
-                        }
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    if environment.demo.badgeVisible {
+                        RideScreenDemoMenu(controller: environment.demo)
+                            .padding(Theme.Spacing.lg)
                     }
+                }
+                // Ride mode overlay (true-black, touch-locked) above the active
+                // ride content when the camera is on with ride mode enabled.
+                .overlay {
+                    if let rideModeController, rideModeController.isOverlayPresented {
+                        RideModeView(controller: rideModeController)
+                            .overlay(alignment: .bottom) {
+                                // While temporarily unlocked, a big Save clip
+                                // control is reachable (rear-camera task 23).
+                                if rideModeController.isShowingControls, cameraCoordinator != nil {
+                                    saveClipButton
+                                        .padding(.bottom, 120)
+                                }
+                            }
+                    }
+                }
             case .summary(let ride):
                 NavigationStack {
                     RideSummaryView(
@@ -229,12 +269,85 @@ struct WhooshApp: App {
         }
     }
 
+    // MARK: - Save clip control (ride mode, unlocked)
+
+    private var saveClipButton: some View {
+        Button {
+            cameraCoordinator?.saveClip()
+        } label: {
+            Label("Save clip", systemImage: "bookmark.fill")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(Theme.Palette.ink)
+                .frame(maxWidth: 240)
+                .frame(height: Theme.Size.minTouchTarget)
+                .background(Theme.Palette.lime)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Save clip")
+        .accessibilityHint("Saves a clip of the last moments to this phone.")
+    }
+
+    // MARK: - Mount & frame binding
+
+    private var mountAndFrameBinding: Binding<Bool> {
+        Binding(
+            get: { mountAndFrame != nil },
+            set: { if !$0 { mountAndFrame = nil } }
+        )
+    }
+
     // MARK: - Ride lifecycle
 
+    /// Start Ride from Home. When rear camera recording is on, go through Mount
+    /// & frame first (frame the camera, then start with or without the camera).
+    /// Otherwise start a normal ride immediately — the MVP path is unchanged.
     private func startRide() {
+        guard environment.isRearCameraRecordingEnabled else {
+            beginRide(withCamera: false)
+            return
+        }
+        let viewModel = environment.makeMountAndFrameViewModel()
+        viewModel.onStartWithCamera = {
+            mountAndFrame = nil
+            beginRide(withCamera: true)
+        }
+        viewModel.onSkipCamera = {
+            mountAndFrame = nil
+            beginRide(withCamera: false)
+        }
+        mountAndFrame = viewModel
+    }
+
+    /// Begin the ride session and, when requested and enabled, the camera
+    /// recording coordinator and ride mode. A camera failure never affects the
+    /// ride or GPS (the coordinator only reads the ride through a bridge).
+    private func beginRide(withCamera: Bool) {
         let session = environment.makeRideSession()
         rideSession = session
         session.start()
+
+        guard withCamera, environment.isRearCameraRecordingEnabled else { return }
+
+        let coordinator = environment.makeCameraCoordinator(for: session)
+        cameraCoordinator = coordinator
+        coordinator.rideStarted()
+
+        // Ride mode (dim, touch-locked) when the rider left it on in Settings.
+        if environment.rearCameraSettingsViewModel.settings.rideModeEnabled {
+            let controller = environment.makeRideModeController(
+                isRideActive: { [weak session] in session?.rideState.isActive ?? false }
+            )
+            rideModeController = controller
+            controller.rideStarted()
+            // Reflect camera trouble as the amber dot in ride mode.
+            coordinator.onStateChange = { [weak controller] state in
+                controller?.setTrouble(!state.isRecording && state != .off)
+            }
+            coordinator.onClipSaved = { [weak controller] saved in
+                controller?.showToast(saved ? .clipSaved : .clipNotSaved)
+            }
+        }
     }
 
     /// "Done" on the finished-ride summary: upload it (no-op while sync is off),
@@ -250,7 +363,13 @@ struct WhooshApp: App {
     }
 
     /// Clear the ride session and detach the crash bridge (disarms detection).
+    /// Also tears down the camera coordinator and ride mode so the camera stops
+    /// and the brightness is restored.
     private func clearRideSession() {
+        cameraCoordinator?.rideEnded()
+        cameraCoordinator = nil
+        rideModeController?.rideEnded()
+        rideModeController = nil
         environment.clearRideSession()
         rideSession = nil
     }

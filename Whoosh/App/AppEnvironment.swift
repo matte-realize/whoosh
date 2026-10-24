@@ -45,6 +45,15 @@ final class AppEnvironment {
     /// permission flow (rear-camera spec Requirement 2/18.1, task 20). Off by
     /// default; the camera is requested only when the rider enables recording.
     let rearCameraSettingsViewModel: RearCameraSettingsViewModel
+    /// The shared rear-camera service stack (capture, frame pipeline, segment
+    /// store, clip pinner, level sensor) used to build a per-ride
+    /// `CameraRecordingCoordinator` and the Mount & frame screen (rear-camera
+    /// task 19/22). All framework ownership stays inside these services; views
+    /// and view models see only protocols.
+    let cameraServices: CameraServices
+    /// The SwiftData-backed clip repository over the same live `ModelContainer`
+    /// as rides (rear-camera task 15/19). Clip metadata is on-device only.
+    let clipRepository: ClipRepository
     /// The Home hub view model (owns its own tracker for authorization).
     let homeViewModel: HomeViewModel
 
@@ -77,6 +86,8 @@ final class AppEnvironment {
         pendingDeletes: PendingRemoteDeleteStore,
         cameraPermission: CameraPermission,
         rearCameraStore: RearCameraSettingsStore,
+        clipRepository: ClipRepository,
+        cameraServices: CameraServices,
         makeHomeTracker: () -> LocationTracking,
         makeRideTracker: @escaping () -> LocationTracking
     ) {
@@ -87,12 +98,14 @@ final class AppEnvironment {
         self.crash = crash
         self.storageNotice = storageNotice
         self.makeRideTracker = makeRideTracker
+        self.clipRepository = clipRepository
+        self.cameraServices = cameraServices
         let settings = SettingsViewModel(repository: repository, defaults: defaults)
         self.settingsViewModel = settings
         self.rearCameraSettingsViewModel = RearCameraSettingsViewModel(
             permission: cameraPermission,
             store: rearCameraStore,
-            clipRepository: InMemoryClipRepository()
+            clipRepository: clipRepository
         )
         self.homeViewModel = HomeViewModel(
             repository: repository,
@@ -238,6 +251,74 @@ final class AppEnvironment {
         crash.detachRide()
     }
 
+    // MARK: - Rear-camera factories (rear-camera task 19/22)
+
+    /// Whether the rider has turned rear camera recording on (drives Mount &
+    /// frame vs. a normal ride at Start Ride, and the Home/Settings toggle).
+    var isRearCameraRecordingEnabled: Bool {
+        rearCameraSettingsViewModel.recordingEnabled
+    }
+
+    /// Build a `CameraRecordingCoordinator` bound to a ride session, driving
+    /// recording with the ride through a read-only `RideCameraBridge`. The ride
+    /// engine is never modified; a camera failure never changes ride state or
+    /// GPS points (Requirement 1.3, 17.4). Camera notices route through the
+    /// shared `alertManager` (phone audio now; watch later).
+    func makeCameraCoordinator(for session: RideSessionViewModel) -> CameraRecordingCoordinator {
+        let bridge = RideCameraBridge(session: session, clock: clock)
+        let services = cameraServices
+        let coordinator = CameraRecordingCoordinator(
+            capture: services.capture,
+            pipeline: services.pipeline,
+            makeRecorder: { rideId in services.makeRecorder(rideId) },
+            segmentStore: services.segmentStore,
+            clipPinner: services.clipPinner,
+            alertManager: alertManager,
+            bridge: bridge,
+            settings: { services.settingsStore.load() },
+            clock: clock,
+            tuning: services.tuning
+        )
+        // Set concrete-only capture properties (camera position + the pixel
+        // `videoSink` that feeds the detector pipeline) before start. Only the
+        // real `CameraCaptureService` exposes these; the fake needs nothing.
+        coordinator.configureCapture = { position in
+            if let service = services.capture as? CameraCaptureService {
+                service.cameraPosition = position
+                service.videoSink = services.pipeline
+            }
+        }
+        return coordinator
+    }
+
+    /// Build the Mount & frame view model shown after Start Ride when rear
+    /// recording is on. The caller wires `onStartWithCamera` / `onSkipCamera`.
+    func makeMountAndFrameViewModel() -> MountAndFrameViewModel {
+        let services = cameraServices
+        return MountAndFrameViewModel(
+            previewHost: services.previewHost,
+            levelSensor: services.makeLevelSensor(),
+            settingsStore: services.settingsStore,
+            clock: clock
+        )
+    }
+
+    /// Build the ride-mode controller for a ride (rear-camera task 21). Ride
+    /// mode is on only when the rider enabled it in Settings; the controller
+    /// restores brightness on every exit path.
+    func makeRideModeController(isRideActive: @escaping () -> Bool) -> RideModeController {
+        RideModeController(
+            screen: UIKitScreenController.shared,
+            dimGuardStore: UserDefaultsDimGuardStore(),
+            clock: clock,
+            tuning: cameraServices.tuning,
+            isRideActive: isRideActive,
+            isRideModeEnabled: { [weak self] in
+                self?.rearCameraSettingsViewModel.settings.rideModeEnabled ?? false
+            }
+        )
+    }
+
     /// A fresh History view model over the shared repository.
     func makeHistoryViewModel(calendar: Calendar = .current) -> HistoryViewModel {
         HistoryViewModel(repository: repository, calendar: calendar)
@@ -249,7 +330,7 @@ final class AppEnvironment {
     /// if an on-disk store cannot be created, so the app still launches (history
     /// simply won't persist across launches in that degraded case).
     static func live() -> AppEnvironment {
-        let (repository, crashRepository, storageNotice) = Self.makeLiveRepositories()
+        let (repository, crashRepository, clipRepository, storageNotice) = Self.makeLiveRepositories()
         let clock = SystemClock()
 
         // Crash-response stores (device-local only; no network). Contacts live
@@ -281,15 +362,39 @@ final class AppEnvironment {
             clock: clock
         )
 
+        // Rear-camera service stack (rear-camera task 19/22). The capture
+        // service is the only capture-session owner and also vends the Mount
+        // & frame preview host. Clip metadata is stored in the shared live
+        // container's `ClipRepository`; footage files live on-device only.
+        let rearCameraStore = UserDefaultsRearCameraSettingsStore()
+        let captureService = CameraCaptureService()
+        let cameraServices = CameraServices.live(
+            capture: captureService,
+            previewHost: captureService,
+            clipRepository: clipRepository,
+            settingsStore: rearCameraStore,
+            clock: clock
+        )
+
+        // The app-wide alert manager is a `FanOutAlertManager` with a phone
+        // audio sink (the no-watch fallback channel), so camera notices and the
+        // rear-vehicle cue surface on the phone (rear-camera task 29). A watch
+        // sink is added later. It stays inert until `fire(_:)` is called.
+        let alertManager = FanOutAlertManager(
+            sinks: [PhoneAudioAlertSink()],
+            clock: clock,
+            appState: { .foregroundActiveScreen }
+        )
+
         return AppEnvironment(
             repository: repository,
             clock: clock,
             detector: NoopDetector(),
-            // Ship the real alert manager app-wide (D-DM5): it is inert until
-            // `fire(_:)` is called, so normal mode is unchanged (the rear-alert
-            // gate won't call it until a real detector exists), and the demo's
-            // forced-alert path produces real haptics/audio.
-            alertManager: HapticAudioAlertManager(clock: clock),
+            // Ship the fan-out alert manager app-wide: it is inert until
+            // `fire(_:)` is called, so normal mode is unchanged, the demo's
+            // forced-alert path produces a real cue, and camera notices reach the
+            // phone speaker.
+            alertManager: alertManager,
             crash: crash,
             calendar: .current,
             defaults: .standard,
@@ -298,7 +403,9 @@ final class AppEnvironment {
             appVersion: Self.appVersion(),
             pendingDeletes: UserDefaultsPendingRemoteDeleteStore(),
             cameraPermission: AVCameraPermission(),
-            rearCameraStore: UserDefaultsRearCameraSettingsStore(),
+            rearCameraStore: rearCameraStore,
+            clipRepository: clipRepository,
+            cameraServices: cameraServices,
             makeHomeTracker: { CoreLocationTracker() },
             makeRideTracker: { CoreLocationTracker() }
         )
@@ -317,14 +424,25 @@ final class AppEnvironment {
     /// is added to the same live container as rides, keeping the container-
     /// retention rule and the in-memory fallback). Existing ride data is
     /// untouched by adding the new `@Model`.
-    private static func makeLiveRepositories() -> (RideRepository, CrashAlertRepository, String?) {
-        let schema: [any PersistentModel.Type] = [RideRecord.self, CrashAlertRecordEntity.self]
+    /// Builds the ride, crash-alert, **and clip** repositories over a **single
+    /// shared `ModelContainer`** holding `RideRecord`, `CrashAlertRecordEntity`,
+    /// and `ClipRecordEntity` (rear-camera task 15/19 + crash-response task 26:
+    /// each record entity is added to the same live container as rides, keeping
+    /// the container-retention rule and the in-memory fallback). Existing ride
+    /// data is untouched by adding the new `@Model`s.
+    private static func makeLiveRepositories() -> (RideRepository, CrashAlertRepository, ClipRepository, String?) {
+        let schema: [any PersistentModel.Type] = [
+            RideRecord.self,
+            CrashAlertRecordEntity.self,
+            ClipRecordEntity.self,
+        ]
         do {
             let container = try ModelContainer(for: Schema(schema))
             let context = container.mainContext
             return (
                 SwiftDataRideRepository(context: context),
                 SwiftDataCrashAlertRepository(context: context),
+                SwiftDataClipRepository(context: context),
                 nil
             )
         } catch {
@@ -341,10 +459,16 @@ final class AppEnvironment {
                 return (
                     SwiftDataRideRepository(context: context),
                     SwiftDataCrashAlertRepository(context: context),
+                    SwiftDataClipRepository(context: context),
                     notice
                 )
             }
-            return (InMemoryRideRepository(), InMemoryCrashAlertRepository(), notice)
+            return (
+                InMemoryRideRepository(),
+                InMemoryCrashAlertRepository(),
+                InMemoryClipRepository(),
+                notice
+            )
         }
     }
 
@@ -360,6 +484,13 @@ final class AppEnvironment {
     ) -> AppEnvironment {
         let rides = seeded ? PreviewSeed.rides(now: Date()) : []
         let repository = InMemoryRideRepository(rides: rides)
+        let clipRepository = InMemoryClipRepository()
+        let rearCameraStore = InMemoryRearCameraSettingsStore()
+        let cameraServices = CameraServices.fake(
+            clipRepository: clipRepository,
+            settingsStore: rearCameraStore,
+            clock: clock
+        )
         let crash = CrashResponseEnvironment(
             contactStore: InMemoryEmergencyContactStore(),
             consentStore: InMemoryConsentStore(),
@@ -386,7 +517,9 @@ final class AppEnvironment {
             appVersion: "preview",
             pendingDeletes: InMemoryPendingRemoteDeleteStore(),
             cameraPermission: FakeCameraPermission(status: .notDetermined),
-            rearCameraStore: InMemoryRearCameraSettingsStore(),
+            rearCameraStore: rearCameraStore,
+            clipRepository: clipRepository,
+            cameraServices: cameraServices,
             makeHomeTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) },
             makeRideTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) }
         )

@@ -11,8 +11,11 @@ import SwiftUI
 ///   These stay disabled until the sync tasks ship (Requirement 14.5 / 12.1).
 /// - **RIDE** — a read-only "Units · Miles · mph" row and a functional GPS
 ///   accuracy picker (Balanced / High) bound to `SettingsViewModel`.
-/// - **SAFETY · EXPERIMENTAL** — a disabled "Rear vehicle detection · Soon" row
-///   that never requests camera permission (Requirement 14.6).
+/// - **REAR CAMERA** — the real, opt-in "Record rear camera" section
+///   (`RearCameraSettingsSection`), off by default; enabling it requests camera
+///   access and turns on recording + experimental rear detection (Requirement
+///   2/18.1). Recording is for the rider's own records and cannot guarantee
+///   detection or delivery.
 /// - A destructive "Delete all rides" action behind a confirmation alert that
 ///   calls `SettingsViewModel.deleteAllRides()` and surfaces any error message.
 struct SettingsView: View {
@@ -38,7 +41,6 @@ struct SettingsView: View {
                 rideSection
                 RearCameraSettingsSection(viewModel: rearCamera)
                 crashAlertsSection
-                safetySection
                 DemoModeSection(controller: demo)
                 deleteAllButton
             }
@@ -276,29 +278,6 @@ struct SettingsView: View {
     }
 
     // MARK: - Safety (experimental)
-
-    private var safetySection: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-            sectionHeader("Safety · Experimental")
-            HStack {
-                Text("Rear vehicle detection")
-                    .font(Theme.Typography.body)
-                    .foregroundStyle(Theme.Colors.textSecondary)
-                Spacer()
-                Text("Soon")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Theme.Colors.textSecondary)
-                    .padding(.horizontal, Theme.Spacing.md)
-                    .padding(.vertical, Theme.Spacing.xs)
-                    .background(Theme.Colors.subtleFill)
-                    .clipShape(Capsule())
-            }
-            .padding(Theme.Spacing.md)
-            .cardStyle()
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Rear vehicle detection, experimental, coming soon")
-        }
-    }
 
     // MARK: - Delete all
 
