@@ -190,7 +190,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 4
   - _Parallel:_ Group P1
 
-- [ ] 6. `[iOS]` `[DEMO]` `CommandDedupeCache` and `RemoteCommandReducer` (phone `Metrics/`, test-first)
+- [x] 6. `[iOS]` `[DEMO]` `CommandDedupeCache` and `RemoteCommandReducer` (phone `Metrics/`, test-first)
   - The 29-row decision table in `design.md` as a pure function of (ride state, camera state, crash phase,
     arming state, settings, version, command, cache). Outcomes and effects are data; undefined cases are
     typed `ignored`/`rejected`, never errors. The cache keeps 5 minutes / 128 entries.
@@ -201,7 +201,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 4; rear-camera 2 (state/command models)
   - _Parallel:_ Group P1
 
-- [ ] 7. `[iOS]` `[IMPORTANT]` `StartArming` state machine (phone `Metrics/`, test-first)
+- [x] 7. `[iOS]` `[IMPORTANT]` `StartArming` state machine (phone `Metrics/`, test-first)
   - The 12-row table: arm only by the rider's tap and only when preconditions pass; expiry (default 5
     minutes, 1–15), resign-active, crash event, authorization loss disarm; accepted `requestStart` →
     starting → consumed; phone Start while armed consumes.
