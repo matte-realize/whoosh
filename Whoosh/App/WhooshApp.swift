@@ -82,17 +82,6 @@ struct WhooshApp: App {
                 )
                 .navigationDestination(for: Route.self, destination: destination)
             }
-            .overlay(alignment: .top) {
-                // DEMO MODE badge over the app chrome (Home + pushed screens),
-                // below the ride cover and any crash takeover. Tapping it opens
-                // the demo tools in Settings (O-DM5).
-                if environment.demo.badgeVisible {
-                    DemoBadge(scheme: .light) {
-                        if path.last != .settings { path.append(.settings) }
-                    }
-                    .padding(.top, Theme.Spacing.sm)
-                }
-            }
             .fullScreenCover(isPresented: coverBinding) {
                 coverContent
             }
@@ -265,14 +254,6 @@ struct WhooshApp: App {
                     cameraPreview: cameraPreview
                 )
                 .interactiveDismissDisabled()
-                .overlay(alignment: .top) {
-                    if environment.demo.badgeVisible {
-                        // Positioned at the top so it never obscures the
-                        // three metrics or the hold-to-stop control.
-                        DemoBadge(scheme: .dark)
-                            .padding(.top, Theme.Spacing.sm)
-                    }
-                }
                 .overlay(alignment: .bottomTrailing) {
                     if environment.demo.badgeVisible {
                         RideScreenDemoMenu(controller: environment.demo)
