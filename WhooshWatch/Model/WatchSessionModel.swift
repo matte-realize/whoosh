@@ -62,6 +62,8 @@ public final class WatchSessionModel {
     public private(set) var reachable = false
     /// Diagnostics: cues played, commands sent (counts only; privacy).
     public private(set) var cuesPlayed = 0
+    /// Rear-vehicle cues played; the root view flashes "Car behind" on change.
+    public private(set) var rearCuesPlayed = 0
     public private(set) var commandsSent = 0
 
     // MARK: Settings (watch UserDefaults mirror; defaults here)
@@ -238,7 +240,10 @@ public final class WatchSessionModel {
             haptics.play(pattern)
             playedAfterMs = 0
             cuesPlayed += 1
-            if alert.kind == .rearVehicleCaution { lastRearCueMs = now }
+            if alert.kind == .rearVehicleCaution {
+                lastRearCueMs = now
+                rearCuesPlayed += 1
+            }
         }
         // Log the notice (replay logs without buzzing / unread).
         noticeLog.record(alert, timeIntoRideMs: reducer.elapsedMs(nowMs: now))

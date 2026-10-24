@@ -65,7 +65,7 @@ nonisolated final class WCSessionWireLink: NSObject, WireLink, @unchecked Sendab
     /// `true` when WatchConnectivity is supported on this device (always true on
     /// iPhone; the guard keeps the type usable in previews/tests on other
     /// destinations).
-    private let isSupported: Bool
+    let isSupported: Bool
 
     override init() {
         if WCSession.isSupported() {
@@ -294,7 +294,12 @@ struct PhoneRemoteComposition {
 enum PhoneRemoteFactory {
     static func make(clock: Clock) -> PhoneRemoteComposition {
         let link = WCSessionWireLink()
-        guard link.isPaired, link.isWatchAppInstalled else {
+        // Gate only on platform support: `isPaired`/`isWatchAppInstalled` read
+        // false until the session activates, which happens after this, so
+        // gating on them always picked the no-watch remote. Sends to a watch
+        // that isn't there report unreachable and the alerts fall back to the
+        // phone, so an unpaired phone still behaves as before.
+        guard link.isSupported else {
             return PhoneRemoteComposition(
                 remote: NoopRideRemote(),
                 statusHolder: WatchLiveStatusHolder(),
