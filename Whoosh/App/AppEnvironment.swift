@@ -353,11 +353,10 @@ final class AppEnvironment {
                     isDemoMode: { demo.isEnabled },
                     currentRideId: { bridge.rideId },
                     routeCoordinate: { instant in bridge.routeCoordinate(at: instant) },
-                    recordNearMiss: { _ in
-                        // Near-miss persistence is owned by the parallel
-                        // NearMissRecorder branch, which subscribes via
-                        // `onDetection` / `detectionEvents()`; this composition
-                        // only runs the detector and the alert path.
+                    // Each alerted detection becomes a stored near miss (synced
+                    // after its ride; demo events never upload).
+                    recordNearMiss: { [nearMissRecorder = self.nearMissRecorder] event in
+                        nearMissRecorder.record(event)
                     }
                 )
             }
