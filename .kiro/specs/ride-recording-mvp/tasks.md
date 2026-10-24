@@ -232,15 +232,19 @@ Start only after task 18 is green and Role C has marked the schema "Agreed" in
 
 ---
 
-## Suggested Kiro hooks (create after task 1)
+## Kiro hooks (created, in `.kiro/hooks/`)
 
-- **Run tests after each spec task** — `PostTaskExec` → `xcodebuild test` (or `swift test`),
-  enforcing the test-first flow.
-- **Privacy guard on writes** — `PreToolUse` on write tools (agent action) checking new code
-  against the privacy steering (network only via `RideSyncService`, no tracking SDKs, no
-  secrets, honest copy).
-- **Format/lint on save** — `PostFileSave` matching `\.swift$` → `swiftformat`/`swiftlint`
-  if the team adopts them.
+Schema: Kiro IDE 1.x `v1` hook JSON. Scripts live in `scripts/`.
+
+- **`run-tests-after-task`** — `PostTaskExec` → `scripts/test.sh` (`xcodebuild test`; skips
+  cleanly until task 1 creates `Whoosh.xcodeproj`).
+- **`privacy-guard-on-save`** — `PostFileSave` on `\.swift$` → `scripts/privacy-check.sh`:
+  network only in `Services/Sync`, no analytics SDKs, no secrets, no collision-prevention
+  copy, Models/Metrics Foundation-only, Views don't import CoreLocation/SwiftData, camera
+  only in `Services/Detection`.
+- **`test-first-before-task`** — `PreTaskExec` agent prompt reminding the agent of the
+  test-first, steering-bound working rules for each task.
+- Optional later: format/lint on save if the team adopts `swiftformat`/`swiftlint`.
 
 ## Definition of done (per task)
 

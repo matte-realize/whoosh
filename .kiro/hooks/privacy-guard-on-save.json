@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "privacy-guard-on-save",
+      "description": "On every saved Swift file, enforce privacy.md and the layering table: network only in Services/Sync, no analytics SDKs, no secrets, honest copy, Models/Metrics import Foundation only, Views never import CoreLocation/SwiftData, camera only in Services/Detection.",
+      "trigger": "PostFileSave",
+      "matcher": "\\.swift$",
+      "action": {
+        "type": "command",
+        "command": "scripts/privacy-check.sh {{filePath}}"
+      }
+    }
+  ]
+}
