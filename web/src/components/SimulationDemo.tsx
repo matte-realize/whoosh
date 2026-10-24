@@ -3,20 +3,33 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import {
   DETECTION,
-  RIDER_SPEED,
+  RIDER_X,
   SCENARIOS,
+  cancelCrash,
+  clockTime,
   closingSpeed,
+  countdownRemaining,
   createSim,
   cueActive,
+  drillMessage,
+  findScenario,
+  isRecording,
+  markCloseCall,
+  nearMissToastActive,
   nearestBehind,
+  rideTime,
+  sendCrashNow,
+  startRide,
   step,
   timeToReach,
+  triggerCrash,
   type ScenarioKey,
   type SimEvent,
   type SimState,
 } from "@/lib/sim/engine";
 import { DEFAULT_ORBIT, drawScene, type Orbit, type ViewMode } from "@/lib/sim/render";
 import { formatDistance, formatDuration, formatSpeed } from "@/lib/units";
+import { ContactPhone, NearMissLog, RiderPhone, WatchMock, hintText, type DeviceSnapshot } from "./SimDevices";
 
 const VIEWS: { key: ViewMode; label: string; hint: string }[] = [
   { key: "orbit", label: "3D orbit", hint: "Drag, or use the arrow keys, to look around. + and − zoom." },
@@ -24,42 +37,61 @@ const VIEWS: { key: ViewMode; label: string; hint: string }[] = [
   { key: "phone", label: "Phone's rear camera", hint: "What the phone on the seat post sees, with the simulated detector's boxes." },
 ];
 
+type ModeKey = "recording" | "nearmiss" | "crash" | "free";
+
+const MODES: { key: ModeKey; label: string; view: ViewMode; orbit: Orbit }[] = [
+  { key: "recording", label: "1 · Ride recording", view: "orbit", orbit: { ...DEFAULT_ORBIT } },
+  { key: "nearmiss", label: "2 · Near-miss logging", view: "phone", orbit: { ...DEFAULT_ORBIT } },
+  {
+    key: "crash",
+    label: "3 · Crash response",
+    view: "orbit",
+    orbit: { azimuth: 1.05, elevation: 0.38, radius: 20, target: { x: RIDER_X, y: 0.5, z: -2 } },
+  },
+  { key: "free", label: "Free ride", view: "orbit", orbit: { ...DEFAULT_ORBIT } },
+];
+
 const SPEEDS = [0.5, 1, 2];
 
-interface Snapshot {
-  t: number;
-  riderDistance: number;
+interface Snapshot extends DeviceSnapshot {
   events: SimEvent[];
-  cue: boolean;
-  lastCue: SimEvent | null;
   nearest: { distance: number; closing: number; ttr: number | null; missed: boolean } | null;
 }
 
 function snapshot(state: SimState): Snapshot {
   const near = nearestBehind(state);
+  const sent = state.crash.phase === "sent";
   return {
     t: state.t,
+    recording: isRecording(state),
+    rideStartsAt: state.rideStartsAt,
+    rideTime: rideTime(state),
     riderDistance: state.riderDistance,
-    events: state.events.slice(0, 8),
+    riderSpeed: state.riderSpeed,
     cue: cueActive(state),
     lastCue: state.lastCue,
+    nearMisses: state.nearMisses.slice(0, 8),
+    toast: nearMissToastActive(state),
+    crash: {
+      phase: state.crash.phase,
+      remaining: countdownRemaining(state),
+      detectedAt: state.crash.detectedAt,
+      sentAt: state.crash.sentAt,
+      endedAt: state.crash.endedAt,
+    },
+    message: sent ? drillMessage(state) : null,
+    messageTime: state.crash.sentAt !== null ? clockTime(state.crash.sentAt) : null,
+    events: state.events.slice(0, 8),
     nearest:
       near === null
         ? null
         : {
             distance: Math.max(0, -(near.z + near.length / 2)),
-            closing: closingSpeed(near),
-            ttr: timeToReach(near),
+            closing: closingSpeed(near, state.riderSpeed),
+            ttr: timeToReach(near, state.riderSpeed),
             missed: near.missed,
           },
   };
-}
-
-function cueText(event: SimEvent | null): string {
-  if (event === null) return "";
-  if (event.type === "false-alarm" || event.hint === null) return "Vehicle behind";
-  if (event.hint === "center") return "Vehicle behind, directly behind you";
-  return `Vehicle behind, on your ${event.hint}`;
 }
 
 function eventLine(event: SimEvent): string {
@@ -69,35 +101,38 @@ function eventLine(event: SimEvent): string {
   return `${at} · Caution cue · ${event.kind} ${where} · ${event.distance} m back`;
 }
 
-/** Two short beeps, only if the visitor turned sound on (which also unlocks audio). */
-function beep(context: AudioContext): void {
+/** Short tones, only if the visitor turned sound on (which also unlocks audio). */
+function tone(context: AudioContext, frequency: number, offsets: number[], length = 0.12): void {
   const now = context.currentTime;
-  for (const offset of [0, 0.18]) {
+  for (const offset of offsets) {
     const osc = context.createOscillator();
     const gain = context.createGain();
-    osc.frequency.value = 880;
+    osc.frequency.value = frequency;
     gain.gain.setValueAtTime(0.0001, now + offset);
     gain.gain.exponentialRampToValueAtTime(0.15, now + offset + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + length);
     osc.connect(gain).connect(context.destination);
     osc.start(now + offset);
-    osc.stop(now + offset + 0.14);
+    osc.stop(now + offset + length + 0.02);
   }
 }
 
 export default function SimulationDemo() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const simRef = useRef<SimState>(createSim("light"));
+  const simRef = useRef<SimState>(createSim("recording"));
   const orbitRef = useRef<Orbit>({ ...DEFAULT_ORBIT });
   const dragRef = useRef<{ x: number; y: number } | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
   const lastEventRef = useRef<SimEvent | null>(null);
+  const lastBeepSecondRef = useRef<number | null>(null);
+  const lastPhaseRef = useRef<string>("none");
 
   const [playing, setPlaying] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [view, setView] = useState<ViewMode>("orbit");
+  const [mode, setMode] = useState<ModeKey>("recording");
   const [scenario, setScenario] = useState<ScenarioKey>("light");
   const [mistakes, setMistakes] = useState(false);
   const [sound, setSound] = useState(false);
@@ -118,8 +153,29 @@ export default function SimulationDemo() {
   const reset = useCallback((key: ScenarioKey, withMistakes: boolean) => {
     simRef.current = createSim(key, withMistakes);
     lastEventRef.current = null;
+    lastBeepSecondRef.current = null;
+    lastPhaseRef.current = "none";
     setSnap(snapshot(simRef.current));
   }, []);
+
+  const scenarioFor = (nextMode: ModeKey, freeScenario: ScenarioKey): ScenarioKey =>
+    nextMode === "free" ? freeScenario : nextMode;
+
+  function chooseMode(nextMode: ModeKey) {
+    const info = MODES.find((item) => item.key === nextMode) ?? MODES[0];
+    setMode(nextMode);
+    setView(info.view);
+    orbitRef.current = { ...info.orbit, target: info.orbit.target ? { ...info.orbit.target } : undefined };
+    reset(scenarioFor(nextMode, scenario), mistakes);
+    setPlaying(true);
+  }
+
+  /** Runs an action on the live simulation and refreshes the readouts at once. */
+  function act(action: (sim: SimState) => unknown, message?: string) {
+    action(simRef.current);
+    setSnap(snapshot(simRef.current));
+    if (message) setAnnouncement(message);
+  }
 
   // Animation loop: simulate while playing, draw every frame, pause when offscreen or hidden.
   useEffect(() => {
@@ -155,11 +211,29 @@ export default function SimulationDemo() {
       if (visible && !document.hidden) {
         if (live.current.playing) {
           step(sim, dt * live.current.speed);
+          const audio = live.current.sound ? audioRef.current : null;
           const latest = sim.events[0] ?? null;
           if (latest !== null && latest !== lastEventRef.current) {
             lastEventRef.current = latest;
-            setAnnouncement(`Caution: ${cueText(latest)}.`);
-            if (live.current.sound && audioRef.current) beep(audioRef.current);
+            setAnnouncement(`Caution: vehicle ${hintText(latest.hint)}. Near miss logged.`);
+            if (audio) tone(audio, 880, [0, 0.18]);
+          }
+          // Crash countdown: a tone each second in the last 10 s, and a ping when the text is sent.
+          const remaining = countdownRemaining(sim);
+          if (remaining !== null) {
+            const second = Math.ceil(remaining);
+            if (second !== lastBeepSecondRef.current) {
+              lastBeepSecondRef.current = second;
+              if (audio && second <= 10) tone(audio, 660, [0], 0.18);
+            }
+          }
+          if (sim.crash.phase !== lastPhaseRef.current) {
+            lastPhaseRef.current = sim.crash.phase;
+            if (sim.crash.phase === "countdown") setAnnouncement("Crash detected. Sending an alert unless you tap I'm OK.");
+            if (sim.crash.phase === "sent") {
+              setAnnouncement("Alert sent to the emergency contact.");
+              if (audio) tone(audio, 1320, [0, 0.12], 0.09);
+            }
           }
         }
         drawScene(ctx, sim, live.current.view, orbitRef.current, canvas.width, canvas.height, scale);
@@ -199,7 +273,7 @@ export default function SimulationDemo() {
 
   function zoom(factor: number) {
     const orbit = orbitRef.current;
-    orbit.radius = Math.min(90, Math.max(14, orbit.radius * factor));
+    orbit.radius = Math.min(90, Math.max(8, orbit.radius * factor));
   }
 
   function onPointerDown(event: PointerEvent<HTMLCanvasElement>) {
@@ -237,19 +311,31 @@ export default function SimulationDemo() {
   }
 
   const viewInfo = VIEWS.find((item) => item.key === view) ?? VIEWS[0];
-  const scenarioInfo = SCENARIOS.find((item) => item.key === scenario) ?? SCENARIOS[0];
-  const cues = snap.events.length;
+  const activeScenario = findScenario(scenarioFor(mode, scenario));
+  const crashBusy = snap.crash.phase === "countdown" || snap.crash.phase === "sending" || snap.crash.phase === "sent";
+  const onStart = () => act(startRide, "Ride started. Recording.");
+  const onMarkCloseCall = () => act(markCloseCall, "Close call marked with your location.");
+  const onCancelCrash = () => act(cancelCrash, "Cancelled. No alert was sent.");
+  const onSendNow = () => act(sendCrashNow, "Sending the alert now.");
 
   return (
     <div className="sim">
+      <div className="sim__modes chips" role="group" aria-label="Demo feature">
+        {MODES.map((item) => (
+          <button key={item.key} type="button" className="chip" aria-pressed={mode === item.key} onClick={() => chooseMode(item.key)}>
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       <div className="sim__stage">
-        <div ref={wrapRef} className={`sim__canvas-wrap${snap.cue ? " is-cue" : ""}`}>
+        <div ref={wrapRef} className={`sim__canvas-wrap${snap.cue || snap.crash.phase === "countdown" ? " is-cue" : ""}`}>
           <canvas
             ref={canvasRef}
             className={`sim__canvas sim__canvas--${view}`}
             tabIndex={0}
             role="img"
-            aria-label={`Simulation, ${viewInfo.label} view: a rider in a bike lane with traffic approaching from behind. The readouts next to it describe what is happening.`}
+            aria-label={`Simulation, ${viewInfo.label} view: a rider in a city bike lane with traffic. The phone, watch and log next to it describe what is happening.`}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -271,23 +357,21 @@ export default function SimulationDemo() {
           <span className="sim__badge">Simulation · not a recording</span>
         </div>
 
+        <p className="sim__feature-note">
+          <strong>{activeScenario.label}.</strong> {activeScenario.description}
+        </p>
+
         <div className="sim__controls">
           <div className="sim__row">
             <button type="button" className="button button--primary sim__play" onClick={() => setPlaying((p) => !p)}>
               {playing ? "❚❚ Pause" : "▶ Play"}
             </button>
-            <button type="button" className="button button--ghost" onClick={() => reset(scenario, mistakes)}>
+            <button type="button" className="button button--ghost" onClick={() => reset(scenarioFor(mode, scenario), mistakes)}>
               ↺ Restart
             </button>
             <div className="chips" role="group" aria-label="Playback speed">
               {SPEEDS.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className="chip"
-                  aria-pressed={speed === value}
-                  onClick={() => setSpeed(value)}
-                >
+                <button key={value} type="button" className="chip" aria-pressed={speed === value} onClick={() => setSpeed(value)}>
                   {value}×
                 </button>
               ))}
@@ -297,13 +381,7 @@ export default function SimulationDemo() {
           <div className="sim__row">
             <div className="chips" role="group" aria-label="Camera view">
               {VIEWS.map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  className="chip"
-                  aria-pressed={view === item.key}
-                  onClick={() => setView(item.key)}
-                >
+                <button key={item.key} type="button" className="chip" aria-pressed={view === item.key} onClick={() => setView(item.key)}>
                   {item.label}
                 </button>
               ))}
@@ -316,7 +394,14 @@ export default function SimulationDemo() {
                 <button type="button" className="chip" aria-label="Zoom out" onClick={() => zoom(1.15)}>
                   −
                 </button>
-                <button type="button" className="chip" onClick={() => (orbitRef.current = { ...DEFAULT_ORBIT })}>
+                <button
+                  type="button"
+                  className="chip"
+                  onClick={() => {
+                    const info = MODES.find((item) => item.key === mode) ?? MODES[0];
+                    orbitRef.current = { ...info.orbit, target: info.orbit.target ? { ...info.orbit.target } : undefined };
+                  }}
+                >
                   Reset view
                 </button>
               </div>
@@ -325,106 +410,105 @@ export default function SimulationDemo() {
           <p className="note note--small">{viewInfo.hint}</p>
 
           <div className="sim__row">
-            <label className="sim__select">
-              <span>Scenario</span>
-              <select
-                value={scenario}
-                onChange={(event) => {
-                  const key = event.target.value as ScenarioKey;
-                  setScenario(key);
-                  reset(key, mistakes);
-                }}
-              >
-                {SCENARIOS.map((item) => (
-                  <option key={item.key} value={item.key}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <button type="button" className="chip" onClick={onMarkCloseCall} disabled={!snap.recording || crashBusy}>
+              ◆ Mark close call
+            </button>
             <button
               type="button"
-              className="chip"
-              aria-pressed={mistakes}
-              onClick={() => {
-                const next = !mistakes;
-                setMistakes(next);
-                reset(scenario, next);
-              }}
+              className="chip chip--danger"
+              onClick={() => act(triggerCrash)}
+              disabled={!snap.recording || crashBusy || snap.riderSpeed < 0.5}
             >
-              Show detector mistakes
+              ✚ Simulate crash
             </button>
             <button type="button" className="chip" aria-pressed={sound} onClick={toggleSound}>
-              Sound cue
+              Sound
             </button>
           </div>
-          <p className="note note--small">{scenarioInfo.description}</p>
+
+          {mode === "free" ? (
+            <div className="sim__row">
+              <label className="sim__select">
+                <span>Traffic</span>
+                <select
+                  value={scenario}
+                  onChange={(event) => {
+                    const key = event.target.value as ScenarioKey;
+                    setScenario(key);
+                    reset(key, mistakes);
+                  }}
+                >
+                  {SCENARIOS.map((item) => (
+                    <option key={item.key} value={item.key}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="chip"
+                aria-pressed={mistakes}
+                onClick={() => {
+                  const next = !mistakes;
+                  setMistakes(next);
+                  reset(scenario, next);
+                }}
+              >
+                Show detector mistakes
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
 
-      <aside className="sim__side" aria-label="What the app is doing">
-        <div className={`phone-mock${snap.cue ? " is-cue" : ""}`}>
-          <div className="phone-mock__notch" aria-hidden="true" />
-          <p className="phone-mock__status">
-            <span className="phone-mock__dot" aria-hidden="true" /> Recording
-          </p>
-          <p className="phone-mock__time">{formatDuration(snap.t)}</p>
-          <p className="phone-mock__distance">{formatDistance(snap.riderDistance)}</p>
-          <p className="phone-mock__speed">{formatSpeed(RIDER_SPEED)}</p>
-          <div className="phone-mock__banner" aria-hidden={!snap.cue}>
-            <strong>⚠ Caution</strong>
-            <span>{cueText(snap.lastCue)}</span>
-          </div>
-          <p className="phone-mock__caption">Illustration of the app&apos;s ride screen</p>
-        </div>
-
-        <div className={`watch-mock${snap.cue ? " is-cue" : ""}`} aria-hidden="true">
-          <div className="watch-mock__face">
-            <span>{snap.cue ? "TAP" : "•"}</span>
-          </div>
-        </div>
-        <p className="note note--small sim__watch-note">Wrist tap on a paired watch (the option the team is testing).</p>
-
-        <dl className="sim__readouts">
-          <div>
-            <dt>Nearest vehicle behind</dt>
-            <dd>{snap.nearest === null ? "None" : formatDistance(snap.nearest.distance)}</dd>
-          </div>
-          <div>
-            <dt>Closing speed</dt>
-            <dd>{snap.nearest === null ? "—" : formatSpeed(Math.max(0, snap.nearest.closing))}</dd>
-          </div>
-          <div>
-            <dt>Time to reach you</dt>
-            <dd>
-              {snap.nearest === null || snap.nearest.ttr === null ? "—" : `${snap.nearest.ttr.toFixed(1)} s`}
-            </dd>
-          </div>
-          <div>
-            <dt>Cues this run</dt>
-            <dd>{cues}</dd>
-          </div>
-        </dl>
-
-        <div className="sim__log">
-          <h3>Event log</h3>
-          {snap.events.length === 0 ? (
-            <p className="note note--small">No cues yet.</p>
-          ) : (
-            <ol>
-              {snap.events.map((event) => (
-                <li key={`${event.t}-${event.vehicleId ?? "fa"}`} className={event.type === "false-alarm" ? "is-false" : undefined}>
-                  {eventLine(event)}
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
-        <p className="visually-hidden" aria-live="polite">
-          {announcement}
-        </p>
+      <aside className="sim__side" aria-label="The rider's devices">
+        <RiderPhone snap={snap} onStart={onStart} onMarkCloseCall={onMarkCloseCall} onCancelCrash={onCancelCrash} onSendNow={onSendNow} />
+        <WatchMock snap={snap} onCancelCrash={onCancelCrash} />
       </aside>
 
+      <div className="sim__panels">
+        <NearMissLog nearMisses={snap.nearMisses} />
+        <ContactPhone snap={snap} />
+        <div className="sim__panel-stack">
+          <dl className="sim__readouts">
+            <div>
+              <dt>Nearest vehicle behind</dt>
+              <dd>{snap.nearest === null ? "None" : formatDistance(snap.nearest.distance)}</dd>
+            </div>
+            <div>
+              <dt>Closing speed</dt>
+              <dd>{snap.nearest === null ? "—" : formatSpeed(Math.max(0, snap.nearest.closing))}</dd>
+            </div>
+            <div>
+              <dt>Time to reach you</dt>
+              <dd>{snap.nearest === null || snap.nearest.ttr === null ? "—" : `${snap.nearest.ttr.toFixed(1)} s`}</dd>
+            </div>
+            <div>
+              <dt>Cues this run</dt>
+              <dd>{snap.events.length}</dd>
+            </div>
+          </dl>
+          <div className="sim__log">
+            <h3>Caution cues</h3>
+            {snap.events.length === 0 ? (
+              <p className="note note--small">No cues yet.</p>
+            ) : (
+              <ol>
+                {snap.events.map((event) => (
+                  <li key={`${event.t}-${event.vehicleId ?? "fa"}`} className={event.type === "false-alarm" ? "is-false" : undefined}>
+                    {eventLine(event)}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <p className="visually-hidden" aria-live="polite">
+        {announcement}
+      </p>
       <p className="visually-hidden">
         Detection rules in this simulation: vehicles are tracked within {DETECTION.rangeMeters} m behind the rider,
         and a cue fires once per vehicle when it is {DETECTION.cueTimeToReachSeconds} s or {DETECTION.cueDistanceMeters} m away.

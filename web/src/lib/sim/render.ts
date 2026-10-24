@@ -6,10 +6,13 @@
  */
 
 import {
+  CONTACT,
   DETECTION,
   RIDER_X,
   ROAD,
+  countdownRemaining,
   cueActive,
+  fallAmount,
   timeToReach,
   type SimState,
   type Vehicle,
@@ -30,10 +33,38 @@ export interface Orbit {
 
 export const DEFAULT_ORBIT: Orbit = { azimuth: (35 * Math.PI) / 180, elevation: (24 * Math.PI) / 180, radius: 38 };
 
-interface Vec3 {
+export interface Vec3 {
   x: number;
   y: number;
   z: number;
+}
+
+/** A free camera: where it is, what it looks at, and its vertical field of view in degrees. */
+export interface CameraPose {
+  pos: Vec3;
+  target: Vec3;
+  fov: number;
+}
+
+/** The phone's rear camera, on the seat post, looking back down the road. */
+export const PHONE_CAMERA: CameraPose = {
+  pos: { x: RIDER_X, y: 0.8, z: -0.65 },
+  target: { x: RIDER_X - 0.6, y: 0.9, z: -40 },
+  fov: 64,
+};
+
+/** Optional extras for drawScene. Every field defaults to the /simulation behavior. */
+export interface SceneOptions {
+  /** Draw the detector's output (zone, pins, labels, colored vehicles, cue border). Default true. */
+  detector?: boolean;
+  /** How far the phone is clipped onto the seat post, 0 (not there) to 1 (mounted). Default 1. */
+  phoneMount?: number;
+  /** Draw the rider and bike in non-phone views. Default true. */
+  showRider?: boolean;
+  /** Use this camera instead of the view's own (the orbit is ignored). */
+  camera?: CameraPose;
+  /** Top-left tag in the phone view. */
+  cameraTag?: string;
 }
 
 const v = (x: number, y: number, z: number): Vec3 => ({ x, y, z });
@@ -193,6 +224,7 @@ const COLORS = {
   marking: "rgb(244 246 248 / 70%)",
   bikeMarking: "rgb(45 245 168 / 80%)",
   accent: "#2df5a8",
+  lime: "#c8f135",
   red: "#ff5a4f",
   amber: "#ffb020",
   text: "#f4f6f8",
@@ -208,16 +240,16 @@ const RIDER: RGB = [45, 245, 168];
 const BIKE: RGB = [200, 206, 212];
 const SKIN: RGB = [214, 180, 150];
 
-function vehicleColor(vehicle: Vehicle): RGB {
+function vehicleColor(vehicle: Vehicle, detector: boolean): RGB {
   if (vehicle.direction === -1) return CAR_ONCOMING;
-  if (vehicle.missed) return CAR_IDLE;
+  if (vehicle.missed || !detector) return CAR_IDLE;
   if (vehicle.state === "cued") return CAR_CUED;
   if (vehicle.state === "tracking") return CAR_TRACKING;
   return CAR_IDLE;
 }
 
-function addVehicle(faces: Face[], cam: Camera, vehicle: Vehicle): void {
-  const rgb = vehicleColor(vehicle);
+function addVehicle(faces: Face[], cam: Camera, vehicle: Vehicle, detector = true): void {
+  const rgb = vehicleColor(vehicle, detector);
   if (vehicle.kind === "car") {
     addBox(faces, cam, vehicle.x, vehicle.z, 0.25, vehicle.width, vehicle.height * 0.5, vehicle.length, rgb);
     addBox(
@@ -236,14 +268,28 @@ function addVehicle(faces: Face[], cam: Camera, vehicle: Vehicle): void {
   }
 }
 
-function addRider(faces: Face[], cam: Camera): void {
+function addRider(faces: Face[], cam: Camera, fall: number, phoneMount = 1): void {
   const x = RIDER_X;
+  if (fall >= 0.5) {
+    // On the ground: the bike on its side, the rider lying to the right of it, away from traffic.
+    addBox(faces, cam, x + 0.25, 0.55, 0, 0.68, 0.07, 0.68, BIKE); // front wheel
+    addBox(faces, cam, x + 0.25, -0.55, 0, 0.68, 0.07, 0.68, BIKE); // rear wheel
+    addBox(faces, cam, x + 0.3, 0, 0.07, 0.1, 0.08, 1.05, BIKE); // frame
+    addBox(faces, cam, x + 0.95, 0.1, 0, 0.62, 0.3, 0.42, RIDER); // torso
+    addBox(faces, cam, x + 1.42, 0.15, 0, 0.26, 0.24, 0.26, SKIN); // head
+    addBox(faces, cam, x + 0.3, -0.5, 0.07, 0.16, 0.05, 0.1, RIDER); // phone, still on the seat post
+    return;
+  }
   addBox(faces, cam, x, 0.55, 0, 0.07, 0.68, 0.68, BIKE); // front wheel
   addBox(faces, cam, x, -0.55, 0, 0.07, 0.68, 0.68, BIKE); // rear wheel
   addBox(faces, cam, x, 0, 0.42, 0.08, 0.1, 1.05, BIKE); // frame
   addBox(faces, cam, x, -0.05, 0.9, 0.42, 0.62, 0.36, RIDER); // torso
   addBox(faces, cam, x, 0.05, 1.52, 0.24, 0.26, 0.26, SKIN); // head
-  addBox(faces, cam, x, -0.5, 0.72, 0.1, 0.16, 0.05, RIDER); // phone on the seat post
+  if (phoneMount > 0) {
+    // Phone on the seat post; while mounting it drops in from above.
+    const lift = (1 - Math.min(1, phoneMount)) * 0.7;
+    addBox(faces, cam, x, -0.5, 0.72 + lift, 0.1, 0.16, 0.05, RIDER);
+  }
 }
 
 /**
@@ -273,7 +319,7 @@ function drawFaces(ctx: CanvasRenderingContext2D, cam: Camera, faces: Face[]): v
 
 // ---------- Ground: road, markings, detection zone ----------
 
-function drawGround(ctx: CanvasRenderingContext2D, cam: Camera, state: SimState, showZone: boolean): void {
+function drawGround(ctx: CanvasRenderingContext2D, cam: Camera, state: SimState, showZone: boolean, showPins = true): void {
   const far = -220;
   const near = 80;
   drawPolygon(ctx, cam, groundRect(-80, 80, far, near), COLORS.ground);
@@ -291,6 +337,35 @@ function drawGround(ctx: CanvasRenderingContext2D, cam: Camera, state: SimState,
     const x = ROAD.travelLaneLeft;
     drawPolygon(ctx, cam, groundRect(x - 0.07, x + 0.07, z, z + dash), "#d8b14a");
     drawPolygon(ctx, cam, groundRect(x - 0.3, x - 0.16, z, z + dash), "#d8b14a");
+  }
+
+  // Near-miss pins: a diamond painted where each one was logged, left behind as the rider rides on.
+  for (const nearMiss of showPins ? state.nearMisses : []) {
+    const z = nearMiss.at - state.riderDistance;
+    if (z < far || z > near) continue;
+    const r = 0.75;
+    const color = nearMiss.source === "rider_reported" ? "rgb(200 241 53 / 85%)" : "rgb(255 176 32 / 85%)";
+    drawPolygon(
+      ctx,
+      cam,
+      [v(RIDER_X, 0.02, z - r), v(RIDER_X + r * 0.8, 0.02, z), v(RIDER_X, 0.02, z + r), v(RIDER_X - r * 0.8, 0.02, z)],
+      color,
+      "rgb(6 7 8 / 60%)",
+      1,
+    );
+  }
+
+  // Crash: a pulsing ring around the rider while the countdown runs, solid once the alert is out.
+  const crash = state.crash;
+  if (crash.phase === "countdown" || crash.phase === "sending" || crash.phase === "sent") {
+    const pulse = crash.phase === "countdown" ? 0.5 + 0.5 * Math.sin(state.t * 8) : 1;
+    const radius = 1.6 + pulse * 0.5;
+    const ring: Vec3[] = [];
+    for (let i = 0; i < 28; i += 1) {
+      const a = (i / 28) * Math.PI * 2;
+      ring.push(v(RIDER_X + 0.6 + Math.cos(a) * radius, 0.02, Math.sin(a) * radius));
+    }
+    drawPolygon(ctx, cam, ring, `rgb(255 90 79 / ${Math.round(10 + pulse * 14)}%)`, "rgb(255 90 79 / 85%)", 2);
   }
 
   if (showZone) {
@@ -327,7 +402,7 @@ function pill(ctx: CanvasRenderingContext2D, x: number, y: number, text: string,
   ctx.fillText(text, x, y - h / 2 + 0.5);
 }
 
-function vehicleLabel(vehicle: Vehicle): { text: string; color: string } | null {
+function vehicleLabel(vehicle: Vehicle, riderSpeed: number): { text: string; color: string } | null {
   const behind = Math.round(-(vehicle.z + vehicle.length / 2));
   if (vehicle.direction === -1) {
     return Math.abs(vehicle.z) < 45 ? { text: "Oncoming · not flagged", color: COLORS.muted } : null;
@@ -336,7 +411,7 @@ function vehicleLabel(vehicle: Vehicle): { text: string; color: string } | null 
   if (vehicle.missed && behind < DETECTION.rangeMeters) return { text: "Missed (simulated mistake)", color: COLORS.muted };
   if (vehicle.state === "cued") return { text: `Caution cue · ${Math.max(behind, 0)} m`, color: COLORS.red };
   if (vehicle.state === "tracking") {
-    const ttr = timeToReach(vehicle);
+    const ttr = timeToReach(vehicle, riderSpeed);
     return { text: `Tracking · ${behind} m${ttr !== null ? ` · ${ttr.toFixed(1)} s` : ""}`, color: COLORS.amber };
   }
   return null;
@@ -344,13 +419,41 @@ function vehicleLabel(vehicle: Vehicle): { text: string; color: string } | null 
 
 function drawLabels(ctx: CanvasRenderingContext2D, cam: Camera, state: SimState, scale: number): void {
   for (const vehicle of state.vehicles) {
-    const label = vehicleLabel(vehicle);
+    const label = vehicleLabel(vehicle, state.riderSpeed);
     if (label === null) continue;
     const p = project(cam, v(vehicle.x, vehicle.height + 0.9, vehicle.z));
     if (p !== null) pill(ctx, p[0], p[1], label.text, label.color, scale);
   }
-  const rider = project(cam, v(RIDER_X, 2.3, 0));
-  if (rider !== null) pill(ctx, rider[0], rider[1], "Rider", COLORS.accent, scale);
+  for (const nearMiss of state.nearMisses) {
+    const z = nearMiss.at - state.riderDistance;
+    if (z < -40 || z > 1) continue;
+    const p = project(cam, v(RIDER_X, 0.9, z));
+    const text = nearMiss.source === "rider_reported" ? "Close call · marked by rider" : "Near miss logged";
+    if (p !== null && z < -2) pill(ctx, p[0], p[1], text, nearMiss.source === "rider_reported" ? COLORS.lime : COLORS.amber, scale);
+  }
+  const rider = project(cam, v(RIDER_X + 0.6, fallAmount(state) >= 0.5 ? 1.3 : 2.3, 0));
+  if (rider !== null) {
+    const { text, color } = riderLabel(state);
+    pill(ctx, rider[0], rider[1], text, color, scale);
+  }
+}
+
+function riderLabel(state: SimState): { text: string; color: string } {
+  const remaining = countdownRemaining(state);
+  switch (state.crash.phase) {
+    case "countdown":
+      return { text: `Crash detected · alert in ${Math.ceil(remaining ?? 0)} s`, color: COLORS.red };
+    case "sending":
+      return { text: `Sending alert to ${CONTACT.contactName}…`, color: COLORS.red };
+    case "sent":
+      return { text: `Alert sent to ${CONTACT.contactName}`, color: COLORS.red };
+    case "cancelled":
+      if (fallAmount(state) > 0) return { text: "I'm OK · no alert sent", color: COLORS.accent };
+      break;
+    default:
+      break;
+  }
+  return { text: state.riderSpeed < 0.05 ? "Rider · ready" : "Rider", color: COLORS.accent };
 }
 
 /** In the phone view, outline what the simulated detector sees, like a detector overlay would. */
@@ -389,7 +492,7 @@ function drawDetections(ctx: CanvasRenderingContext2D, cam: Camera, state: SimSt
 /** Exported for scripts/sim-check (projection tests). */
 export function cameraFor(view: ViewMode, orbit: Orbit, width: number, height: number): Camera {
   if (view === "phone") {
-    return makeCamera(v(RIDER_X, 0.8, -0.65), v(RIDER_X - 0.6, 0.9, -40), 64, width, height);
+    return makeCamera(PHONE_CAMERA.pos, PHONE_CAMERA.target, PHONE_CAMERA.fov, width, height);
   }
   if (view === "overhead") {
     // From above and slightly behind, so the rider rides up the screen and traffic comes from below.
@@ -412,7 +515,9 @@ export function drawScene(
   width: number,
   height: number,
   scale: number,
+  options: SceneOptions = {},
 ): void {
+  const detector = options.detector ?? true;
   const sky = ctx.createLinearGradient(0, 0, 0, height);
   sky.addColorStop(0, COLORS.sky);
   sky.addColorStop(0.55, COLORS.horizon);
@@ -420,18 +525,21 @@ export function drawScene(
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, width, height);
 
-  const cam = cameraFor(view, orbit, width, height);
-  drawGround(ctx, cam, state, view !== "phone");
+  const pose = options.camera;
+  const cam = pose ? makeCamera(pose.pos, pose.target, pose.fov, width, height) : cameraFor(view, orbit, width, height);
+  drawGround(ctx, cam, state, view !== "phone" && detector, detector);
 
   const faces: Face[] = [];
-  const buildingSides = view === "orbit" ? [cam.pos.x > RIDER_X ? -1 : 1] : [-1, 1];
+  // Buildings on the camera's side would block the road, except when looking along it from the bike.
+  const alongRoad = view === "phone" || (pose !== undefined && Math.abs(cam.pos.x - RIDER_X) < 1.5);
+  const buildingSides = view === "orbit" && !alongRoad ? [cam.pos.x > RIDER_X ? -1 : 1] : [-1, 1];
   addBuildings(faces, cam, state.riderDistance, buildingSides);
-  for (const vehicle of state.vehicles) addVehicle(faces, cam, vehicle);
-  if (view !== "phone") addRider(faces, cam);
+  for (const vehicle of state.vehicles) addVehicle(faces, cam, vehicle, detector);
+  if (view !== "phone" && (options.showRider ?? true)) addRider(faces, cam, fallAmount(state), options.phoneMount ?? 1);
   drawFaces(ctx, cam, faces);
 
   if (view === "phone") {
-    drawDetections(ctx, cam, state, scale);
+    if (detector) drawDetections(ctx, cam, state, scale);
     // The rear camera looks backward, so the rider's left is on the right of this image.
     ctx.font = `700 ${11 * scale}px ui-sans-serif, system-ui, sans-serif`;
     ctx.fillStyle = COLORS.muted;
@@ -443,12 +551,12 @@ export function drawScene(
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     ctx.fillStyle = COLORS.accent;
-    ctx.fillText("● REAR CAMERA · SIMULATED", 14 * scale, 12 * scale);
-  } else {
+    ctx.fillText(options.cameraTag ?? "● REAR CAMERA · SIMULATED", 14 * scale, 12 * scale);
+  } else if (detector) {
     drawLabels(ctx, cam, state, scale);
   }
 
-  if (cueActive(state)) {
+  if ((detector && cueActive(state)) || state.crash.phase === "countdown") {
     ctx.strokeStyle = "rgb(255 90 79 / 70%)";
     ctx.lineWidth = 6 * scale;
     ctx.strokeRect(3 * scale, 3 * scale, width - 6 * scale, height - 6 * scale);

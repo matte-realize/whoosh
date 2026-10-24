@@ -1,7 +1,21 @@
 // Checks for src/lib/sim/engine.ts. Run from web/:  node scripts/sim-check.ts
 // (Node 23.6+ runs TypeScript directly by stripping types.)
 import {
+  CRASH,
   FILM_SCENARIO,
+  ROUTE_LENGTH,
+  cancelCrash,
+  clockTime,
+  countdownRemaining,
+  drillMessage,
+  isRecording,
+  markCloseCall,
+  nearMissToastActive,
+  rideTime,
+  riderDown,
+  routePoint,
+  sendCrashNow,
+  triggerCrash,
   createSim,
   nearestBehind,
   positionHint,
@@ -28,6 +42,8 @@ function run(state: SimState, seconds: number, dt = 1 / 60): SimState {
   const sim = run(createSim("oncoming"), 60);
   check(sim.events.length === 0, "oncoming-only scenario raises no cues in 60 s");
   check(sim.vehicles.every((v) => v.direction === -1), "oncoming-only scenario spawns only oncoming vehicles");
+  const early = run(createSim("oncoming"), 2);
+  check(early.vehicles.length === 1 && early.vehicles[0].z > 0, "oncoming vehicles stay in the scene after they spawn");
 }
 
 // Close pass: exactly one cue per loop, on the left, before the car reaches the rider.
@@ -118,6 +134,76 @@ check(SCENARIOS.every((s) => s.spawns.every((sp, i, all) => i === 0 || all[i - 1
   check(cue?.hint === "left", "film: the cue says 'on your left'");
   check(passAt !== null && passAt < 14, `film: the car is past the rider before the end card (${passAt?.toFixed(2)} s)`);
 }
+
+// Feature 1, ride recording: nothing records before Start Ride; then time, distance and route move.
+{
+  const sim = run(createSim("recording"), 1.5);
+  check(!isRecording(sim) && rideTime(sim) === 0 && sim.riderDistance === 0, "recording: idle before Start Ride");
+  check(markCloseCall(sim) === null, "recording: cannot mark a close call before the ride starts");
+  run(sim, 20);
+  check(isRecording(sim) && Math.abs(rideTime(sim) - 19.5) < 0.05, `recording: ride time counts from Start Ride (${rideTime(sim).toFixed(2)} s)`);
+  check(sim.riderDistance > 70 && sim.riderDistance < 100, `recording: distance grows (${sim.riderDistance.toFixed(1)} m)`);
+  const start = routePoint(0);
+  const now = routePoint(sim.riderDistance);
+  check(now.lat > start.lat && now.lon < start.lon, "recording: the route heads north-west up Mass Ave");
+  check(routePoint(ROUTE_LENGTH + 500).lat === routePoint(ROUTE_LENGTH).lat, "recording: the route stops at its end");
+}
+
+// Feature 2, near-miss logging: the close pass is cued once and logged once, with a location.
+{
+  const sim = createSim("nearmiss");
+  let cueAt: number | null = null;
+  for (let i = 0; i < 12 * 60; i += 1) {
+    step(sim, 1 / 60);
+    if (cueAt === null && sim.events.length > 0) cueAt = sim.t;
+  }
+  const detected = sim.nearMisses.filter((n) => n.source === "detected");
+  check(cueAt !== null && cueAt < 9, `near miss: the close pass is cued early in the clip (${cueAt?.toFixed(2)} s)`);
+  check(detected.length === 1 && detected[0].hint === "left", "near miss: exactly one detected entry, on the left");
+  check(detected[0]?.score !== null && detected[0].score! >= 0 && detected[0].score! <= 1, "near miss: score is in 0..1");
+  check(detected[0] !== undefined && Math.abs(detected[0].lat - 42.341) < 0.01, "near miss: logged with a Mass Ave location");
+  const marked = markCloseCall(sim);
+  check(marked !== null && marked.source === "rider_reported" && marked.score === null, "near miss: rider can mark a close call (no score)");
+  check(nearMissToastActive(sim), "near miss: the logged toast shows after an entry");
+}
+
+// Feature 3, crash response: scripted crash, countdown, send, and the drill text.
+{
+  const sim = run(createSim("crash"), 5.5);
+  check(sim.crash.phase === "countdown", "crash: the scripted crash starts a countdown");
+  const left = countdownRemaining(sim);
+  check(left !== null && left > CRASH.countdownSeconds - 1 && left <= CRASH.countdownSeconds, `crash: countdown starts near ${CRASH.countdownSeconds} s (${left?.toFixed(2)})`);
+  check(!triggerCrash(sim), "crash: a second crash during the countdown is ignored");
+  run(sim, 1);
+  check(sim.riderSpeed === 0 && riderDown(sim), "crash: the rider is down and stopped");
+  run(sim, CRASH.countdownSeconds);
+  check(sim.crash.phase === "sending" || sim.crash.phase === "sent", "crash: the countdown expiring sends the alert");
+  run(sim, CRASH.sendingSeconds + 0.2);
+  check(sim.crash.phase === "sent" && sim.crash.sentAt !== null, "crash: the alert is sent");
+  check(!cancelCrash(sim), "crash: I'm OK after sending does nothing");
+  const text = drillMessage(sim);
+  check(text.startsWith("WHOOSH DEMO - NOT REAL: Alex"), "crash: the text is the drill wording (G6)");
+  check(/ll=42\.\d{5},-71\.\d{5}&q=Rider/.test(text), "crash: the text has 5-decimal Apple Maps coordinates");
+  check(/^[\x0A\x20-\x7E]+$/.test(text) && text.length <= 612, `crash: the text is ASCII and within 612 chars (${text.length})`);
+  check(sim.events.length === 0, "crash: no caution cues while the rider is down");
+}
+{
+  const sim = run(createSim("crash"), 8);
+  check(cancelCrash(sim) && sim.crash.phase === "cancelled", "crash: I'm OK cancels during the countdown");
+  run(sim, CRASH.getUpSeconds + 3);
+  check(!riderDown(sim) && sim.riderSpeed > 3, "crash: after I'm OK the rider gets up and rides on");
+  check(sim.crash.sentAt === null, "crash: a cancelled countdown sends nothing");
+}
+{
+  const sim = run(createSim("crash"), 6);
+  check(sendCrashNow(sim) && sim.crash.phase === "sending", "crash: Send now skips the countdown");
+}
+{
+  const sim = run(createSim("crash"), 5.5);
+  run(sim, CRASH.countdownSeconds); // reach the deadline
+  check(!cancelCrash(sim), "crash: a cancel at or after the deadline loses (expiry wins the tie)");
+}
+check(clockTime(0) === "1:40 PM" && clockTime(30) === "1:41 PM", "clock: drill time of day formats as h:mm PM");
 
 console.log(failures === 0 ? "ALL PASS" : `${failures} FAILED`);
 process.exit(failures === 0 ? 0 : 1);

@@ -14,8 +14,8 @@ export default function SimulationPage() {
         <p className="eyebrow">See it in action</p>
         <h1>Take a ride with Whoosh</h1>
         <p className="subtitle">
-          A rider in a city bike lane, cars coming up from behind, and the heads-up Whoosh is designed
-          to give. Drag to look around, look through the phone&apos;s camera, and try different traffic.
+          A ride up the Mass Ave bike lane in Boston, with the rider&apos;s phone, Watch and emergency
+          contact alongside. Pick a feature: ride recording, near-miss logging, or crash response.
         </p>
       </header>
 
@@ -25,24 +25,26 @@ export default function SimulationPage() {
         <h2 id="sim-how-heading">What you are watching</h2>
         <div className="sim-explainer__grid">
           <div className="card">
-            <h3>Tracking</h3>
+            <h3>1 · Ride recording</h3>
             <p>
-              A vehicle behind the rider and getting closer, within 60 m, turns amber. The label shows how
-              far back it is and how many seconds until it reaches the rider.
+              The rider taps Start Ride. The phone records ride time, distance, speed and the route on
+              the map, and the paired Watch shows the same numbers. Everything stays on the phone.
             </p>
           </div>
           <div className="card">
-            <h3>Caution cue</h3>
+            <h3>2 · Near-miss logging</h3>
             <p>
-              When it is about 3.5 seconds or 10 m away, it turns red and the app gives one cue: a banner, a
-              wrist tap, and a sound if you turn sound on. One cue per vehicle, never a stream.
+              The rear camera spots a car closing from behind. The rider gets one caution cue, and the
+              app logs a near miss with the side, the detector&apos;s score and where it happened. The
+              rider can also tap Mark close call. No video is kept.
             </p>
           </div>
           <div className="card">
-            <h3>Not flagged</h3>
+            <h3>3 · Crash response</h3>
             <p>
-              Oncoming traffic on the other side of the road is ignored, because it is not coming up behind
-              the rider. Left and right are always the rider&apos;s own left and right.
+              A simulated crash starts a countdown with a large I&apos;m OK button on the phone and the
+              Watch. If nobody taps it, the emergency contact gets a text with a map link. Drills say
+              &ldquo;DEMO - NOT REAL&rdquo;.
             </p>
           </div>
         </div>
@@ -54,8 +56,16 @@ export default function SimulationPage() {
           It shows how the app is designed to behave, not how it performs. The simulated detector knows
           exactly where every vehicle is. The real one only has a camera image, is experimental, has not
           been measured yet, and will miss vehicles and raise false alarms. Turn on <strong>Show detector
-          mistakes</strong> to see what that looks like. The distances, timings and thresholds here are
-          illustrative values, not the app&apos;s tuning. Whoosh does not predict or prevent collisions.
+          mistakes</strong> (under Free ride) to see what that looks like. The distances, timings and
+          thresholds here are illustrative values, not the app&apos;s tuning. Whoosh does not predict or
+          prevent collisions.
+        </p>
+        <p>
+          The crash countdown here is 15 seconds, the shortest the design allows; the app&apos;s default
+          is 30. Real crash detection is experimental and will miss crashes and raise false ones, which
+          is why the rider always gets a chance to cancel. Whoosh is not an emergency service and
+          cannot guarantee that an alert is sent, delivered or read. The phone number and names are
+          made up.
         </p>
         <p>
           <Link href="/">Back to Whoosh</Link> · <Link href="/dashboard">Explore the ride map</Link>
