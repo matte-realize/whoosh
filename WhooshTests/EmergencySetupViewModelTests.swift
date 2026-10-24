@@ -43,11 +43,13 @@ struct EmergencySetupViewModelTests {
         #expect(vm.isEnabled)
     }
 
-    @Test func defaultsAreOffAndEmpty() {
+    @Test func defaultsAreOnButEmpty() {
+        // Crash alerts default on (hackathon build); they still arm only after
+        // a contact, a rider label and consent exist.
         let (vm, _, _) = makeViewModel()
         #expect(vm.contacts.isEmpty)
         #expect(vm.riderLabel.isEmpty)
-        #expect(vm.isEnabled == false)
+        #expect(vm.isEnabled == true)
         #expect(vm.hasRiderLabel == false)
     }
 

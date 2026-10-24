@@ -28,7 +28,11 @@ struct MotionCrashDetectorTests {
 
     /// Feed a steady baseline, then an impact, then stillness; return the trigger
     /// evaluation time.
-    private func driveCrashTrace(_ detector: MotionCrashDetector, tuning: MotionCrashTuning = MotionCrashTuning()) {
+    private func driveCrashTrace(
+        _ detector: MotionCrashDetector,
+        speed snapshot: RideSpeedSnapshot? = nil,
+        tuning: MotionCrashTuning = MotionCrashTuning()
+    ) {
         var t = t0
         // 3 s riding at ~1 g jitter.
         while t <= t0.addingTimeInterval(3.0) {
@@ -38,6 +42,9 @@ struct MotionCrashDetectorTests {
         // Impact.
         let impact = t
         detector.ingestAndEvaluate(accelerationMagnitude: 6.0 * g, at: impact)
+        // The rider is down: GPS speed collapses (the core needs a speed drop
+        // as well as the impact and stillness to clear the trigger score).
+        snapshot?.update(0.2)
         // Stillness for the window.
         var s = impact.addingTimeInterval(0.1)
         let end = impact.addingTimeInterval(tuning.stillnessWindow + 0.5)
@@ -48,9 +55,9 @@ struct MotionCrashDetectorTests {
     }
 
     @Test func emitsMotionSignalForCrashTraceWhileMonitoring() {
-        let (detector, _, box) = makeDetector(speed: 7.0)
+        let (detector, snapshot, box) = makeDetector(speed: 7.0)
         detector.start()
-        driveCrashTrace(detector)
+        driveCrashTrace(detector, speed: snapshot)
 
         #expect(box.signals.count == 1)
         let signal = box.signals.first

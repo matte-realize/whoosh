@@ -58,6 +58,21 @@ enum NearMissUploadMapper {
             case source
             case sharePublicly = "share_publicly"
         }
+
+        /// Synthesized `Codable` omits `nil` optionals; send them as explicit
+        /// `null` so an upsert clears a stale value instead of keeping it.
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(rideId, forKey: .rideId)
+            try container.encode(occurredAt, forKey: .occurredAt)
+            try container.encode(latitude, forKey: .latitude)
+            try container.encode(longitude, forKey: .longitude)
+            try container.encode(kind, forKey: .kind)
+            try container.encode(confidence, forKey: .confidence)
+            try container.encode(positionHint, forKey: .positionHint)
+            try container.encode(source, forKey: .source)
+            try container.encode(sharePublicly, forKey: .sharePublicly)
+        }
     }
 
     /// Map an uploadable event to the contract shape, dropping the local clip id
