@@ -7,12 +7,31 @@
 #
 # MVP rules (unchanged): 1 network only in Services/Sync, 2 no analytics SDKs,
 # 3 no secrets, 4 honest copy, 5 Models/Metrics import Foundation only,
-# 6 Views never touch CoreLocation/SwiftData, 7 camera only in Services/Detection.
+# 6 Views never touch CoreLocation/SwiftData.
 # Crash-response additions: network also allowed in Services/Notification; provider
 # credentials flagged anywhere; tel:/telprompt: only in Features/Emergency; MessageUI
-# only in Support/Representables; CoreMotion only in Services/Crash; Keychain SecItem
-# only in Services/Contacts; AVAudioSession only in Services/Alerts; and copy that
-# claims emergency services were notified or that help is on the way.
+# only in Support/Representables; CoreMotion only in Services/Crash (and Services/Camera,
+# see below); Keychain SecItem only in Services/Contacts; AVAudioSession only in
+# Services/Alerts; and copy that claims emergency services were notified or that help
+# is on the way.
+# Rear-camera additions (replaces the old rule 7 "camera only in Services/Detection"):
+# 7 capture/writer APIs (AVCaptureSession, AVCaptureDevice, AVCaptureVideoDataOutput,
+#   AVCaptureAudioDataOutput, AVCaptureMovieFileOutput, AVAssetWriter, camera/microphone
+#   requestAccess) only in Services/Camera/ — the detectors consume frames, they do not
+#   capture, so Services/Detection is no longer allowed.
+# 10 CoreMotion also allowed in Services/Camera/ (mount level sensor) in addition to
+#   Services/Crash.
+# 13 import Photos / PHPhotoLibrary only in Services/Camera/PhotosClipExporter.swift.
+# 14 import WatchConnectivity only in Services/Remote/.
+# 15 UIScreen brightness writes and isIdleTimerDisabled only in Services/Screen/
+#   (temporarily also allowed in ActiveRideView until task 21 migrates it).
+# 16 files under Services/Sync/ and Services/Notification/ must not reference camera,
+#   clip, or footage types (VideoFrame, ClipRecord, SegmentInfo, FootageBuffer, AVAsset,
+#   .mp4/.mov).
+# 17 Models/Metrics must not import AVFoundation, CoreMedia, CoreVideo, Photos, or
+#   CoreMotion (extends rule 5).
+# 18 honest copy: footage is for the rider's own records, never "evidence" and never a
+#   claim that capture is assured ("cannot guarantee detection or delivery").
 set -o pipefail  # no -u: macOS bash 3.2 errors on empty arrays
 cd "$(dirname "$0")/.."
 
@@ -76,10 +95,12 @@ for f in "${files[@]}"; do
     report "$f" "copy claims help is on the way (never promise response; cannot guarantee detection or delivery)"
   fi
 
-  # 5. Layering: Models and Metrics import Foundation only.
+  # 5. Layering: Models and Metrics import Foundation only (extended for the camera
+  #    spec: also no AVFoundation/CoreMedia/CoreVideo/Photos/CoreMotion — time is a
+  #    TimeInterval/Date, never a CMTime).
   case "$f" in
     */Models/*|*/Metrics/*)
-      if grep -nE '^import (SwiftUI|CoreLocation|SwiftData|MapKit|UIKit|AVFoundation|CoreMotion|MessageUI|ContactsUI)' "$f" >/dev/null; then
+      if grep -nE '^import (SwiftUI|CoreLocation|SwiftData|MapKit|UIKit|AVFoundation|AVKit|CoreMedia|CoreVideo|Photos|PhotosUI|CoreMotion|MessageUI|ContactsUI|WatchConnectivity)' "$f" >/dev/null; then
         report "$f" "Models/Metrics must import Foundation only"
       fi
       ;;
@@ -94,11 +115,12 @@ for f in "${files[@]}"; do
       ;;
   esac
 
-  # 7. Camera permission is not requested in the MVP.
-  if grep -nE 'AVCaptureDevice\.requestAccess|AVCaptureSession' "$f" >/dev/null; then
+  # 7. Capture and asset-writer APIs only in Services/Camera (the only AVCaptureSession
+  #    owner and the only asset writer). Detectors consume frames; they never capture.
+  if grep -nE 'AVCaptureSession|AVCaptureDevice|AVCaptureVideoDataOutput|AVCaptureAudioDataOutput|AVCaptureMovieFileOutput|AVAssetWriter|(AVCaptureDevice|AVCaptureDeviceInput)\.requestAccess|requestAccess\(for: ?\.(video|audio)\)' "$f" >/dev/null; then
     case "$f" in
-      */Services/Detection/*) ;;
-      *) report "$f" "camera access outside Services/Detection (MVP must not request camera)" ;;
+      */Services/Camera/*) ;;
+      *) report "$f" "capture/writer API outside Services/Camera (only the camera service owns capture and the asset writer; detectors consume frames)" ;;
     esac
   fi
 
@@ -119,11 +141,13 @@ for f in "${files[@]}"; do
     esac
   fi
 
-  # 10. Core Motion only in the crash detector folder (the only motion consumer).
+  # 10. Core Motion only where motion is consumed: the crash detector (Services/Crash)
+  #     and the rear-camera mount level sensor (Services/Camera).
   if grep -nE 'import CoreMotion|CMMotionManager|CMMotionActivityManager' "$f" >/dev/null; then
     case "$f" in
       */Services/Crash/*) ;;
-      *) report "$f" "CoreMotion outside Services/Crash (only the crash detector may read motion)" ;;
+      */Services/Camera/*) ;;
+      *) report "$f" "CoreMotion outside Services/Crash and Services/Camera (only the crash detector and the mount level sensor read motion)" ;;
     esac
   fi
 
@@ -141,6 +165,54 @@ for f in "${files[@]}"; do
       */Services/Alerts/*) ;;
       *) report "$f" "AVAudioSession outside Services/Alerts (only the countdown feedback configures audio)" ;;
     esac
+  fi
+
+  # 13. Photos export only in the single export file; footage leaves the camera folder
+  #     only on an explicit, add-only Photos save.
+  if grep -nE 'import Photos|import PhotosUI|PHPhotoLibrary|PHAssetCreationRequest' "$f" >/dev/null; then
+    case "$f" in
+      */Services/Camera/PhotosClipExporter.swift) ;;
+      *) report "$f" "Photos API outside Services/Camera/PhotosClipExporter.swift (clip export is the only Photos path, add-only, on explicit rider action)" ;;
+    esac
+  fi
+
+  # 14. WatchConnectivity only in the remote-control folder (the watch spec lives there).
+  if grep -nE 'import WatchConnectivity|WCSession' "$f" >/dev/null; then
+    case "$f" in
+      */Services/Remote/*) ;;
+      *) report "$f" "WatchConnectivity outside Services/Remote (the in-ride remote is the only WatchConnectivity user)" ;;
+    esac
+  fi
+
+  # 15. Screen brightness writes and the idle-timer toggle only in Services/Screen
+  #     (the only code that dims the screen / keeps it awake). ActiveRideView is
+  #     temporarily allowed until task 21 migrates its idle-timer call behind the
+  #     ScreenController.
+  if grep -nE '\.brightness *=|isIdleTimerDisabled' "$f" >/dev/null; then
+    case "$f" in
+      */Services/Screen/*) ;;
+      */Features/Ride/ActiveRideView.swift) ;;
+      *) report "$f" "screen brightness write / isIdleTimerDisabled outside Services/Screen (ride mode and the idle timer are owned by the screen controller; ActiveRideView allowed until task 21)" ;;
+    esac
+  fi
+
+  # 16. The network layers must never reference camera, clip, or footage types: footage
+  #     never leaves the device and is never uploaded, linked, or put in a message.
+  case "$f" in
+    */Services/Sync/*|*/Services/Notification/*)
+      if grep -nE 'VideoFrame|ClipRecord|ClipReason|SegmentInfo|SegmentRecord|FootageBuffer|ClipFootageBuffer|AVAsset|\.mp4|\.mov' "$f" >/dev/null; then
+        report "$f" "camera/clip/footage reference in a network layer (Services/Sync, Services/Notification): footage never leaves the device"
+      fi
+      ;;
+  esac
+
+  # 18. Honest copy: never call footage "evidence" or claim capture is assured. Phrased
+  #     to avoid colliding with rule 4 (which already covers collision prevention).
+  if grep -nEi '(footage|video|recording|clip)[a-z ]* (is|as|are|provides?|serves? as) [a-z ]*evidence' "$f" >/dev/null; then
+    report "$f" "copy calls footage evidence (recording is for the rider's own records; cannot guarantee detection or delivery)"
+  fi
+  if grep -nEi '(guarantee|ensure|assured?|always) (that )?[a-z ]*(the )?(incident|crash|vehicle|hazard|moment|footage) [a-z ]*(is |will be |was )?(captured|recorded)' "$f" >/dev/null; then
+    report "$f" "copy claims capture is assured (cannot guarantee detection or delivery; recording may fail)"
   fi
 done
 
