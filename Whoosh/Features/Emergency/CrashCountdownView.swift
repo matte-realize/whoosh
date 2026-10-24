@@ -54,12 +54,12 @@ struct CrashCountdownView: View {
         .accessibilityAddTraits(.isModal)
         // Keep the screen awake for the duration (Requirement 8.8 / 13.4).
         .onAppear {
-            UIApplication.shared.isIdleTimerDisabled = true
+            KeepAwake.shared.acquire(.crashCountdown)
             announceIfNeeded()
             startPulse()
         }
         .onDisappear {
-            UIApplication.shared.isIdleTimerDisabled = false
+            KeepAwake.shared.release(.crashCountdown)
         }
         // Re-announce on each per-second change of the remaining value.
         .onChange(of: coordinator.remainingSeconds) { _, _ in

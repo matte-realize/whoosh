@@ -40,8 +40,8 @@ struct ActiveRideView: View {
             bottomSheet
         }
         .preferredColorScheme(.dark)
-        .onAppear { setIdleTimer(disabled: true) }
-        .onDisappear { setIdleTimer(disabled: false) }
+        .onAppear { KeepAwake.shared.acquire(.ride) }
+        .onDisappear { KeepAwake.shared.release(.ride) }
         .onChange(of: viewModel.banner) { _, banner in
             announceBanner(banner)
         }
@@ -260,12 +260,6 @@ struct ActiveRideView: View {
         } else {
             viewModel.pause()
         }
-    }
-
-    private func setIdleTimer(disabled: Bool) {
-        #if canImport(UIKit)
-        UIApplication.shared.isIdleTimerDisabled = disabled
-        #endif
     }
 }
 
