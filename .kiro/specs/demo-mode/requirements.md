@@ -406,6 +406,54 @@ crash-response spec corrected where it was wrong about Apple's crash-detection A
 
 ---
 
+## Requirement 11: Demo rear feed (shipped, October 24, 2026)
+
+**Priority:** Demo-critical
+
+**User story:** As a presenter standing still indoors, I want to show the rear camera and the
+experimental vehicle detection with real boxes and real dings, so judges see the headline feature
+without a bike moving.
+
+A bundled, recorded road clip (`DemoRearFeed.mp4`) is played as if it were the live rear camera
+and run through the **real** `VisionVehicleConsumer` (the WhooshVision YOLO model), with the
+model's boxes drawn over the video. It is reachable two ways: a full-screen "Play demo rear feed"
+tool in the Settings demo tools, and automatically on a demo ride where it replaces the live map
+on the ride screen.
+
+### Acceptance Criteria
+
+1. WHILE demo mode is on THE Settings demo tools SHALL offer **"Play demo rear feed"**, which
+   presents the bundled clip full-screen with the live model's detection boxes drawn over it, and
+   SHALL tear the feed down on dismiss.
+2. WHILE demo mode is on AND a demo ride is recording THE active-ride screen SHALL show the demo
+   feed in place of the live route map, SHALL skip Mount & frame, SHALL hide the GPS "signal
+   lost" banner (a demo ride has no real GPS), and SHALL show the detection chip as **on**.
+3. THE feed SHALL pull frames at ~10 Hz through the real `VisionVehicleConsumer` (one inference
+   at a time; frames arriving while busy are skipped) and SHALL mark the first frame after a loop
+   as a discontinuity so the approach estimator resets. No clip is recorded; no `HazardDetection`
+   is persisted.
+4. THE feed SHALL treat only the **main car** as the proximity target: the largest vehicle box
+   (car/truck/bus/motorcycle, confidence ≥ 0.5) whose centre x is in 0.25…0.75 and whose bottom
+   edge is in the near half of the frame (y + height > 0.45). It SHALL count that car as
+   **dangerous** when its box area ≥ 0.12, **or** it is still growing ≥ 4% over the last ~0.6 s
+   at area ≥ 0.03. Only the main box SHALL be highlighted in the alert colour.
+5. WHILE a car is dangerous THE feed SHALL ding at an interval that shortens with closeness, from
+   ~1.4 s (far) to 0.25 s (filling the frame); each ding SHALL play the phone tone and call
+   `AlertManager.fireUrgent(.cautionRearVehicle)`, which skips the fan-out's 3 s per-kind cooldown
+   so the cue speeds up as the car closes in. A closeness bar SHALL show proximity.
+6. All demo-feed copy SHALL stay honest (experimental cue; cannot guarantee detection or
+   delivery) and SHALL pass `scripts/privacy-check.sh`. Nothing is recorded, uploaded, or sent.
+
+### Amendment to Requirement 2 — DEMO MODE badge removed (owner request, October 24, 2026)
+
+At the owner's request the always-on **"DEMO MODE" badge** (Requirement 2.1) was **removed** from
+Home, the ride screen, and the emergency screens: it crowded the demo feed and the three ride
+numbers. The demo tools stay discoverable in Settings → Demo mode and the ride-screen demo menu
+(Requirement 3), which remain the only way to reach demo triggers, so the "impossible to trigger
+accidentally" and "demo rides are tagged" guarantees (Requirements 2.3/2.6, 9) are unchanged. The
+`DemoBadge` view and `DemoModeController.badgeVisible` remain in the codebase (the ride-screen
+demo menu still gates on `badgeVisible`); only the badge's placement on those screens was dropped.
+
 ## Non-functional notes
 
 - **Testability:** the route source, the playback timing (via `Clock`), the stationary gate, the

@@ -897,6 +897,51 @@ not expect.
 
 ---
 
+## Amendments (shipped, October 24, 2026)
+
+Four changes made while wiring the watch on device. They are recorded here against the
+requirements they amend; the acceptance criteria above still hold except where noted.
+
+### A12 — Rapid rear cues (amends Requirement 12.2)
+
+**User story:** As a rider with a car closing in, I want the wrist buzzes to speed up as it gets
+closer, so the cue tracks the threat instead of being throttled.
+
+1. THE `WristHapticLimiter` SHALL expose a `rapidRearCues` flag (default off). WHILE it is on,
+   a `rearVehicleCaution` cue SHALL skip its **per-kind cooldown and storm backoff** and keep only
+   the 1 s minimum gap between pattern starts, so a closing car can buzz faster than once per 3 s.
+2. THE watch SHALL set `rapidRearCues = true` (the phone, not the watch, decides how fast rear
+   cues arrive). THE phone still paces **real-ride** rear cues through L0/L1/L2 (rear-vehicle
+   caution at most once per 3 s); only its **urgent proximity path** (demo rear feed, which calls
+   `AlertManager.fireUrgent`) sends them faster. All other kinds keep their cooldowns, and the
+   1 s minimum gap, dedupe, freshness, and demo gate are unchanged.
+
+### A13 — "Car behind" wrist flash (amends Requirement 11 / 14)
+
+1. WITH each rear-vehicle buzz THE watch SHALL show a 2.5 s full-screen amber **"Car behind"**
+   flash (icon + text) so the experimental cue is visible as well as felt, driven by the model's
+   `rearCuesPlayed` counter. THE flash SHALL be hidden while a crash countdown takeover is up and
+   SHALL remain honest (experimental cue; no "warning"/"danger" wording).
+
+### A14 — Phone remote gating fix (amends Requirement 3 / 7)
+
+1. THE phone SHALL select the watch-backed remote by gating **only on `WCSession.isSupported()`**,
+   not on `isPaired` / `isWatchAppInstalled`. Root cause: those two facts read `false` until the
+   session activates (which happens *after* selection), so gating on them always chose the
+   no-watch `NoopRideRemote` and the wrist never went live. Sends to a watch that is not there
+   report unreachable and the alert fan-out falls back to phone audio, so an unpaired phone still
+   behaves exactly as before (Requirement 1.5).
+2. THE phone readiness connection (`PhoneWatchConnectionFactory`) SHALL **reuse the remote's
+   `WCSession` link** (WatchConnectivity allows a single delegate) rather than create a second
+   session; with no usable watch it stays the inert no-op.
+
+### A15 — Demo mode skips the watch connect step (amends Requirement 3.x)
+
+1. WHILE demo mode is on THE phone SHALL skip the pre-ride "Connect your watch" readiness step and
+   go straight into the (demo) ride, since a demo ride needs no real watch link.
+
+---
+
 ## Non-functional notes
 
 - **Honest about the wrist.** A watch may be on a locked screen, a muted mode, or low on battery. Whoosh

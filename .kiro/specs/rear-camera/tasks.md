@@ -541,6 +541,23 @@ path is unchanged.
 
 ---
 
+## Post-ship fixes (October 24, 2026)
+
+- [x] 41. `[iOS]` `[DEMO]` Vision model load fallback (`.mlmodelc`)
+  - **Root cause:** the bundled YOLO26n model failed to load in the app because an Xcode app build
+    **compiles `yolo26n.mlpackage` to `yolo26n.mlmodelc`** (SwiftPM `swift test` copies the
+    `.mlpackage` as is), so looking up only the `.mlpackage` resource returned `nil` on device.
+    **Fix:** `WhooshVisionModel.url` (`cv/ios/WhooshVision/Sources/WhooshVision/VehicleBox.swift`)
+    now falls back to the compiled model —
+    `Bundle.module.url(forResource: "yolo26n", withExtension: "mlpackage") ?? ...
+    withExtension: "mlmodelc"`. `VehicleDetector` skips `MLModel.compileModel` when the URL is
+    already `.mlmodelc`.
+  - _Verify:_ `WhooshVisionModel.url != nil` in `FrameGeometryTests`; the detector loads and runs
+    in the app (demo rear feed draws boxes on device).
+  - _Requirements:_ 4.1, 4.2
+
+---
+
 ## Teammate B tasks (`[Teammate B]`) — vision / detector
 
 - [ ] B1. `[Teammate B]` `[DEMO]` Make the detector a `FrameConsumer`

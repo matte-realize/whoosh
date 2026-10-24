@@ -938,9 +938,34 @@ O-W1 … O-W11.)*
 
 ---
 
-## Risks
+## Shipped amendments (October 24, 2026)
 
-| Risk | Impact | Mitigation |
+Implementation notes for the on-device amendments A12–A15 (see `requirements.md`).
+
+- **A12 `rapidRearCues` (`Packages/WhooshWire/.../Haptics/WristHapticLimiter.swift`).** A public
+  `var rapidRearCues = false`. In `admit`, the per-kind cooldown check for `rearVehicleCaution` is
+  skipped when `rapidRearCues` is set (`let skipCooldown = rapidRearCues && alert.kind ==
+  .rearVehicleCaution`); the storm backoff is not consulted for that path. The 1 s minimum gap,
+  dedupe, freshness, demo gate, and all other kinds' cooldowns are untouched. `WatchSessionModel`
+  sets `limiter.rapidRearCues = true` at init — a closing car dings faster because the **phone**
+  sends proximity cues faster (its urgent `fireUrgent` path on the demo rear feed), not because the
+  watch invents them. Pure and unit-tested with the monotonic clock.
+- **A13 "Car behind" flash (`WhooshWatch/App/WatchRootView.swift`,
+  `WhooshWatch/Model/WatchSessionModel.swift`).** The model publishes `rearCuesPlayed` (count,
+  privacy-safe). `WatchRootView.onChange(of: model.rearCuesPlayed)` shows `RearCueFlashView` (a
+  full-screen amber `car.rear.fill` + "Car behind") for 2.5 s, gated behind `countdownPhase ==
+  .hidden` so it never covers the crash takeover.
+- **A14 remote gating (`Whoosh/Services/Remote/WCSessionWireLink.swift`).** `PhoneRemoteFactory.make`
+  now gates on `link.isSupported` only; `isPaired` / `isWatchAppInstalled` read `false` before the
+  session activates, so the earlier gate always returned `NoopRideRemote` and no link.
+  `PhoneWatchConnectionFactory.make(clock:sharedLink:)` casts the shared `WireLink` back to the one
+  `WCSessionWireLink` and builds `WatchConnection` over it (one WCSession delegate), reading the
+  live `isPaired` / `isWatchAppInstalled` facts as closures for the readiness screen.
+- **A15 demo skips connect (`Whoosh/App/WhooshApp.swift`).** `startRide` returns straight to
+  `proceedToRideSetup` when `environment.demo.isEnabled`, so the "Connect your watch" step is not
+  shown for a demo ride.
+
+## Risks
 | ---- | ------ | ---------- |
 | **The workout-session bet fails on the owner's watch** (haptics or reachability not reliable with the wrist down) | The headline feature is unavailable | Spike first (task 1); fallback ladder F1–F3; audio always available |
 | **Watch battery drain** over a long ride | Watch dies before the ride ends (SE, especially 1st generation) | Measure M6–M8; `.unknown` location type; display-aware status; limiter; show watch battery before the ride; end the session at 5% |

@@ -433,6 +433,53 @@ The iOS owner approved this spec and accepted every recommendation; this table i
 - **O-DM7 (D-DM15)** Re-seed behavior (recommend: report + remove-first).
 - **O-DM8 (D-DM4)** One scripted route for v1 (recommend: yes).
 
+## Demo rear feed (shipped, October 24, 2026 — Requirement 11)
+
+The rear-camera headline — recording plus experimental vehicle detection with proximity dings —
+can be shown standing still indoors by replaying a bundled road clip through the **real** vision
+pipeline. This is demo-only and records/uploads nothing.
+
+**Files:**
+
+- `Whoosh/Services/Detection/DemoVideoFeed.swift` — `@MainActor @Observable` feed. Loads
+  `DemoRearFeed.mp4` from the app bundle into an `AVPlayer` with an `AVPlayerItemVideoOutput`,
+  loops it, and on a ~10 Hz timer pulls the newest `CVPixelBuffer`, wraps it in the project's
+  `VideoFrame`, and feeds the **real** `VisionVehicleConsumer` (WhooshVision YOLO). One inference
+  runs at a time (frames arriving while busy are skipped); the first frame after a loop is flagged
+  `isDiscontinuity` so the approach estimator resets. Publishes `boxes`, `proximity`,
+  `alertCount`, and `modelState`.
+- `Whoosh/Features/Demo/DemoVideoFeedView.swift` — the full-screen Settings presentation and the
+  shared `DemoFeedSurface` (player layer + `DetectionOverlay` at the clip's aspect ratio) reused
+  on the ride screen.
+- `Whoosh/Resources/Demo/DemoRearFeed.mp4` — the bundled recorded road clip.
+
+**Proximity logic (pure, inside `DemoVideoFeed`):** only the **main car** counts — the largest
+vehicle box (`car`/`truck`/`bus`/`motorcycle`, confidence ≥ 0.5) with centre x in 0.25…0.75 and
+bottom edge in the near half (`y + height > 0.45`), so parked cars at the edges and small cars far
+back are ignored. It is **dangerous** when area ≥ 0.12 **or** it is still growing ≥ 4% over the
+last ~0.6 s at area ≥ 0.03 (a short `mainAreaHistory` window drives the growth check). The danger
+holds 1 s after the last approaching frame so dings don't stutter. Closeness maps box area 0.02 →
+0 and 0.22+ → 1; the ding interval is `1.4 − closeness · 1.15` s (≈1.4 s far → 0.25 s full frame).
+Only the main box is marked `isApproaching` so just it is highlighted in the alert colour.
+
+**Dinging and the fan-out:** each due ding plays the phone tone (`AudioSessionTonePlayer`) and
+calls `onDing`, which the composition root (`DemoModeController.makeVideoFeed()`) routes to
+`AlertManager.fireUrgent(.cautionRearVehicle)`. `fireUrgent` (added to the `AlertManager` protocol
+with a `fire`-based default; `FanOutAlertManager` overrides it) delivers **ignoring the per-kind
+cooldown**, so the watch buzzes on every ding and the cue accelerates as the car closes in, while
+genuine ride cues still obey the 3 s cooldown via `fire`.
+
+**Ride-screen integration:** `WhooshApp.beginRide` sets `demoFeed = environment.demo.isEnabled ?
+environment.demo.makeVideoFeed() : nil`. `ActiveRideView` shows `DemoFeedSurface` + a closeness
+bar in place of the map when `demoFeed` is set, surfaces the detection chip as **on**, and
+suppresses the GPS signal-lost banner and its VoiceOver announcement (`demoFeed == nil` guards).
+`proceedToRideSetup` and `startRide` skip Mount & frame and the watch-connect step for demo rides.
+
+**Badge removal (owner request):** the always-on `DemoBadge` is no longer placed on Home, the ride
+screen, or the emergency screens (it now appears only in its own `#Preview`). The `DemoBadge` view
+and `DemoModeController.badgeVisible` remain; the ride-screen demo menu (`RideScreenDemoMenu`) is
+still gated on `badgeVisible`, so the demo triggers stay reachable only while demo mode is on.
+
 ## Risks
 
 | Risk | Impact | Mitigation |

@@ -214,6 +214,39 @@ forced alert, seed, previews) depend **only** on the finished MVP.
   - _Requirements:_ 1.4, 2.1, 3.2, 3.6, 5.2, 6.1 (end-to-end)
   - _Depends on:_ 11, 12, 13, 14
 
+## Phase 5 — Demo rear feed and badge removal (shipped, October 24, 2026)
+
+- [x] 16. `[iOS]` `[DEMO]` Demo rear feed over the bundled clip through the real detector
+  - Add `Whoosh/Services/Detection/DemoVideoFeed.swift` (`@MainActor @Observable`): play bundled
+    `Whoosh/Resources/Demo/DemoRearFeed.mp4` through an `AVPlayer` + `AVPlayerItemVideoOutput`,
+    loop it, pull frames at ~10 Hz into `VideoFrame`, and feed the **real** `VisionVehicleConsumer`
+    (one inference at a time; discontinuity flag on loop). Add `Whoosh/Features/Demo/
+    DemoVideoFeedView.swift` with the shared `DemoFeedSurface` (player + `DetectionOverlay`).
+  - Main-car proximity: largest vehicle box (conf ≥ 0.5) with centre x 0.25…0.75 and bottom edge
+    in the near half; dangerous at area ≥ 0.12 or growing ≥ 4% over ~0.6 s at area ≥ 0.03; ding
+    interval 1.4 s (far) → 0.25 s (full frame); only the main box highlighted. Each ding plays the
+    phone tone and calls `AlertManager.fireUrgent(.cautionRearVehicle)`.
+  - Add `fireUrgent(_:)` to the `AlertManager` protocol (default = `fire`); `FanOutAlertManager`
+    overrides it to deliver ignoring the per-kind cooldown. `DemoModeController.makeVideoFeed()`
+    wires `onDing` to `fireUrgent`.
+  - Launch from Settings demo tools ("Play demo rear feed") full-screen; on demo rides,
+    `WhooshApp.beginRide` creates the feed and `ActiveRideView` shows it in place of the map, skips
+    Mount & frame, hides the signal-lost banner, and shows the detection chip **on**.
+  - _Verify (device):_ clip plays, model boxes draw, the main car dings faster as it fills the
+    frame, the watch buzzes on each ding; honest copy passes `scripts/privacy-check.sh`.
+  - _Requirements:_ 11.1, 11.2, 11.3, 11.4, 11.5, 11.6
+  - _Depends on:_ 9, 10, 11 (and the rear-camera `VisionVehicleConsumer`)
+
+- [x] 17. `[iOS]` `[DEMO]` Remove the always-on DEMO MODE badge (owner request)
+  - Stop placing `DemoBadge` on Home, the ride screen, and the emergency screens; keep the
+    `DemoBadge` view (now only in its `#Preview`) and `DemoModeController.badgeVisible`. The
+    ride-screen demo menu stays gated on `badgeVisible`, so demo triggers remain reachable only
+    while demo mode is on; demo rides keep their persistent "Demo ride" tag.
+  - _Verify:_ demo tools still reachable from Settings and the ride-screen menu; no badge overlays
+    the demo feed or the three ride numbers.
+  - _Requirements:_ 2 (amendment), 3.3, 9.2
+  - _Depends on:_ 10
+
 ---
 
 ## Cross-spec edits (done by the spec-writing job, not a code task)

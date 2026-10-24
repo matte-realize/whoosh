@@ -534,6 +534,45 @@ unaffected (Never block a ride).
 
 ---
 
+## Shipped amendments (October 24, 2026)
+
+On-device fixes/additions made after the initial build; all shipped (`requirements.md` A12–A15,
+`design.md` "Shipped amendments").
+
+- [x] 35. `[iOS]` `[IMPORTANT]` `WristHapticLimiter.rapidRearCues` (test-first)
+  - Add `public var rapidRearCues = false` to `WristHapticLimiter`; skip the per-kind cooldown and
+    storm backoff for `rearVehicleCaution` when set, keeping only the 1 s minimum gap. Set it true
+    in `WatchSessionModel.init`. The phone still paces real-ride rear cues at 3 s; only its urgent
+    proximity path sends them faster.
+  - _Verify:_ unit tests — rapid rear cues admitted at the 1 s gap, other kinds still cooled down;
+    build the watch target.
+  - _Requirements:_ A12
+  - _Depends on:_ 9
+
+- [x] 36. `[iOS]` `[IMPORTANT]` "Car behind" wrist flash
+  - Publish `rearCuesPlayed` on `WatchSessionModel`; show a 2.5 s full-screen amber `RearCueFlashView`
+    ("Car behind", icon + text) from `WatchRootView.onChange`, hidden behind the crash countdown.
+  - _Verify (device):_ each rear buzz shows the flash; it never covers the countdown.
+  - _Requirements:_ A13
+  - _Depends on:_ 20, 21
+
+- [x] 37. `[iOS]` `[IMPORTANT]` Phone remote gating fix
+  - `PhoneRemoteFactory.make` gates on `WCSession.isSupported()` only (not `isPaired` /
+    `isWatchAppInstalled`, which read false before activation and always picked the no-watch
+    remote). `PhoneWatchConnectionFactory` reuses the remote's `WCSessionWireLink` (one delegate).
+  - _Verify (device):_ a paired watch goes live and buzzes; an unpaired phone is unchanged
+    (unreachable sends fall back to phone audio).
+  - _Requirements:_ A14, 1.5, 7
+  - _Depends on:_ 16
+
+- [x] 38. `[iOS]` `[IMPORTANT]` Demo mode skips the watch connect step
+  - `WhooshApp.startRide` goes straight to ride setup when demo mode is on, skipping the pre-ride
+    "Connect your watch" readiness step.
+  - _Requirements:_ A15
+  - _Depends on:_ 22, and the demo-mode spec
+
+---
+
 ## Role C tasks (`[Role C]`)
 
 - [ ] C-W1. `[Role C]` `[IMPORTANT]` Spike support and review

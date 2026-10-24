@@ -752,6 +752,39 @@ remaining items in the contract are deployment prerequisites for the on-device v
 
 ---
 
+## Post-ship fixes (October 24, 2026)
+
+Fixes made after the MVP shipped. Docs-only entries here; the code is done and verified.
+
+- [x] 29. Launch white-screen fix — cached location authorization
+  - **Root cause:** `CoreLocationTracker` read `CLLocationManager.authorizationStatus`
+    synchronously during `App.init`, a synchronous XPC call to `locationd` that hung the main
+    thread at launch (white screen). **Fix:** cache the status from
+    `locationManagerDidChangeAuthorization` (`private(set) var authorizationStatus`, default
+    `.notDetermined`); Core Location delivers the real status through `onAuthorizationChange`
+    moments after the manager is created, and the view models already handle a late status. Also
+    removed the synchronous `locationServicesEnabled()` check on the hot path.
+  - _Verify:_ app launches without hanging; the denial/permission paths still fire on the late
+    status callback.
+  - _Requirements: 2.1, 2.6, 4.1, 11.3_
+
+- [x] 30. Permissions audit — launch notification auth + watch HealthKit
+  - Notification authorization is requested **at launch when crash alerts are on**
+    (`WhooshApp` asks `environment.crash.scheduler.requestAuthorizationIfNeeded()` when
+    `crash.settingsStore.current().enabled`), so the countdown's backup notification channel is
+    ready rather than only prompting inside the consent flow (crash alerts are on by default in
+    the hackathon build). The iOS target carries the HealthKit entitlement
+    (`com.apple.developer.healthkit` in `Config/Whoosh.entitlements`) and
+    `NSHealthShareUsageDescription` / `NSHealthUpdateUsageDescription` strings (in `project.yml`)
+    so `WatchLauncher.startWatchApp` can start the watch's cycling workout. HealthKit is
+    write-only on the watch; the phone reads nothing and uploads nothing.
+  - _Verify:_ the notification prompt appears once at launch with crash alerts on; the watch
+    launch path has the entitlement and usage strings; no new permission is requested that a
+    feature does not use.
+  - _Requirements: cross-spec (crash-response, watch-companion); privacy.md "Permissions"_
+
+---
+
 ## Kiro hooks (created, in `.kiro/hooks/`)
 
 Schema: Kiro IDE 1.x `v1` hook JSON. Scripts live in `scripts/`.
