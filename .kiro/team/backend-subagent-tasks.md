@@ -27,6 +27,7 @@ Docker, or Node, so runs happen in the user's own terminal.
 | near_misses ownership fix | **Done**, passing locally (assertions 27, 29) | Insert/update policies check the ride belongs to the same user |
 | Data API grants | **Done**, applied and tested locally | Explicit grants in every migration (Supabase's 2026 default change) |
 | Sharing-flow RLS tests | **Done**, passing locally | Assertions 30–34 |
+| Crash-alert backend | Not done: written; 138 logic checks pass; SQL (85 assertions) not yet run; Deno functions never run | `supabase/migrations/20261024150000_crash_alerts.sql`, `supabase/functions/` |
 | Incident map: database | **Done**, passing locally | Migration `20261024130000_…`, tests `incident_cells.test.sql` (20 assertions) |
 | Performance indexes | **Done**, applied and their existence tested locally | Same migration; see "Indexes" in the contract |
 | Eval tooling for B | **Done**, 107 checks pass | `vision/eval/` (stdlib Python; `python3 run_toy.py`) |

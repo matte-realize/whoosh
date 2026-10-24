@@ -439,6 +439,26 @@ becomes 2). The trade-off — a rare duplicate over a silent loss — is the own
 O5). The provider call should carry the provider's own idempotency header where it exists
 (**Verify**).
 
+## 14a. Implementation status (Role C, October 24, 2026)
+
+- **Database:** `supabase/migrations/20261024150000_crash_alerts.sql` holds the tables, RLS, grants,
+  and the SQL functions `crash_alert_take`, `crash_alert_apply_status` and `crash_alert_purge`.
+  Its tests are in `supabase/tests/crash_alerts.test.sql` (85 assertions). Written, not yet run.
+- **Edge Functions:** `supabase/functions/` holds the four functions. Their shared logic passes
+  138 Node checks:
+  - every golden case G1–G9, with exact text, length and segment count
+  - the A.3 cases, the 5.3 validation table, and Twilio signature checks
+  - the request flows: idempotency, all caps, the kill switch, monotonic and sticky callbacks,
+    the unknown-outcome retry limit, and the delete guard
+
+  The Deno files type-check but have never been run.
+- **Choices made where the contract left room:**
+  - The `riderLabel` isn't stored, so idempotency compares `kind`, `templateVersion` and
+    `detectedAt`.
+  - The test-type per-recipient cap uses the smaller of the per-user and across-users limits.
+  - Twilio `ValidityPeriod` is 900 s. `MaxPrice` isn't set.
+- **Still to do:** see the list below, and `supabase/functions/README.md` for deployment.
+
 ## 14. Open items for Role C
 
 - [ ] Review this draft; mark **Agreed** and set version 1.0 (with the iOS owner).
