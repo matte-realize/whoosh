@@ -13,7 +13,7 @@ name: Whoosh
 
 options:
   minimumXcodeGenVersion: "2.46.0"
-  bundleIdPrefix: com.whoosh
+  bundleIdPrefix: com.alexmcgreevy
   deploymentTarget:
     iOS: "17.0"
     watchOS: "10.0"
@@ -78,7 +78,7 @@ targets:
       - target: WhooshWatch
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.whoosh.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.alexmcgreevy.whoosh
         PRODUCT_NAME: Whoosh
         DEVELOPMENT_TEAM: Z87CXCTTK6
         CODE_SIGN_STYLE: Automatic
@@ -103,7 +103,7 @@ targets:
         INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY: "$(SUPABASE_PUBLISHABLE_KEY)"
 
   # watchOS companion app (watch-companion Requirement 2). A companion of the
-  # iOS app (bundle id com.whoosh.app.watchkitapp, WKCompanionAppBundleIdentifier
+  # iOS app (bundle id com.alexmcgreevy.whoosh.watchkitapp, WKCompanionAppBundleIdentifier
   # points at the iOS app); deployment target watchOS 10.0 (O-W1, owner's Apple
   # Watch SE). The app is thin and phone-authoritative, holds no ride data, and
   # makes no network request (enforced by scripts/privacy-check.sh).
@@ -126,7 +126,7 @@ targets:
       - package: WhooshWire
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.whoosh.app.watchkitapp
+        PRODUCT_BUNDLE_IDENTIFIER: com.alexmcgreevy.whoosh.watchkitapp
         PRODUCT_NAME: Whoosh
         DEVELOPMENT_TEAM: Z87CXCTTK6
         CODE_SIGN_STYLE: Automatic
@@ -134,7 +134,7 @@ targets:
         WATCHOS_DEPLOYMENT_TARGET: "10.0"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Whoosh
-        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.whoosh.app
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.alexmcgreevy.whoosh
         INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp: NO
         # Keep-alive: the watch holds a cycling HKWorkoutSession during a ride so
         # the app keeps running and may play haptics with the wrist down
@@ -157,7 +157,7 @@ targets:
       - target: Whoosh
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.whoosh.app.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.alexmcgreevy.whoosh.tests
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:
