@@ -70,6 +70,14 @@ struct RideCameraTuning: Equatable, Codable, Sendable {
     var dimBrightness: Double = 0.0
     var redDotShiftPeriod: TimeInterval = 60
 
+    // Alert routing cooldowns (design "Eyes-free surfaces": rear-vehicle caution
+    // at most once per 3 s; camera notices at most once per minute per reason).
+    var rearVehicleAlertCooldown: TimeInterval = 3
+    var cameraNoticeCooldown: TimeInterval = 60
+
+    // Eyes-free status heartbeat (design: publish on change plus a 5 s heartbeat).
+    var statusHeartbeat: TimeInterval = 5
+
     // Retention / misc
     var clipRetention: TimeInterval = 30 * 24 * 60 * 60
     var testRecordingLength: TimeInterval = 10
