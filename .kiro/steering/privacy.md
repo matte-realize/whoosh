@@ -74,6 +74,52 @@ Rules:
   camera stop, interruption, heat/storage/battery reduction, or permission loss is announced on the
   eyes-free surface (watch/audio) and noted in the ride summary.
 
+## Apple Watch companion (opt-in, post-MVP; added October 24, 2026)
+
+_Amended by watch-companion A10 (October 24, 2026)._ Applies to the Apple Watch companion
+(`.kiro/specs/watch-companion/`). It is **off by default**, opt-in, and post-MVP; every phone flow
+behaves exactly as before when no watch is present. The watch is **phone-authoritative**: it displays
+what the phone publishes, sends typed commands, and plays haptics. It records no ride, holds no ride
+data, and decides no state transition.
+
+### What the watch may receive, hold, and send
+
+| Data | Where | Rules |
+| ---- | ----- | ----- |
+| Ride status (state, elapsed duration, distance and speed **rounded**, camera state + reason codes, battery percentages, counts) | Transient over WatchConnectivity; the system keeps the latest context | Only the allowlisted `WireRideStatus` fields. **No coordinates, route, map data, video, frames, thumbnails, clip ids, contact names or numbers, or message text.** |
+| Crash countdown on the watch | Watch memory | Event id, relative remaining time, drill flag, **contact count**, phase. Never names, numbers, or location. |
+| Notice log | Watch memory, current ride only | Kind, time-into-ride, reason code. Discarded at the next ride; never persisted. |
+| Last ride summary | Small local record on the watch | Totals and counts only. No route, no location, no contacts. |
+| Watch settings | Watch `UserDefaults` | Default-save-to-Health, "also play a sound", complication opt-in. |
+| Workout (optional) | Apple Health, on the rider's own devices | **Write-only workout type**; Whoosh reads no Health data, uploads no workout; the rider chooses Save or Discard. |
+| Wire diagnostics | Watch memory / local log | Ids, types, and outcome codes only; never payload content; never a shared container or upload. |
+
+Rules:
+
+- **Nothing leaves the rider's own devices.** The link is device to device over WatchConnectivity; the
+  **watch app makes no network requests**, ever, and the watch target contains no networking, analytics,
+  or tracking SDK (enforced by `scripts/privacy-check.sh`, extended to scan `WhooshWatch/` and
+  `Packages/WhooshWire/Sources`).
+- **Wire privacy rule:** the wire payload carries enums, rounded numbers, booleans, and identifiers only —
+  **no free-form text and no sensitive field**. A pure allowlist test (PR-1) serializes every wire type
+  and fails on any field outside the allowlist or any string longer than a short code.
+- **Confined frameworks.** `import WatchConnectivity` only in
+  `Whoosh/Services/Remote/WCSessionWireLink.swift` and `WhooshWatch/Services/Link/`; HealthKit /
+  `HKWorkoutSession` only in `WhooshWatch/Services/Workout/` and the single phone file that calls
+  `startWatchApp` (`Whoosh/Services/Remote/WatchLauncher.swift`); WatchKit haptic calls
+  (`WKInterfaceDevice.play`) only in `WhooshWatch/Services/Haptics/`. The shared package
+  (`Packages/WhooshWire`) imports Foundation only. The network layers (`Services/Sync`,
+  `Services/Notification`) must not reference wire types.
+- **Write-only Health.** HealthKit authorization is requested only to **share** the cycling workout type,
+  reads nothing, and is asked for when the rider first starts a watch-supported ride or taps "Set up
+  watch alerts", after an in-app explanation. The rider chooses Save or Discard.
+- **Honest about the wrist.** Haptics are a cue, not a guarantee: a watch may be on a locked screen, in a
+  muted mode, or low on battery. Copy says the rear-vehicle cue is experimental and that Whoosh **cannot
+  guarantee detection or delivery**; it never says "warning", "collision", or "danger" for the cue.
+- **Silent degradation is not allowed.** With the phone rear-mounted, any camera stop, interruption, or
+  loss is announced on the eyes-free surface (watch or audio) and noted in the ride summary; when the
+  watch is not ready the announcement uses phone audio.
+
 ## Emergency contacts and crash alerts
 
 Applies to the opt-in crash-response feature (`.kiro/specs/crash-response/`, backend contract
@@ -145,6 +191,8 @@ Request the minimum permission, as late as possible, with honest usage strings.
 | Background location mode | Declared now (open decision O-CAM2) so the route survives a lock; used only while a ride is active, with the background-location indicator; **When-In-Use** authorization, no Always prompt | `UIBackgroundModes` = `location` |
 | Notifications (camera paused) | Lazily, after rear camera recording is enabled, with an in-app explanation; denial only removes this notice channel | runtime authorization |
 | Notifications (time-sensitive) | When the rider enables crash alerts, after an in-app explanation (backup prompt only) | runtime authorization; Time Sensitive capability |
+| HealthKit (watch): share workout type only | When the rider first starts a watch-supported ride or taps "Set up watch alerts", after an in-app explanation; reads nothing (confirm whether the share key is required with an empty read set) | `NSHealthShareUsageDescription` / `NSHealthUpdateUsageDescription` on the watch target _(watch-companion A10)_ |
+| Notifications (watch): crash-cancel backup | Only when crash alerts are enabled and the watch is used, after an in-app explanation | runtime authorization on the watch _(watch-companion A10)_ |
 | Contacts             | **Never requested.** Contacts are chosen with the system picker or typed in. | — |
 | Motion               | Not expected for the experimental raw-accelerometer detector (verify) | — |
 

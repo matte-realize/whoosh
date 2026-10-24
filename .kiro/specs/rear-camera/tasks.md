@@ -458,6 +458,11 @@ path is unchanged.
     latency, haptic patterns), then the watch UI (pause/resume, save clip, hold-to-stop, live time/
     distance, camera/storage/battery state, crash-countdown cancel) and the WatchConnectivity
     implementation in `Services/Remote/` plus a watch `AlertSink`.
+  - _Amended by watch-companion A10 (October 24, 2026): this spec is now written and approved at
+    `.kiro/specs/watch-companion/` (requirements, design, tasks). Its "Seam amendments" table
+    (A1–A11) records every change it makes to this rear-camera spec; see amendments A1–A7 applied
+    above (Req 13.2, `RideStatus`, `RideRemoteCommand`, `AlertSink`/`AlertContext`, `AlertKind`,
+    `ScreenModeStateMachine`, and the `WatchConnectivity` privacy-rule location)._
   - _Requirements:_ 13.6
   - _Depends on:_ 13
 

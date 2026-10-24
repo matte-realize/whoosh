@@ -8,6 +8,11 @@
   - Enables the Observation framework (`@Observable`), modern MapKit SwiftUI APIs,
     and SwiftData. Chosen to reduce boilerplate during a hackathon.
   - Primary demo device: iPhone 14. iOS 17 keeps teammates' older phones supported.
+- **Watch target (opt-in, post-MVP):** `WhooshWatch`, watchOS 10.0 (watch-companion spec).
+  watchOS 10 pairs with iOS 17 and runs on every Apple Watch SE generation (owner's watch:
+  Apple Watch SE 2nd generation). SwiftUI, Swift 6 language mode; the watch app is thin and
+  phone-authoritative. Shared wire logic lives in the Foundation-only package
+  `Packages/WhooshWire`. _(watch-companion A10)_
 - **IDE / project:** Xcode 26.5. The committed `Whoosh.xcodeproj` is the source of truth and
   can be opened directly. _Amended:_ the original "no XcodeGen" decision is revised —
   [XcodeGen](https://github.com/yonaskolb/XcodeGen) is used **only as a one-time generator**
@@ -55,7 +60,11 @@
 | Background location  | Core Location (`location` background mode) | Recommended now (open decision O-CAM2): When-In-Use + background updates + indicator, only during a ride; no Always prompt. |
 | Detection (future)   | Vision / Core ML                  | A `HazardDetector` that is also a `FrameConsumer`; never owns capture. |
 | Alerts               | Core Haptics / AVAudioSession / local notifications | `AlertSink`s behind the unchanged `AlertManager` (fan-out); audio/watch channels. |
-| In-ride remote (future) | WatchConnectivity (Apple Watch companion) | Separate spec (O-CAM1); only in `Services/Remote/`, behind `RideRemoteControl`. |
+| In-ride remote (Apple Watch) | WatchConnectivity (Apple Watch companion) | Watch-companion spec (opt-in, post-MVP). Confined to `Whoosh/Services/Remote/WCSessionWireLink.swift` (phone) and `WhooshWatch/Services/Link/` (watch), behind `WireLink`/`RideRemoteControl`. _(watch-companion A10)_ |
+| Watch keep-alive | HealthKit (`HKWorkoutSession`, cycling) | **Watch only.** Write-only workout type (no reads, no upload); only in `WhooshWatch/Services/Workout/` and the single phone `startWatchApp` caller (`Whoosh/Services/Remote/WatchLauncher.swift`). _(watch-companion A10)_ |
+| Watch haptics | WatchKit (`WKInterfaceDevice.play`, `WKHapticType`) | **Watch only.** Only in `WhooshWatch/Services/Haptics/`; pattern selection and limiting are pure in `Packages/WhooshWire`. _(watch-companion A10)_ |
+| Watch complication (Stretch) | WidgetKit | **Watch only**, opt-in, timer + state only; no distance, speed, location, or crash data. _(watch-companion A10)_ |
+| Shared wire contract | Local Swift package (`Packages/WhooshWire`) | Foundation-only; the versioned wire envelope/DTOs, codec, and pure watch-side logic compiled into both the iOS and watch targets; tested with `swift test`. _(watch-companion A10)_ |
 | Testing              | Swift Testing                     | `@Test`, `#expect`, parameterized tables.    |
 
 ## Architecture

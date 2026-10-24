@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Enforces the rules in .kiro/steering/privacy.md and the layering table in the specs
-# (ride-recording-mvp design + crash-response design "Privacy and network invariants").
+# (ride-recording-mvp design + crash-response design "Privacy and network invariants"
+# + watch-companion design "Privacy and network invariants").
 # Usage: scripts/privacy-check.sh <file.swift> [more files...]
-# With no arguments, checks every Swift file under Whoosh/.
+# With no arguments, checks every Swift file under Whoosh/, WhooshWatch/, and
+# Packages/WhooshWire/Sources/.
 # Exits 1 and prints violations if any rule is broken; exits 0 otherwise.
 #
 # MVP rules (unchanged): 1 network only in Services/Sync, 2 no analytics SDKs,
@@ -22,7 +24,8 @@
 # 10 CoreMotion also allowed in Services/Camera/ (mount level sensor) in addition to
 #   Services/Crash.
 # 13 import Photos / PHPhotoLibrary only in Services/Camera/PhotosClipExporter.swift.
-# 14 import WatchConnectivity only in Services/Remote/.
+# 14 import WatchConnectivity only in Whoosh/Services/Remote/WCSessionWireLink.swift and
+#   WhooshWatch/Services/Link/ (the only WatchConnectivity adapters, phone and watch).
 # 15 UIScreen brightness writes and isIdleTimerDisabled only in Services/Screen/
 #   (temporarily also allowed in ActiveRideView until task 21 migrates it).
 # 16 files under Services/Sync/ and Services/Notification/ must not reference camera,
@@ -32,6 +35,23 @@
 #   CoreMotion (extends rule 5).
 # 18 honest copy: footage is for the rider's own records, never "evidence" and never a
 #   claim that capture is assured ("cannot guarantee detection or delivery").
+# Watch-companion additions (the watch is phone-authoritative; nothing leaves the user's
+# devices; see watch-companion design "Privacy and network invariants", amendment A10):
+# 19 the shared package (Packages/WhooshWire/Sources) is Foundation-only, like
+#   Models/Metrics (extends rules 5 and 17): no SwiftUI/WatchKit/HealthKit/
+#   WatchConnectivity/CoreLocation/MapKit/AVFoundation/Photos/CoreMotion/networking.
+# 20 import HealthKit / HKWorkoutSession / HKHealthStore only in
+#   WhooshWatch/Services/Workout/ and the single phone file that calls startWatchApp
+#   (Whoosh/Services/Remote/WatchLauncher.swift).
+# 21 WatchKit haptic calls (WKInterfaceDevice.play / WKHapticType) only in
+#   WhooshWatch/Services/Haptics/.
+# 22 WhooshWatch/ imports no CoreLocation, MapKit, AVFoundation, AVKit, CoreMedia,
+#   CoreVideo, Photos, or networking/analytics API (the watch holds no ride data, no
+#   route, no video, and makes no network request).
+# 23 the network layers (Services/Sync, Services/Notification) must not reference wire
+#   types (WireEnvelope/WireRideStatus/WireAlert/WireCommand/WireCommandReply/
+#   WireWatchState/WireHello/WireSummary/WireAlertReceipt): the wire contract is device
+#   to device and never crosses the network boundary.
 set -o pipefail  # no -u: macOS bash 3.2 errors on empty arrays
 cd "$(dirname "$0")/.."
 
@@ -39,7 +59,7 @@ if [ "$#" -gt 0 ]; then
   files=("$@")
 else
   files=()
-  while IFS= read -r f; do files+=("$f"); done < <(find Whoosh -name '*.swift' 2>/dev/null)
+  while IFS= read -r f; do files+=("$f"); done < <(find Whoosh WhooshWatch Packages/WhooshWire/Sources -name '*.swift' 2>/dev/null)
 fi
 
 fail=0
@@ -96,12 +116,14 @@ for f in "${files[@]}"; do
   fi
 
   # 5. Layering: Models and Metrics import Foundation only (extended for the camera
-  #    spec: also no AVFoundation/CoreMedia/CoreVideo/Photos/CoreMotion — time is a
+  #    spec: also no AVFoundation/CoreMedia/CoreVideo/Photos/CoreMotion/WatchConnectivity;
+  #    extended for the watch spec (rule 19): the shared package Packages/WhooshWire/Sources
+  #    is Foundation-only too, and HealthKit/WatchKit are also forbidden here — time is a
   #    TimeInterval/Date, never a CMTime).
   case "$f" in
-    */Models/*|*/Metrics/*)
-      if grep -nE '^import (SwiftUI|CoreLocation|SwiftData|MapKit|UIKit|AVFoundation|AVKit|CoreMedia|CoreVideo|Photos|PhotosUI|CoreMotion|MessageUI|ContactsUI|WatchConnectivity)' "$f" >/dev/null; then
-        report "$f" "Models/Metrics must import Foundation only"
+    */Models/*|*/Metrics/*|Packages/WhooshWire/Sources/*)
+      if grep -nE '^import (SwiftUI|CoreLocation|SwiftData|MapKit|UIKit|WatchKit|HealthKit|AVFoundation|AVKit|CoreMedia|CoreVideo|Photos|PhotosUI|CoreMotion|MessageUI|ContactsUI|WatchConnectivity)' "$f" >/dev/null; then
+        report "$f" "Models/Metrics/WhooshWire package must import Foundation only (rule 5/19)"
       fi
       ;;
   esac
@@ -176,11 +198,16 @@ for f in "${files[@]}"; do
     esac
   fi
 
-  # 14. WatchConnectivity only in the remote-control folder (the watch spec lives there).
+  # 14. WatchConnectivity only in the two named adapters: the phone wire link
+  #     (Whoosh/Services/Remote/WCSessionWireLink.swift) and the watch link folder
+  #     (WhooshWatch/Services/Link/). Nothing else may import it.
   if grep -nE 'import WatchConnectivity|WCSession' "$f" >/dev/null; then
     case "$f" in
-      */Services/Remote/*) ;;
-      *) report "$f" "WatchConnectivity outside Services/Remote (the in-ride remote is the only WatchConnectivity user)" ;;
+      */Whoosh/Services/Remote/WCSessionWireLink.swift) ;;
+      Whoosh/Services/Remote/WCSessionWireLink.swift) ;;
+      */WhooshWatch/Services/Link/*) ;;
+      WhooshWatch/Services/Link/*) ;;
+      *) report "$f" "WatchConnectivity outside Whoosh/Services/Remote/WCSessionWireLink.swift and WhooshWatch/Services/Link/ (the only WatchConnectivity adapters)" ;;
     esac
   fi
 
@@ -214,6 +241,54 @@ for f in "${files[@]}"; do
   if grep -nEi '(guarantee|ensure|assured?|always) (that )?[a-z ]*(the )?(incident|crash|vehicle|hazard|moment|footage) [a-z ]*(is |will be |was )?(captured|recorded)' "$f" >/dev/null; then
     report "$f" "copy claims capture is assured (cannot guarantee detection or delivery; recording may fail)"
   fi
+
+  # 20. HealthKit / workout-session APIs only on the watch, in the workout folder, and in
+  #     the single phone file that calls startWatchApp (the phone never holds a session;
+  #     it only asks the system to launch the watch app). The write-only workout keep-alive
+  #     is the sole HealthKit use (watch-companion Req 4, 19.5).
+  if grep -nE 'import HealthKit|HKWorkoutSession|HKWorkoutConfiguration|HKLiveWorkoutBuilder|HKHealthStore' "$f" >/dev/null; then
+    case "$f" in
+      */WhooshWatch/Services/Workout/*) ;;
+      WhooshWatch/Services/Workout/*) ;;
+      */Whoosh/Services/Remote/WatchLauncher.swift) ;;
+      Whoosh/Services/Remote/WatchLauncher.swift) ;;
+      *) report "$f" "HealthKit/HKWorkoutSession outside WhooshWatch/Services/Workout/ and Whoosh/Services/Remote/WatchLauncher.swift (the workout keep-alive and the single startWatchApp caller are the only HealthKit users)" ;;
+    esac
+  fi
+
+  # 21. WatchKit haptic playback only in the watch haptics folder (the single haptic
+  #     actuator; the limiter/selector are pure in the package).
+  if grep -nE 'WKInterfaceDevice|\bWKHapticType\b' "$f" >/dev/null; then
+    case "$f" in
+      */WhooshWatch/Services/Haptics/*) ;;
+      WhooshWatch/Services/Haptics/*) ;;
+      *) report "$f" "WatchKit haptic call (WKInterfaceDevice/WKHapticType) outside WhooshWatch/Services/Haptics/ (haptics have one actuator; selection and limiting are pure in the package)" ;;
+    esac
+  fi
+
+  # 22. The watch target holds no ride data, no route, no video, and makes no network
+  #     request: WhooshWatch/ must not import CoreLocation, MapKit, AVFoundation/AVKit,
+  #     CoreMedia, CoreVideo, Photos, or any networking API (watch-companion Req 19.3, 19.9).
+  case "$f" in
+    */WhooshWatch/*|WhooshWatch/*)
+      if grep -nE '^import (CoreLocation|MapKit|AVFoundation|AVKit|CoreMedia|CoreVideo|Photos|PhotosUI)' "$f" >/dev/null; then
+        report "$f" "WhooshWatch imports a forbidden framework (CoreLocation/MapKit/AVFoundation/CoreMedia/CoreVideo/Photos): the watch holds no route, video, or location"
+      fi
+      if grep -nE 'URLSession|URLRequest|import Supabase|WKWebView|import Network' "$f" >/dev/null; then
+        report "$f" "WhooshWatch uses a network API (the watch app makes no network request; WatchConnectivity is device to device)"
+      fi
+      ;;
+  esac
+
+  # 23. The network layers must never reference wire types: the wire contract is device to
+  #     device over WatchConnectivity and never crosses the network boundary.
+  case "$f" in
+    */Services/Sync/*|*/Services/Notification/*)
+      if grep -nE 'WireEnvelope|WireRideStatus|WireAlert|WireCommand|WireCommandReply|WireWatchState|WireHello|WireSummary|WireAlertReceipt' "$f" >/dev/null; then
+        report "$f" "wire type referenced in a network layer (Services/Sync, Services/Notification): the wire contract is device to device, never uploaded"
+      fi
+      ;;
+  esac
 done
 
 if [ "$fail" -eq 0 ]; then
