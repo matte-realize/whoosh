@@ -29,6 +29,8 @@ so these runs happen in the user's own terminal.
 | HazardDetection contract draft | Authored, awaiting 3-way OK | `.kiro/team/hazard-contract.md` |
 | Eval tooling for B | Done and run | `vision/eval/` (stdlib Python; `python3 run_toy.py`) |
 | Demo script and runbook | Drafted, never rehearsed | `.kiro/team/demo-plan.md` |
+| Incident map + indexes | Database done, passing locally (54 assertions across both test files); web part not yet built | Migration `20261024130000_…`, tests `incident_cells.test.sql` (20), web `IncidentSection` |
+| Website map performance | Authored, not yet built | Map created once per page; ride switch only swaps the route layer; canvas renderer |
 | iOS share-toggle proposal | Drafted, awaiting the iOS owner | `.kiro/team/ios-share-toggle-proposal.md` |
 
 Next, by you: install the CLI (`brew install supabase/tap/supabase`), start Docker, run

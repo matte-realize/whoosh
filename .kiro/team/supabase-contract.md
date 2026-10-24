@@ -57,8 +57,13 @@ Version: 0.2 (draft, October 24, 2026)
 | `latitude`       | float8      | Not null. Nearest accepted route point          |
 | `longitude`      | float8      | Not null                                        |
 | `kind`           | text        | Not null. From `HazardDetection.kind` (e.g. `vehicle`) |
-| `confidence`     | float8      | Not null; check `between 0 and 1`               |
+| `confidence`     | float8 null | Check `between 0 and 1`. Required when `source = 'detected'`; null for rider reports |
 | `position_hint`  | text null   | Check: `left` / `center` / `right`, or null     |
+| `source`         | text        | Not null, default `'detected'`; check `detected` / `rider_reported` |
+| `share_publicly` | boolean     | Not null, default `false`. Per incident, separate from the ride's flag. Feeds `public_incident_cells` |
+
+`source`, `share_publicly`, and the nullable `confidence` come from migration
+`20261024130000_incident_mapping_and_indexes.sql` (see "Incident map" below).
 
 ## Grants (required on every table)
 
@@ -73,6 +78,7 @@ RLS is consulted. Every migration therefore states its grants in the same file a
 | `rides` | select, insert, update, delete | none | select, insert, update, delete |
 | `near_misses` | select, insert, update, delete | none | select, insert, update, delete |
 | `public_rides` (view) | none | select | none |
+| `public_incident_cells` (view) | none | select | none |
 
 Grants only decide whether a role can touch the table. RLS still decides which rows. Do not
 fix a `42501` by granting `anon` access to a raw table.
@@ -126,6 +132,36 @@ for rows where `share_publicly = true`, and `anon` gets `select` on the view onl
 written in `supabase/migrations/20261024120200_public_rides_view.sql` (it also revokes all
 direct `anon` access to `rides` and `near_misses`). It has been applied and tested on a local
 database only. Update this section if C picks differently.
+
+## Incident map
+
+Design and rationale: `incident-mapping-proposal.md`. The website reads only the view
+`public_incident_cells`, as `anon`. A cell appears only when all of these hold:
+
+- Coordinates rounded to 3 decimals (about 110 m north-south, 80 m east-west in Boston). The
+  view returns the rounded point, never an original one.
+- At least 3 incidents with `share_publicly = true`, from at least 2 different riders.
+- Only incidents older than 24 hours count.
+
+Columns: `latitude`, `longitude`, `incident_count`, `rider_reported_count`, `detected_count`,
+`vehicle_kinds`, `first_month`, `last_month`. No `user_id`, `ride_id`, exact time, or
+confidence. The thresholds reduce re-identification risk and do not remove it.
+
+The app must drop incidents inside the privacy-trim zone (first and last 160 m) before upload.
+The database cannot check that.
+
+## Indexes
+
+| Index | Serves |
+| ----- | ------ |
+| `rides (user_id, started_at desc)` | A user's own rides, newest first, under RLS |
+| `rides (started_at desc) where share_publicly` | The website's `public_rides` query (ordered, limit 50) |
+| `near_misses (ride_id)` | Near misses for a ride; cascade deletes from `rides` |
+| `near_misses (user_id)` | The RLS filter on every near-miss query; the `auth.users` foreign key |
+| `near_misses (occurred_at) where share_publicly` | `public_incident_cells` |
+
+`public_incident_cells` aggregates on every read. That is fine at hackathon scale. If it gets
+slow, switch it to a materialized view refreshed on a schedule.
 
 ## App behavior the backend can rely on
 

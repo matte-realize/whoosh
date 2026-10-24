@@ -17,6 +17,7 @@ performance number comes from `vision/REPORT.md` with its sample size.
 | Rider hears or feels a caution alert | Experimental rear-vehicle detection driving a haptic/audio alert | B's detector + a real `AlertManager` + iOS task 18 | verify, may not make it |
 | Ride appears on the big screen | Website lists the ride and draws its route | Sync (iOS 21–23), share toggle, Supabase project, `public_rides` view | verify, stretch |
 | Near-miss markers on the map | Markers from **sample data** (fixtures mode only) | `web/fixtures/rides.json` | works only in fixtures mode |
+| Incident map | Aggregated cells (3+ reports, 2+ riders, 1-day delay) | `public_incident_cells`, or sample `web/fixtures/incident_cells.json` | live map will almost certainly be empty at the hackathon; show sample data and say so |
 
 Two facts to keep straight on stage:
 - The website's Supabase mode cannot show near misses (`anon` cannot read that table). Any

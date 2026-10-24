@@ -63,14 +63,17 @@ protocol HazardDetector {
 | -------------- | -------------------- | ----- |
 | `timestamp` | `occurred_at` | `timestamptz`, UTC |
 | `kind` | `kind` | `text not null` |
-| `confidence` | `confidence` | `float8`, check `between 0 and 1` |
+| `confidence` | `confidence` | `float8`, check `between 0 and 1`; required for detected events |
 | `relativePositionHint` | `position_hint` | check `left`, `center`, `right`, or null |
+| (set by the app) | `source` | `'detected'` for a `HazardDetection`; `'rider_reported'` when the rider marks one (confidence null) |
+| (set by the app, per incident opt-in) | `share_publicly` | default `false`; true only if the rider contributes it to the public incident map |
 | nearest route point (added by the app) | `latitude`, `longitude` | `float8 not null` |
 | the ride being recorded | `ride_id` | must belong to the same user (enforced by RLS) |
 
 The MVP app does not upload near misses. The sync work in iOS tasks 21–23 covers `rides` only.
-The website shows near-miss markers from fixtures until a public near-miss view is decided
-(see `supabase-contract.md`, "Open items").
+Individual near misses are never public. The website shows only aggregated, thresholded cells
+from `public_incident_cells` (see `supabase-contract.md`, "Incident map"), plus per-ride
+near-miss markers from sample fixtures.
 
 ## Honest-copy rule
 
