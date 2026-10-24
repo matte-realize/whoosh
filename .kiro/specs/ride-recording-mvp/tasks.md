@@ -50,7 +50,7 @@ Conventions:
   - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 10.5, 10.6_
   - _Depends on: 1_
 
-- [ ] 3. Domain models (pure)
+- [x] 3. Domain models (pure)
   - Implement `RoutePoint`, `RideSummary`, `Ride`, `RideState`, and the `RideTuning` config
     struct with documented defaults.
   - Ensure Models import Foundation only (no SwiftUI/CoreLocation/SwiftData/MapKit), per the
@@ -59,7 +59,7 @@ Conventions:
   - _Requirements: 3.5, 4.2, 4.3_
   - _Depends on: 1_
 
-- [ ] 4. Ride metrics (pure, test-first)
+- [x] 4. Ride metrics (pure, test-first)
   - Implement `RideMetrics.distanceMeters`, `averageSpeed`, and `summary`.
   - Unit tests: empty → zeros; single point → zero distance; two points → known distance
     within tolerance; a multi-point fixture with a hand-computed expected distance; duration
@@ -67,7 +67,7 @@ Conventions:
   - _Requirements: 6.2, 6.3, 6.4_
   - _Depends on: 3_
 
-- [ ] 5. Weekly stats aggregation (pure, test-first)
+- [x] 5. Weekly stats aggregation (pure, test-first)
   - Implement `WeeklyStats` and `WeeklyStatsCalculator.compute(rides:now:calendar:)` in the
     Metrics layer (Foundation only). Output: `totalDistanceMeters`, `rideCount`,
     `totalActiveDuration`, and `distancePerWeekday` (Mon–Sun, length 7).
@@ -77,7 +77,7 @@ Conventions:
   - _Requirements: 13.4, 13.5, 13.6_
   - _Depends on: 3_
 
-- [ ] 6. Clock seam (test-first)
+- [x] 6. Clock seam (test-first)
   - Define the `Clock` protocol with `SystemClock` and `TestClock` (manual time advance +
     deterministic scheduled-work firing).
   - Unit tests: scheduled work fires after advancing past the interval; cancellation works.
@@ -131,7 +131,7 @@ Conventions:
   - _Requirements: 2.1, 4.1, 11.3_
   - _Depends on: 9_
 
-- [ ] 12. Formatters and unit policy (test-first)
+- [x] 12. Formatters and unit policy (test-first)
   - Centralize formatting in US customary units: miles (2 decimals under 10 mi, 1 above),
     mph (1 decimal), feet for short distances; duration `m:ss` under an hour, `h:mm:ss` above.
     Conversion from SI happens only here.
