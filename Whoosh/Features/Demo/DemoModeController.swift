@@ -282,6 +282,13 @@ final class DemoModeController {
     ///
     /// Honest: the rear-vehicle cue is experimental; Whoosh cannot guarantee
     /// detection or delivery.
+    /// A demo rear feed over the bundled road clip. Each vehicle the real model
+    /// flags fires the rear-vehicle cue through the same fan-out as a ride
+    /// (phone + watch).
+    func makeVideoFeed() -> DemoVideoFeed {
+        DemoVideoFeed { [weak self] in self?.fireRearAlertOnce() }
+    }
+
     func sendTestAlertsToWatch() {
         guard isEnabled else { return }
         // The rear-vehicle caution (the wrist cue + alert screen).

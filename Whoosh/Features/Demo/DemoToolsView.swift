@@ -15,9 +15,11 @@ import SwiftUI
 struct DemoToolsView: View {
     @Bindable var controller: DemoModeController
     @State private var showReseedPrompt = false
+    @State private var videoFeed: DemoVideoFeed?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            videoFeedTool
             simulatedRideTool
             forcedAlertTool
             crashDrillTool
@@ -128,6 +130,26 @@ struct DemoToolsView: View {
                 .font(.system(size: 11))
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // MARK: - Demo rear feed (owner request)
+
+    private var videoFeedTool: some View {
+        toolCard(title: "Demo rear camera") {
+            toolButton("Play demo rear feed", systemImage: "video.fill") {
+                videoFeed = controller.makeVideoFeed()
+            }
+            Text("Plays a recorded road clip as the rear camera through the real vehicle model. Each car it flags fires the rear-vehicle cue on the phone and the watch. Experimental cue — cannot guarantee detection or delivery.")
+                .font(.system(size: 11))
+                .foregroundStyle(Theme.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { videoFeed != nil },
+            set: { if !$0 { videoFeed = nil } }
+        )) {
+            if let videoFeed { DemoVideoFeedView(feed: videoFeed) }
         }
     }
 
