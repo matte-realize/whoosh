@@ -294,7 +294,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 9, 12, 13; rear-camera 13
   - _Parallel:_ Group P2b
 
-- [ ] 15. `[iOS]` `[DEMO]` Watch app model with fakes (compiles in the watch target)
+- [x] 15. `[iOS]` `[DEMO]` Watch app model with fakes (compiles in the watch target)
   - `WatchSessionModel` (`@Observable`) wiring `WireLink`, the codec, the reducers, `HapticPlaying`,
     `WorkoutSessionController`, and a `Clock`, all behind protocols with fakes; no WatchConnectivity,
     HealthKit, or WatchKit import in the model. Hello handshake, status application, alert handling through
@@ -345,7 +345,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 11, 15, 17, 1
   - _Parallel:_ Group P3b
 
-- [ ] 19. `[iOS]` `[DEMO]` `WKHapticPlayer`, pattern tuning, and the on-watch pattern preview
+- [x] 19. `[iOS]` `[DEMO]` `WKHapticPlayer`, pattern tuning, and the on-watch pattern preview
   - The only watch file calling `WKInterfaceDevice.play`: plays patterns in one cancellable serial task,
     checks the app state, reports `suppressedNotActive`; a hidden "Feel patterns" list on the watch for
     tuning. Run spike test **T1** (distinguish patterns wrist down, over a sleeve, on a rough road) and
@@ -356,7 +356,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 8, 15
   - _Parallel:_ Group P3 (with 16–18)
 
-- [ ] 20. `[iOS]` `[DEMO]` Watch UI: Ride, Controls, Idle/Ready, Summary, Settings
+- [x] 20. `[iOS]` `[DEMO]` Watch UI: Ride, Controls, Idle/Ready, Summary, Settings
   - Thin SwiftUI views over `WatchSessionModel`: Ride page (three numbers, chips), Controls page
     (pause/resume, Save clip, **hold-to-stop** with progress ring and VoiceOver action, disabled-with-reason
     states), Idle/Ready page (readiness line, start when armed), Summary page (Save to Health / Discard),
