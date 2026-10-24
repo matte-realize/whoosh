@@ -4,7 +4,11 @@ import ImageIO
 
 public enum WhooshVisionModel {
     /// The bundled YOLO26n Core ML package (320 px, COCO, NMS embedded).
-    public static var url: URL? { Bundle.module.url(forResource: "yolo26n", withExtension: "mlpackage") }
+    /// SwiftPM copies the `.mlpackage` as is; an Xcode app build compiles it to `.mlmodelc`.
+    public static var url: URL? {
+        Bundle.module.url(forResource: "yolo26n", withExtension: "mlpackage")
+            ?? Bundle.module.url(forResource: "yolo26n", withExtension: "mlmodelc")
+    }
 }
 
 /// One detected vehicle in one frame.
