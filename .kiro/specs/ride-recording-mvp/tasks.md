@@ -19,7 +19,7 @@ Conventions:
 
 ---
 
-- [ ] 1. Project scaffolding and app foundation
+- [x] 1. Project scaffolding and app foundation
   - Create a standard Xcode 26.5 project (committed `.xcodeproj`, iOS 17 deployment target,
     SwiftUI app lifecycle, Xcode 26 default concurrency settings) and the folder layout from
     the tech steering: `App/`, `Features/`, `Services/`, `Models/`, `Support/`, `WhooshTests/`.
@@ -33,6 +33,10 @@ Conventions:
   - _Verify:_ app builds and launches to a placeholder home screen on an iOS 17+ simulator and
     on the iPhone 14 with no first-party warnings; `xcodebuild test` passes.
   - _Requirements: 1.3, 9.1_
+  - _Pending device check:_ `build-for-testing` succeeds for the simulator with no first-party
+    warnings and the synced-folder auto-compile was verified. Launching on-device (iPhone 14)
+    and running the full simulator test run are left to the orchestrator (no simulator/device
+    boot in this task).
 
 - [ ] 2. Design system and theme (Support/)
   - Build `Theme` in `Support/` with the color tokens Ink `#0B0F14`, Lime `#C8F135`, Amber

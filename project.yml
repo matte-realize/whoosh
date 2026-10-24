@@ -1,0 +1,82 @@
+# project.yml — XcodeGen spec for Whoosh.
+#
+# XcodeGen is used ONLY as a one-time generator to keep the repo simple; the
+# committed artifact is Whoosh.xcodeproj. Sources use Xcode's file-system-
+# synchronized groups (`type: syncedFolder`), so any new .swift file dropped
+# under Whoosh/ or WhooshTests/ is compiled automatically WITHOUT regenerating
+# the project. project.yml lives at the repo root to document the settings.
+#
+# Regenerate (rarely needed, e.g. after changing settings here):
+#   xcodegen generate
+
+name: Whoosh
+
+options:
+  minimumXcodeGenVersion: "2.46.0"
+  bundleIdPrefix: com.whoosh
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+# Swift 6 language mode + Xcode 26 default concurrency, applied project-wide.
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+
+configFiles:
+  Debug: Config/Shared.xcconfig
+  Release: Config/Shared.xcconfig
+
+targets:
+  Whoosh:
+    type: application
+    platform: iOS
+    sources:
+      - path: Whoosh
+        type: syncedFolder
+        excludes:
+          - "**/.gitkeep"
+    configFiles:
+      Debug: Config/Shared.xcconfig
+      Release: Config/Shared.xcconfig
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.whoosh.app
+        PRODUCT_NAME: Whoosh
+        DEVELOPMENT_TEAM: Z87CXCTTK6
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1"                      # iPhone only
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Whoosh
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Whoosh uses your location to record your cycling route and show your ride map."
+        INFOPLIST_KEY_NSCameraUsageDescription: "Whoosh uses the rear camera to experimentally detect approaching vehicles. Video is processed on your device and is not uploaded."
+
+  WhooshTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: WhooshTests
+        type: syncedFolder
+    dependencies:
+      - target: Whoosh
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.whoosh.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Whoosh:
+    build:
+      targets:
+        Whoosh: all
+        WhooshTests: [test]
+    test:
+      targets:
+        - WhooshTests
+      gatherCoverageData: false
