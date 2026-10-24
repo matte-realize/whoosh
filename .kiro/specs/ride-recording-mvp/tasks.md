@@ -83,14 +83,16 @@ Conventions:
   - Unit tests: scheduled work fires after advancing past the interval; cancellation works.
   - _Requirements: 4.6 (testable timing foundation)_
 
-- [ ] 7. RideRepository protocol + in-memory fake (test-first)
+- [x] 7. RideRepository protocol + in-memory fake (test-first)
   - Define `RideRepository` (including `deleteAll()`) and `InMemoryRideRepository`.
   - Unit tests: save; `allRides` returns most-recent-first; `ride(id:)` hit/miss; `delete`
     removes permanently; deleting a missing id is a safe no-op; `deleteAll` wipes everything.
   - _Requirements: 7.5, 7.2, 7.4, 7.8_
+  - _Pending device check:_ code + unit tests written and `build-for-testing` succeeds with no
+    first-party warnings; the full `xcodebuild test` run is left to the orchestrator.
   - _Depends on: 3_
 
-- [ ] 8. SwiftData persistence implementation (test-first)
+- [x] 8. SwiftData persistence implementation (test-first)
   - Define `RideRecord` `@Model` (points stored as an encoded blob) and
     `SwiftDataRideRepository` with `Ride` ↔ `RideRecord` mapping, implementing `deleteAll()`.
   - Wrap point decoding so a corrupt record is skipped (logged), not thrown.
@@ -99,14 +101,20 @@ Conventions:
     reload; corrupt-record skip.
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.6, 7.7, 7.8_
   - _Depends on: 3, 7_
+  - _Pending device check:_ code + unit tests written and `build-for-testing` succeeds with no
+    first-party warnings; the full `xcodebuild test` run (incl. file-backed reload cases) is
+    left to the orchestrator.
 
-- [ ] 9. LocationTracking protocol + fake (test-first)
+- [x] 9. LocationTracking protocol + fake (test-first)
   - Define `LocationTracking`, `LocationAuthorizationStatus`, `TrackingAccuracy`,
     `LocationFailure`, and `FakeLocationTracker` that scripts points, status changes, and
     failures on command.
   - Unit tests: fake delivers scripted callbacks in order; authorization change propagates.
   - _Requirements: 2.1, 4.1, 4.6_
   - _Depends on: 3_
+  - _Pending device check:_ code + unit tests written and `build-for-testing` succeeds with no
+    first-party warnings; the full `xcodebuild test` run is left to the orchestrator.
+    (`TrackingAccuracy` already existed in Models from task 3 and is reused, not redefined.)
 
 - [ ] 10. RideSessionViewModel state machine (test-first) — core of the MVP
   - Implement the `@Observable` view model owning `RideState`, injected `LocationTracking`,
@@ -140,7 +148,7 @@ Conventions:
   - _Requirements: 10.1, 10.2_
   - _Depends on: 3_
 
-- [ ] 13. GPS-accuracy setting + SettingsViewModel (test-first)
+- [x] 13. GPS-accuracy setting + SettingsViewModel (test-first)
   - Implement `SettingsViewModel` that reads/writes the GPS accuracy choice (Balanced / High)
     in `UserDefaults` and maps it to `RideTuning.accuracy`; the composition root feeds the
     persisted value into the next ride. Expose the "Delete all rides" intent calling
@@ -149,6 +157,9 @@ Conventions:
     `TrackingAccuracy`; delete-all calls the repository.
   - _Requirements: 14.2, 14.4_
   - _Depends on: 7, 9_
+  - _Pending device check:_ code + unit tests written and `build-for-testing` succeeds with no
+    first-party warnings; the full `xcodebuild test` run is left to the orchestrator. Delete-all
+    failure is reported via `deleteErrorMessage` (plain, non-raw copy) per Requirement 11.4.
 
 - [ ] 14. Settings screen
   - Build `SettingsView` (pushed from Home, back label "Home") using the design system:
