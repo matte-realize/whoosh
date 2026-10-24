@@ -59,6 +59,14 @@ final class RideSessionViewModel {
     /// The finished ride after `stop`, for the summary screen; `nil` until then.
     private(set) var finishedRide: Ride?
 
+    /// The active ride's id, or `nil` when no ride is in progress.
+    ///
+    /// Read-only accessor added per crash-response design Owner resolution O7 so
+    /// the `RideSessionBridge` can publish it through `RideContext` without the
+    /// crash feature touching any other ride internals. It exposes the existing
+    /// private `rideID` and does not change ride behavior.
+    var currentRideID: UUID? { rideID }
+
     /// Current authorization status, mirrored for the UI (Requirement 2.4).
     private(set) var authorizationStatus: LocationAuthorizationStatus
 
