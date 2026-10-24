@@ -124,9 +124,11 @@ struct RingBufferManagerTests {
         tuning.ringMaxDuration = 15 // only 1 segment fits
         tuning.ringMaxBytes = 100_000_000_000
         let (manager, store) = makeManager(tuning: tuning)
-        for i in 0..<4 { manager.segmentFinished(segment(index: i)) }
-        // Protect the oldest two as a pending post-roll window.
+        // Protect the oldest two as a pending post-roll window before more
+        // segments arrive (each registration runs an eviction pass, so setting
+        // it afterwards would test segments that were already gone).
         manager.setPendingWindow([id(0), id(1)])
+        for i in 0..<4 { manager.segmentFinished(segment(index: i)) }
         manager.evict()
         let remaining = store.segments(rideId: Self.rideID).map(\.index)
         #expect(remaining.contains(0))
