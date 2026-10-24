@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0D8CDB10DC1DAC6F88BE3AA0 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 65A39A397D575BB1CFDF69D4 /* Supabase */; };
+		A63C31C1A199F559C072DA1C /* WhooshVision in Frameworks */ = {isa = PBXBuildFile; productRef = 763D334EB7B2665C4570D2F7 /* WhooshVision */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -22,6 +23,7 @@
 
 /* Begin PBXFileReference section */
 		1ED3E3C78DD70D553B209950 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
+		28A310D5A6EC94F088D91686 /* WhooshVision */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WhooshVision; path = cv/ios/WhooshVision; sourceTree = SOURCE_ROOT; };
 		290A0FAE07F4F96B8B6ECC13 /* Whoosh.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Whoosh.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9E699B0BB11436716774F23 /* WhooshTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WhooshTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -66,6 +68,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0D8CDB10DC1DAC6F88BE3AA0 /* Supabase in Frameworks */,
+				A63C31C1A199F559C072DA1C /* WhooshVision in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,6 +79,7 @@
 			isa = PBXGroup;
 			children = (
 				2866BEDCF897DBE8C13390AE /* Config */,
+				5FF98E5A4804080F581F2C1B /* Packages */,
 				CEC63E9F48AE9CA24B59D85B /* Whoosh */,
 				A2A498788EB34A9FD1520B7F /* WhooshTests */,
 				FD3BC061DA40886FE5E9B313 /* Products */,
@@ -88,6 +92,14 @@
 				1ED3E3C78DD70D553B209950 /* Shared.xcconfig */,
 			);
 			path = Config;
+			sourceTree = "<group>";
+		};
+		5FF98E5A4804080F581F2C1B /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				28A310D5A6EC94F088D91686 /* WhooshVision */,
+			);
+			name = Packages;
 			sourceTree = "<group>";
 		};
 		FD3BC061DA40886FE5E9B313 /* Products */ = {
@@ -120,6 +132,7 @@
 			name = Whoosh;
 			packageProductDependencies = (
 				65A39A397D575BB1CFDF69D4 /* Supabase */,
+				763D334EB7B2665C4570D2F7 /* WhooshVision */,
 			);
 			productName = Whoosh;
 			productReference = 290A0FAE07F4F96B8B6ECC13 /* Whoosh.app */;
@@ -173,6 +186,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				BB62BFC80463C9EE3C7B792A /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				E9AD8CB94F05EC879FE1D4BA /* XCLocalSwiftPackageReference "cv/ios/WhooshVision" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FD3BC061DA40886FE5E9B313 /* Products */;
@@ -477,6 +491,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		E9AD8CB94F05EC879FE1D4BA /* XCLocalSwiftPackageReference "cv/ios/WhooshVision" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = cv/ios/WhooshVision;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		BB62BFC80463C9EE3C7B792A /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -493,6 +514,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = BB62BFC80463C9EE3C7B792A /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		763D334EB7B2665C4570D2F7 /* WhooshVision */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WhooshVision;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
