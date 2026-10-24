@@ -1,78 +1,58 @@
 import Link from "next/link";
-import { FeatureExplorer } from "@/components/FeatureExplorer";
 import { HeroVisual } from "@/components/HeroVisual";
-import { Icon, type IconName } from "@/components/Icon";
 import IntroFilm from "@/components/IntroFilm";
-import { LogoMark } from "@/components/Logo";
-import { Reveal } from "@/components/Reveal";
 import { Ring } from "@/components/Ring";
 import StatsPanel from "@/components/StatsPanel";
-import { STATUS_CHECKED_ON } from "@/lib/projectStatus";
+import { FEATURES, STATUS_CHECKED_ON, STATUS_LABEL, STATUS_SYMBOL } from "@/lib/projectStatus";
 
-const STEPS: { icon: IconName; title: string; body: string }[] = [
+const STEPS: { title: string; body: string }[] = [
   {
-    icon: "phone",
-    title: "Clip your phone to your bike",
-    body: "Mount it facing backward, under the seat. The phone you already have is all you need.",
+    title: "Mount your phone under the saddle, camera facing back.",
+    body: "Any iPhone and a standard seat-post mount. There is nothing else to buy.",
   },
   {
-    icon: "bike",
-    title: "Ride like you always do",
-    body: "Whoosh keeps an eye on the road behind you and records your ride, even with no signal.",
+    title: "Start a ride and put the phone out of mind.",
+    body: "Whoosh records your route and watches the road behind you. It doesn't need a signal.",
   },
   {
-    icon: "alert",
-    title: "Get a heads-up",
-    body: "When a car is coming up behind you, feel a tap on your wrist or hear a short tone.",
+    title: "When a car comes up behind you, you'll know.",
+    body: "A tap on your watch or a short tone tells you which side it's on. You never need to look at the screen.",
   },
-];
-
-const BENEFITS: { icon: IconName; title: string; body: string }[] = [
-  { icon: "bike", title: "No extra gear", body: "No radar to buy and no mirror to fit. Just your phone." },
-  { icon: "alert", title: "Eyes on the road", body: "A tap or a tone instead of a screen you have to look at." },
-  { icon: "cloud", title: "Works without signal", body: "Everything happens on your phone, so it keeps working in dead zones." },
-  { icon: "lock", title: "Private by default", body: "No account, no email. Your rides stay yours." },
-  { icon: "map", title: "Better streets, together", body: "Share close calls to show where riding needs to get safer." },
-  { icon: "clock", title: "Every ride, saved", body: "Distance, time and route for every ride, right on your phone." },
 ];
 
 /** Facts about how Whoosh is designed. None of these is a performance claim. */
-const BIG_NUMBERS: { label: string; value: string; unit?: string; detail: string; tone: string }[] = [
-  { label: "Extra gear", value: "0", detail: "Just the phone you already own and a bike mount.", tone: "green" },
-  { label: "Accounts needed", value: "0", detail: "No email, no password, no profile.", tone: "blue" },
-  { label: "Privacy trim", value: "160", unit: "m", detail: "Cut from both ends of every route you share.", tone: "amber" },
-  { label: "Riders to map a close call", value: "2+", detail: "A spot shows only once several riders report it.", tone: "red" },
+const NUMBERS: { label: string; value: string; unit?: string; detail: string; tone: string }[] = [
+  { label: "Extra gear", value: "0", detail: "Your phone and a mount.", tone: "green" },
+  { label: "Accounts", value: "0", detail: "No email, no password.", tone: "blue" },
+  { label: "Privacy trim", value: "160", unit: "m", detail: "Removed from each end of a shared route.", tone: "amber" },
+  { label: "Riders per close call", value: "2+", detail: "Before a spot appears on the map.", tone: "red" },
 ];
 
 const PRIVACY: string[] = [
-  "Your rides stay on your phone unless you choose to back them up or share them.",
-  "Camera video never leaves your phone.",
-  "No account, email or phone number needed.",
-  "Shared routes hide where you start and stop.",
-  "A close call only shows on the map once several riders have reported the same spot.",
-  "No ads and no tracking.",
+  "Rides are stored on your phone. Nothing is uploaded unless you turn on backup or sharing.",
+  "Camera video is processed on the phone and never sent anywhere.",
+  "There is no account. Backup, if you use it, doesn't ask for an email, name or phone number.",
+  "When you share a ride, the first and last 160 m are cut off so your home and work stay private.",
+  "A close call only shows on the public map after at least two riders report the same spot, and never on the same day.",
+  "No ads, no analytics, no tracking.",
 ];
 
 const FAQ = [
   {
-    q: "Do I need any special equipment?",
-    a: "No. Whoosh is designed to use your iPhone and a simple bike mount. A watch is optional, for the wrist tap.",
+    q: "What do I need?",
+    a: "An iPhone and a seat-post phone mount. A watch is optional; it's for the wrist tap.",
   },
   {
-    q: "Does my camera video get uploaded?",
-    a: "Never. Whoosh is designed to look at the video on your phone and throw it away as it goes. Nothing from the camera is sent anywhere.",
+    q: "Is my camera video uploaded?",
+    a: "No. Whoosh looks at the video on the phone and discards it as it goes.",
   },
   {
-    q: "Do I need an account?",
-    a: "No. Ride tracking works without one. If you choose to back up your rides, Whoosh does it without asking for your email or name.",
-  },
-  {
-    q: "Will Whoosh stop a crash?",
-    a: "No. Whoosh gives you a heads-up; it can't see everything and it can be wrong. Keep looking, keep signaling, and ride the way you always would.",
+    q: "Will it stop a crash?",
+    a: "No. It gives you a heads-up. It can miss a car and it can alert when nothing is there, so keep riding the way you always do.",
   },
   {
     q: "When can I get it?",
-    a: "Whoosh is in development for iPhone. You can try the ride map and the 3D simulation on this site today.",
+    a: "Whoosh is in development for iPhone. The ride map and the simulation on this site work today.",
   },
 ];
 
@@ -82,13 +62,8 @@ export default function HomePage() {
       <section className="hero">
         <div className="hero__inner">
           <div className="hero__text">
-            <p className="pill-badge">
-              <span className="pill-badge__dot" aria-hidden="true" />
-              In development for iPhone
-            </p>
-            <h1>
-              A heads-up for what&apos;s <span className="gradient-text">behind you.</span>
-            </h1>
+            <p className="hero__kicker">In development for iPhone</p>
+            <h1>A heads-up for what&apos;s behind you.</h1>
             <p className="hero__lead">
               Whoosh turns the phone on your bike into a rear-view companion. When a car is coming up
               behind you, you&apos;ll feel a tap or hear a tone, so you can keep your eyes on the road
@@ -96,16 +71,13 @@ export default function HomePage() {
             </p>
             <div className="hero__actions">
               <a className="button button--primary" href="#film">
-                <span aria-hidden="true">▶ </span>
                 Watch the film
               </a>
               <Link className="button button--ghost" href="/simulation">
                 Try the simulation
               </Link>
             </div>
-            <p className="hero__fine">
-              A heads-up, not a guarantee. Always look and ride carefully.
-            </p>
+            <p className="hero__fine">A heads-up, not a guarantee. Always look and ride carefully.</p>
           </div>
           <HeroVisual />
         </div>
@@ -113,241 +85,176 @@ export default function HomePage() {
 
       <div className="page">
         <section id="film" className="film-section" aria-labelledby="film-heading">
-          <div className="film-section__head">
-            <p className="eyebrow">Watch</p>
-            <h2 id="film-heading">16 seconds with Whoosh</h2>
-          </div>
+          <h2 id="film-heading" className="film-section__title">
+            A 16-second ride
+          </h2>
           <IntroFilm />
         </section>
 
-        <Reveal className="section">
-          <section id="how-it-works" aria-labelledby="how-heading" className="center">
-            <p className="eyebrow">How it works</p>
-            <h2 id="how-heading">Three steps. No new gear.</h2>
-            <ol className="steps-row">
-              {STEPS.map((stepItem, index) => (
-                <li key={stepItem.title} className="step-card">
-                  <span className="step-card__number" aria-hidden="true">
-                    {index + 1}
-                  </span>
-                  <span className="step-card__icon">
-                    <Icon name={stepItem.icon} size={30} />
-                  </span>
+        <section className="section split" aria-labelledby="how-heading">
+          <h2 id="how-heading">How it works</h2>
+          <ol className="plain-steps">
+            {STEPS.map((stepItem, index) => (
+              <li key={stepItem.title}>
+                <span className="plain-steps__n" aria-hidden="true">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div>
                   <h3>{stepItem.title}</h3>
                   <p>{stepItem.body}</p>
-                </li>
-              ))}
-            </ol>
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
-          <section className="bignums" aria-labelledby="bignums-heading">
-            <h2 id="bignums-heading" className="visually-hidden">
-              Whoosh by the numbers
-            </h2>
-            <dl className="bignums__grid">
-              {BIG_NUMBERS.map((item) => (
-                <div key={item.label} className={`bignum bignum--${item.tone}`}>
-                  <dt>{item.label}</dt>
-                  <dd>
-                    {item.value}
-                    {item.unit ? <span className="bignum__unit">{item.unit}</span> : null}
-                  </dd>
-                  <p>{item.detail}</p>
                 </div>
-              ))}
-            </dl>
-          </section>
-        </Reveal>
+              </li>
+            ))}
+          </ol>
+        </section>
 
-        <Reveal className="section">
-          <section className="concept" aria-labelledby="concept-heading">
-            <div className="concept__text">
-              <p className="eyebrow">After every ride</p>
-              <h2 id="concept-heading">Your ride, at a glance</h2>
-              <p className="lead">
-                When you stop, Whoosh shows how far you went, how long you were moving, and every
-                heads-up it gave you, all without leaving your phone.
-              </p>
-              <ul className="concept__list">
-                <li>
-                  <strong>Moving time</strong> counts only the time you were rolling, not red lights.
-                </li>
-                <li>
-                  <strong>Heads-ups</strong> lists each car that came up behind you, and on which side.
-                </li>
-                <li>
-                  <strong>Your route</strong> stays on your phone unless you choose to share it.
-                </li>
-              </ul>
-            </div>
-            <div className="concept__phone" aria-label="Concept design of the ride summary screen, with example numbers">
-              <p className="concept__tag">Concept design · example ride</p>
-              <p className="concept__title">Evening ride</p>
-              <p className="concept__sub">Mass Ave · Cambridge to Back Bay</p>
-              <div className="concept__ring">
-                <Ring value={0.92} display="92%" label="Moving" caption="24 of 26 minutes" tone="green" size={176} />
+        <section className="section bignums" aria-labelledby="bignums-heading">
+          <h2 id="bignums-heading" className="visually-hidden">
+            Whoosh by the numbers
+          </h2>
+          <dl className="bignums__grid">
+            {NUMBERS.map((item) => (
+              <div key={item.label} className={`bignum bignum--${item.tone}`}>
+                <dt>{item.label}</dt>
+                <dd>
+                  {item.value}
+                  {item.unit ? <span className="bignum__unit">{item.unit}</span> : null}
+                </dd>
+                <p>{item.detail}</p>
               </div>
-              <dl className="concept__stats">
-                <div>
-                  <dt>Distance</dt>
-                  <dd>4.2 mi</dd>
-                </div>
-                <div>
-                  <dt>Avg speed</dt>
-                  <dd>10.5 mph</dd>
-                </div>
-                <div>
-                  <dt>Heads-ups</dt>
-                  <dd>3</dd>
-                </div>
-              </dl>
-              <ul className="concept__cues">
-                <li>
-                  <span className="concept__dot" aria-hidden="true" /> 6:12 pm · Car on your left
-                </li>
-                <li>
-                  <span className="concept__dot" aria-hidden="true" /> 6:19 pm · Bus on your left
-                </li>
-                <li>
-                  <span className="concept__dot" aria-hidden="true" /> 6:27 pm · Car directly behind
-                </li>
-              </ul>
-            </div>
-          </section>
-        </Reveal>
+            ))}
+          </dl>
+        </section>
 
-        <Reveal className="section">
-          <section aria-labelledby="why-heading">
-            <p className="eyebrow">Why Whoosh</p>
-            <h2 id="why-heading">Made for everyday riders</h2>
-            <ul className="benefit-grid">
-              {BENEFITS.map((benefit) => (
-                <li key={benefit.title} className="benefit">
-                  <span className="benefit__icon">
-                    <Icon name={benefit.icon} />
-                  </span>
-                  <div>
-                    <h3>{benefit.title}</h3>
-                    <p>{benefit.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
-          <section className="showcase" aria-labelledby="showcase-heading">
-            <div>
-              <p className="eyebrow">See it in action</p>
-              <h2 id="showcase-heading">Watch a ride, in 3D</h2>
-              <p className="lead">
-                Spin around a rider on a city street, watch cars come up from behind, and see the
-                moment Whoosh gives its heads-up. You can even look through the phone&apos;s camera.
-              </p>
-              <Link className="button button--primary" href="/simulation">
-                Start the simulation
-                <span aria-hidden="true"> →</span>
-              </Link>
-            </div>
-            <div className="showcase__art" aria-hidden="true">
-              <div className="showcase__ring">
-                <LogoMark size={120} />
-              </div>
-              <span className="showcase__chip showcase__chip--amber">Car approaching · 24 m</span>
-              <span className="showcase__chip showcase__chip--red">Heads-up · on your left</span>
-            </div>
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
-          <section aria-labelledby="community-heading">
-            <div className="split">
-              <div>
-                <p className="eyebrow">The ride map</p>
-                <h2 id="community-heading">Rides and close calls, shared by riders</h2>
-              </div>
-              <div>
-                <p className="lead">
-                  When riders choose to share, their rides and close calls come together on one map,
-                  so everyone can see where streets need work.
-                </p>
-                <p>
-                  <Link href="/dashboard">Open the ride map</Link>
-                </p>
-              </div>
-            </div>
-            <StatsPanel />
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
-          <section aria-labelledby="privacy-heading" className="card card--accent">
-            <p className="eyebrow">
-              <Icon name="lock" size={16} /> Privacy
+        <section className="section concept" aria-labelledby="concept-heading">
+          <div className="concept__text">
+            <h2 id="concept-heading">After the ride</h2>
+            <p className="lead">
+              When you stop, Whoosh shows how far you went, how long you were actually moving, and each
+              heads-up it gave you.
             </p>
-            <h2 id="privacy-heading">Your rides are yours</h2>
-            <ul className="checklist checklist--columns">
-              {PRIVACY.map((point) => (
-                <li key={point}>{point}</li>
-              ))}
-            </ul>
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
-          <section aria-labelledby="today-heading">
-            <p className="eyebrow">Where Whoosh is today</p>
-            <h2 id="today-heading">What you can try, and what&apos;s coming</h2>
-            <p className="note">Updated {STATUS_CHECKED_ON}.</p>
-            <FeatureExplorer />
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
-          <section aria-labelledby="faq-heading">
-            <p className="eyebrow">Questions</p>
-            <h2 id="faq-heading">Good questions</h2>
-            <div className="faq">
-              {FAQ.map((item) => (
-                <details key={item.q}>
-                  <summary>{item.q}</summary>
-                  <p>{item.a}</p>
-                </details>
-              ))}
-            </div>
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
-          <section className="honesty" aria-labelledby="honesty-heading">
-            <h2 id="honesty-heading">A heads-up, not a guarantee</h2>
             <p>
-              Whoosh is still being built, and the part that spots cars is experimental. It can miss
-              a car, and it can sometimes alert when nothing is there. It doesn&apos;t predict or
-              prevent crashes. Use it as an extra pair of eyes, never instead of your own.
+              Moving time leaves out red lights and stops. Each heads-up is listed with the time and the
+              side the car came from, so you can see where your route gets busy.
             </p>
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
-          <section className="cta" aria-labelledby="cta-heading">
-            <LogoMark size={56} />
-            <h2 id="cta-heading">Ride with a little more awareness</h2>
-            <p>Try the simulation, or explore the ride map.</p>
-            <div className="cta__actions">
-              <Link className="button button--primary" href="/simulation">
-                See it in action
-                <span aria-hidden="true"> →</span>
-              </Link>
-              <Link className="button button--ghost" href="/dashboard">
-                Explore the ride map
-              </Link>
+          </div>
+          <div className="concept__phone" aria-label="Concept design of the ride summary screen, with example numbers">
+            <p className="concept__tag">Concept design, example ride</p>
+            <p className="concept__title">Evening ride</p>
+            <p className="concept__sub">Mass Ave, Cambridge to Back Bay</p>
+            <div className="concept__ring">
+              <Ring value={0.92} display="92%" label="Moving" caption="24 of 26 minutes" tone="green" size={176} />
             </div>
-          </section>
-        </Reveal>
+            <dl className="concept__stats">
+              <div>
+                <dt>Distance</dt>
+                <dd>4.2 mi</dd>
+              </div>
+              <div>
+                <dt>Avg speed</dt>
+                <dd>10.5 mph</dd>
+              </div>
+              <div>
+                <dt>Heads-ups</dt>
+                <dd>3</dd>
+              </div>
+            </dl>
+            <ul className="concept__cues">
+              <li>
+                <span className="concept__time">6:12 pm</span> Car on your left
+              </li>
+              <li>
+                <span className="concept__time">6:19 pm</span> Bus on your left
+              </li>
+              <li>
+                <span className="concept__time">6:27 pm</span> Car directly behind
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section className="section" aria-labelledby="community-heading">
+          <div className="split">
+            <h2 id="community-heading">The ride map</h2>
+            <div>
+              <p className="lead">
+                Riders can choose to share a ride or a close call. Shared rides and close calls are
+                combined on one public map of Boston, so it&apos;s easier to see which streets need work.
+              </p>
+              <p>
+                <Link href="/dashboard">Open the ride map</Link>
+              </p>
+            </div>
+          </div>
+          <StatsPanel />
+        </section>
+
+        <section className="section split" aria-labelledby="privacy-heading">
+          <h2 id="privacy-heading">Privacy</h2>
+          <ul className="plain-list">
+            {PRIVACY.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="section" aria-labelledby="status-heading">
+          <div className="split">
+            <h2 id="status-heading">What works today</h2>
+            <p className="lead">
+              Whoosh is still being built. Here is where each part stands, as of {STATUS_CHECKED_ON}.
+            </p>
+          </div>
+          <div className="table-wrap">
+            <table className="status-table">
+              <thead>
+                <tr>
+                  <th scope="col">Feature</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {FEATURES.map((feature) => (
+                  <tr key={feature.name}>
+                    <th scope="row">
+                      {feature.name}
+                      <span className="status-table__summary">{feature.summary}</span>
+                    </th>
+                    <td>
+                      <span className={`status status--${feature.status}`}>
+                        <span aria-hidden="true">{STATUS_SYMBOL[feature.status]} </span>
+                        {STATUS_LABEL[feature.status]}
+                      </span>
+                    </td>
+                    <td className="status-table__note">{feature.statusNote}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="section split" aria-labelledby="faq-heading">
+          <h2 id="faq-heading">Questions</h2>
+          <dl className="qa">
+            {FAQ.map((item) => (
+              <div key={item.q}>
+                <dt>{item.q}</dt>
+                <dd>{item.a}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <section className="section honesty" aria-labelledby="honesty-heading">
+          <h2 id="honesty-heading">What Whoosh can&apos;t do</h2>
+          <p>
+            The part that spots cars is experimental and hasn&apos;t been measured yet. It can miss a car,
+            and it can alert when nothing is there. It doesn&apos;t predict or prevent crashes. Treat it as
+            an extra pair of eyes, never a replacement for your own.
+          </p>
+        </section>
       </div>
     </main>
   );
