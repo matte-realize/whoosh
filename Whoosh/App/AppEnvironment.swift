@@ -152,7 +152,12 @@ final class AppEnvironment {
                     repository: repository,
                     tuning: tuning
                 )
-            }
+            },
+            // Route the demo "Simulate crash" drill through the real
+            // crash-response coordinator (demo-mode task 12). Drills bypass
+            // arming (drills only), use the `drill` template, hide "Call 911",
+            // and never send a real alert.
+            triggerCrashDrill: { [crash] in crash.triggerCrashDrill() }
         )
 
         // Choose the sync service: the real Supabase one only when a client is

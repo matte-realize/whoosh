@@ -78,7 +78,7 @@ forced alert, seed, previews) depend **only** on the finished MVP.
   - _Requirements:_ 5.5, 7.4, 9.3
   - _Depends on:_ 0
 
-- [ ] 4. `[iOS]` `[DEMO]` `DemoArmingBypass` rule for drills (test-first)
+- [x] 4. `[iOS]` `[DEMO]` `DemoArmingBypass` rule for drills (test-first)
   - Pure helper: a **drill** signal is accepted even when `CrashArming` is false; a real
     (non-drill) signal still obeys `CrashArming`. No change to the crash spec's `CrashArming`.
   - Unit tests: drill accepted while stationary/no-ride; real signal in the same state rejected.
@@ -172,7 +172,7 @@ forced alert, seed, previews) depend **only** on the finished MVP.
   - _Requirements:_ 2.3, 3.1, 4.3, 4.4, 4.5, 5.1, 5.2, 5.6, 7.1, 7.2
   - _Depends on:_ 10
 
-- [ ] 12. `[iOS]` `[DEMO]` Crash drill integration
+- [x] 12. `[iOS]` `[DEMO]` Crash drill integration
   - Wire `DemoModeController.simulateCrashDrill()` to the crash-response `CrashResponseCoordinator`
     via `DebugCrashSimulator`, applying `DemoArmingBypass` (drills only). Surface Simulate crash in
     the demo tools and the ride-screen menu. Confirm the drill shows the real countdown with the

@@ -179,6 +179,11 @@ final class CrashResponseCoordinator {
     /// Whether the app is foregrounded (polling only runs foregrounded).
     @ObservationIgnored private var isForeground = true
 
+    /// One-shot: set by `triggerDrill()` so the immediately-following drill
+    /// signal reduces as armed (demo-mode arming bypass, drills only). Reset as
+    /// soon as that signal has been dispatched.
+    @ObservationIgnored private var drillBypassActive = false
+
     init(
         detector: CrashDetector,
         rideContext: RideContext,
@@ -257,6 +262,33 @@ final class CrashResponseCoordinator {
         dispatch(.detectorSignal(isDrill: signal.isDrill), signal: signal)
     }
 
+    // MARK: - Demo-mode crash drill (demo-mode task 12)
+
+    /// Run a crash **drill** immediately through the real reduce → effect loop,
+    /// bypassing arming for this one drill signal (demo-mode task 4/12,
+    /// Requirement 6.1–6.4). The resulting event is marked `isDrill`, so the
+    /// countdown uses the `drill` template ("DEMO — NOT REAL"), the takeover
+    /// hides "Call 911", and it never consumes the real-alert per-ride cap.
+    ///
+    /// Works with no active ride and no consent/contacts; when contacts and
+    /// consent do exist the same notifier path runs (in Tier 0 that is the
+    /// "not sent" / composer fallback, never an automatic real send).
+    ///
+    /// No-op while an event is already active (a running countdown is not
+    /// interrupted by a second drill tap).
+    func triggerDrill() {
+        guard !machine.eventState.isActive else { return }
+        drillBypassActive = true
+        let signal = CrashSignal(
+            timestamp: clock.now(),
+            confidence: 1.0,
+            source: "simulator",
+            isDrill: true
+        )
+        dispatch(.detectorSignal(isDrill: true), signal: signal)
+        drillBypassActive = false
+    }
+
     // MARK: - Rider intents (forwarded to the reducer)
 
     /// The rider tapped "I'm OK — Cancel".
@@ -302,11 +334,21 @@ final class CrashResponseCoordinator {
 
     /// Build the ambient context for a reduction step from the current app
     /// state and seams.
+    ///
+    /// Demo-mode drills (`triggerDrill()`) set a one-shot `drillBypassActive`
+    /// flag so the next signal reduces as "armed" even with no ride, consent, or
+    /// contact (demo-mode task 4 / Requirement 6.3). The bypass applies to drills
+    /// only; a real signal always obeys `CrashArming`, so demo mode can never
+    /// cause a real send.
     private func makeContext() -> CrashReducerContext {
         CrashReducerContext(
             now: clock.now(),
             tuning: tuning,
-            armed: isArmed(),
+            armed: DemoArmingBypass.isArmed(
+                isDrill: drillBypassActive,
+                normallyArmed: isArmed(),
+                demoModeEnabled: drillBypassActive
+            ),
             online: connectivity.isOnline,
             consentCurrent: isConsentCurrent(),
             newEventId: makeID()

@@ -159,6 +159,14 @@ final class CrashResponseEnvironment {
         bridge?.reevaluateArming()
     }
 
+    /// Run a demo-mode crash **drill** through the real coordinator (demo-mode
+    /// task 12). Bypasses arming for this one drill only; it uses the `drill`
+    /// template, hides "Call 911", never consumes the real-alert cap, and never
+    /// sends a real (non-drill) alert. Works with no ride, consent, or contacts.
+    func triggerCrashDrill() {
+        coordinator.triggerDrill()
+    }
+
     /// Reconcile a persisted active event on launch (task 14). Safe to call with
     /// no active event.
     func reconcileOnLaunch() {
