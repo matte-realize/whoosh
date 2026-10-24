@@ -31,6 +31,10 @@ final class RideSessionBridge: RideContext {
     /// Supplies the non-ride arming inputs (enabled / consent current / label /
     /// reachable-contact count) when arming is evaluated.
     @ObservationIgnored private let armingInputs: () -> ArmingInputs
+    /// Publishes the ride's freshest speed (m/s, or `nil`) whenever `points`
+    /// change, so the motion detector can read it off the ride engine without
+    /// coupling to it. No-op by default.
+    @ObservationIgnored private let publishSpeed: (Double?) -> Void
 
     /// The non-ride arming inputs, snapshotted at evaluation time.
     struct ArmingInputs {
@@ -53,11 +57,13 @@ final class RideSessionBridge: RideContext {
     init(
         rideViewModel: RideSessionViewModel,
         detector: CrashDetector,
-        armingInputs: @escaping () -> ArmingInputs
+        armingInputs: @escaping () -> ArmingInputs,
+        publishSpeed: @escaping (Double?) -> Void = { _ in }
     ) {
         self.rideViewModel = rideViewModel
         self.detector = detector
         self.armingInputs = armingInputs
+        self.publishSpeed = publishSpeed
     }
 
     // MARK: - RideContext (read-only projection)
@@ -120,6 +126,8 @@ final class RideSessionBridge: RideContext {
     /// non-ride inputs, and start/stop the detector if the result changed.
     func reevaluateArming() {
         let inputs = armingInputs()
+        // Publish the freshest speed for the motion detector (no-op by default).
+        publishSpeed(rideViewModel.points.last?.speedMetersPerSecond)
         let armed = CrashArming.isArmed(
             CrashArming.Input(
                 rideState: rideViewModel.rideState,

@@ -362,12 +362,38 @@ final class AppEnvironment {
         try? contactStore.purgeOrphansIfFreshInstall()
         let settingsStore = UserDefaultsCrashAlertSettingsStore()
 
-        // Detector source: the demo simulator when developer tools are on, else
-        // the no-op. Either way detection is only armed by the bridge while a
-        // ride is recording with consent, a label, and a reachable contact.
-        let developerToolsOn = settingsStore.current().developerToolsEnabled
-        let simulator: DebugCrashSimulator? = developerToolsOn ? DebugCrashSimulator(clock: clock) : nil
-        let detector: CrashDetector = simulator ?? NoopCrashDetector()
+        // Detector source. The experimental `MotionCrashDetector` is the LIVE
+        // detector whenever crash alerts are enabled (the hackathon default is
+        // on); it reads Core Motion only while the bridge arms it during a ride.
+        // The `DebugCrashSimulator` is still built when developer/demo tools are
+        // on so the "Simulate crash" drill works. When both exist they are fanned
+        // into one `CompositeCrashDetector`; either alone is used directly.
+        //
+        // Either way detection only *acts* when the bridge arms it (recording +
+        // consent + label + reachable contact) and the reducer allows it — the
+        // detector never decides that. Experimental: cannot guarantee detection
+        // or delivery; the countdown's "I'm OK — Cancel" is the safety net.
+        let crashSettings = settingsStore.current()
+        let speedSnapshot = RideSpeedSnapshot()
+
+        let motion: MotionCrashDetector? = crashSettings.enabled
+            ? MotionCrashDetector(clock: clock, speedSnapshot: speedSnapshot)
+            : nil
+        let simulator: DebugCrashSimulator? = crashSettings.developerToolsEnabled
+            ? DebugCrashSimulator(clock: clock)
+            : nil
+
+        let detector: CrashDetector
+        switch (motion, simulator) {
+        case let (m?, s?):
+            detector = CompositeCrashDetector([m, s])
+        case let (m?, nil):
+            detector = m
+        case let (nil, s?):
+            detector = s
+        case (nil, nil):
+            detector = NoopCrashDetector()
+        }
 
         let crash = CrashResponseEnvironment(
             contactStore: contactStore,
@@ -381,7 +407,8 @@ final class AppEnvironment {
             footageBuffer: NoopFootageBuffer(),
             detector: detector,
             simulator: simulator,
-            clock: clock
+            clock: clock,
+            speedSnapshot: speedSnapshot
         )
 
         // Rear-camera service stack (rear-camera task 19/22). The capture
