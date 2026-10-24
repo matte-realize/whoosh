@@ -11,6 +11,10 @@ import SwiftUI
 /// feasibility spike returns a go decision).
 @main
 struct WhooshWatchApp: App {
+    /// The app delegate owns and activates the single watch connectivity link and
+    /// completes every WatchConnectivity background task (task 17).
+    @WKApplicationDelegateAdaptor(WatchAppDelegate.self) private var delegate
+
     var body: some Scene {
         WindowGroup {
             WatchPlaceholderView()

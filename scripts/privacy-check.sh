@@ -256,12 +256,15 @@ for f in "${files[@]}"; do
   fi
 
   # 21. WatchKit haptic playback only in the watch haptics folder (the single haptic
-  #     actuator; the limiter/selector are pure in the package).
-  if grep -nE 'WKInterfaceDevice|\bWKHapticType\b' "$f" >/dev/null; then
+  #     actuator; the limiter/selector are pure in the package). Only the haptic
+  #     *playback* call (`WKInterfaceDevice...play(`) and `WKHapticType` are confined;
+  #     other `WKInterfaceDevice` uses (e.g. battery monitoring for WireWatchState in
+  #     the workout keep-alive) are not haptic calls and are allowed.
+  if grep -nE 'WKInterfaceDevice[^\n]*\.play\(|\.play\(\.[A-Za-z]|\bWKHapticType\b' "$f" >/dev/null; then
     case "$f" in
       */WhooshWatch/Services/Haptics/*) ;;
       WhooshWatch/Services/Haptics/*) ;;
-      *) report "$f" "WatchKit haptic call (WKInterfaceDevice/WKHapticType) outside WhooshWatch/Services/Haptics/ (haptics have one actuator; selection and limiting are pure in the package)" ;;
+      *) report "$f" "WatchKit haptic call (WKInterfaceDevice.play/WKHapticType) outside WhooshWatch/Services/Haptics/ (haptics have one actuator; selection and limiting are pure in the package)" ;;
     esac
   fi
 

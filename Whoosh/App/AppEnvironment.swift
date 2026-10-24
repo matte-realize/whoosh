@@ -76,6 +76,21 @@ final class AppEnvironment {
     /// app makes zero network calls and behaves exactly as before.
     let syncCoordinator: SyncCoordinator
 
+    /// The eyes-free remote surface (watch-companion tasks 16/17). A
+    /// `WireLinkRideRemote` over the phone WatchConnectivity adapter when an Apple
+    /// Watch is paired **and** the Whoosh watch app is installed; otherwise the
+    /// inert `NoopRideRemote`, so with no usable watch the phone behaves exactly
+    /// as before (nothing is published, no command is ever received —
+    /// Requirement 1.5). Build a `RideStatusPublisher` over it with
+    /// `makeRideStatusPublisher()`.
+    let remote: RideRemoteControlling
+
+    /// Launches/wakes the watch app for its keep-alive workout (watch-companion
+    /// task 16). A `NoopWatchLauncher`-equivalent is not needed: the real
+    /// launcher is a no-op when Health is unavailable, and it is only *used* on a
+    /// rescue path. `nil` in previews/tests.
+    let watchLauncher: (any WatchLaunching)?
+
     /// Builds a fresh `LocationTracking` for a ride session. Injectable so
     /// previews/tests supply a `FakeLocationTracker`.
     private let makeRideTracker: () -> LocationTracking
@@ -98,12 +113,16 @@ final class AppEnvironment {
         clipRepository: ClipRepository,
         cameraServices: CameraServices,
         makeHomeTracker: () -> LocationTracking,
-        makeRideTracker: @escaping () -> LocationTracking
+        makeRideTracker: @escaping () -> LocationTracking,
+        remote: RideRemoteControlling,
+        watchLauncher: (any WatchLaunching)? = nil
     ) {
         self.repository = repository
         self.clock = clock
         self.detector = detector
         self.alertManager = alertManager
+        self.remote = remote
+        self.watchLauncher = watchLauncher
         self.nearMissRepository = nearMissRepository
         self.nearMissRecorder = NearMissRecorder(repository: nearMissRepository)
         self.crash = crash
@@ -267,6 +286,37 @@ final class AppEnvironment {
     /// an interrupted-ride probe is thrown away). Safe to call repeatedly.
     func clearRideSession() {
         crash.detachRide()
+        remote.onCommand = nil
+    }
+
+    // MARK: - Eyes-free remote (watch-companion tasks 16/17)
+
+    /// Build the status publisher that forwards `RideStatus` snapshots to the
+    /// eyes-free surface (the `remote`), throttled by `StatusThrottle`. When no
+    /// watch is paired the `remote` is `NoopRideRemote`, so this publisher is a
+    /// no-op and the ride flow is unchanged.
+    func makeRideStatusPublisher() -> RideStatusPublisher {
+        RideStatusPublisher(remote: remote, clock: clock)
+    }
+
+    /// Route wrist commands from the `remote` to the ride engine through the
+    /// existing `RideRemoteBridge` (no ride-engine change). Call when a ride
+    /// session begins; `clearRideSession()` detaches it. A no-op `remote`
+    /// (`NoopRideRemote`) never invokes `onCommand`, so nothing changes when no
+    /// watch is paired.
+    func attachRemoteCommands(
+        to session: RideSessionViewModel,
+        saveClip: @escaping () -> ClipSaveOutcome = { .nothingToSave },
+        cancelCrashCountdown: @escaping () -> Void = {}
+    ) {
+        let bridge = RideRemoteBridge(
+            rideViewModel: session,
+            saveClip: saveClip,
+            cancelCrashCountdown: cancelCrashCountdown
+        )
+        remote.onCommand = { command, reply in
+            reply(bridge.handle(command))
+        }
     }
 
     // MARK: - Rear-camera factories (rear-camera task 19/22)
@@ -462,6 +512,15 @@ final class AppEnvironment {
             appState: { .foregroundActiveScreen }
         )
 
+        // Eyes-free remote (watch-companion tasks 16/17). The phone adapter is
+        // built inside `Services/Remote/` (the only place allowed to touch the
+        // WatchConnectivity framework): `PhoneRemoteFactory.make(clock:)` returns
+        // a watch-backed `RideRemoteControlling` only when an Apple Watch is
+        // paired AND the Whoosh watch app is installed; otherwise the inert
+        // `NoopRideRemote`, so with no usable watch the phone behaves exactly as
+        // before (nothing published, no command ever received).
+        let remote = PhoneRemoteFactory.make(clock: clock)
+
         return AppEnvironment(
             repository: repository,
             clock: clock,
@@ -484,7 +543,9 @@ final class AppEnvironment {
             clipRepository: clipRepository,
             cameraServices: cameraServices,
             makeHomeTracker: { CoreLocationTracker() },
-            makeRideTracker: { CoreLocationTracker() }
+            makeRideTracker: { CoreLocationTracker() },
+            remote: remote,
+            watchLauncher: WatchLauncher()
         )
     }
 
@@ -598,7 +659,8 @@ final class AppEnvironment {
             clipRepository: clipRepository,
             cameraServices: cameraServices,
             makeHomeTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) },
-            makeRideTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) }
+            makeRideTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) },
+            remote: NoopRideRemote()
         )
     }
 }
