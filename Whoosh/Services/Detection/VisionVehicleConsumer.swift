@@ -60,6 +60,22 @@ nonisolated final class VisionVehicleConsumer: FrameConsumer, HazardDetector, @u
         set { queue.sync { _onModelStateChange = newValue } }
     }
 
+    /// **View-only** per-frame boxes for drawing the detector's current view on
+    /// the active ride screen's live preview (owner device-testing feedback:
+    /// "the user should be able to see the camera" with detections drawn on
+    /// top). Delivered on the **main actor**, like `onDetection`, as a fresh set
+    /// each processed frame (empty when nothing is seen). This is purely for
+    /// display: it is **not** on the alert / near-miss path, it does not change
+    /// detection, and nothing here leaves the device — the boxes are discarded
+    /// as the next frame's arrive. Set by the composition
+    /// (`CameraPreviewViewModel`); `nil` means no one is drawing, so no boxes are
+    /// published (no cost). Guarded by `queue` for writes/reads off the
+    /// detection path.
+    var onOverlayBoxes: (([DetectionOverlayBox]) -> Void)? {
+        get { queue.sync { _onOverlayBoxes } }
+        set { queue.sync { _onOverlayBoxes = newValue } }
+    }
+
     /// The one-time model-load outcome the consumer reports. Not a claim about
     /// detection quality — detection is experimental and cannot guarantee
     /// detection or delivery.
@@ -81,6 +97,7 @@ nonisolated final class VisionVehicleConsumer: FrameConsumer, HazardDetector, @u
     // which is also set via the `queue.sync` accessor above).
     private var _onDetection: ((HazardDetection) -> Void)?
     private var _onModelStateChange: ((ModelLoadState) -> Void)?
+        private var _onOverlayBoxes: (([DetectionOverlayBox]) -> Void)?
     private var detector: VehicleDetector?
     private var isLoading = false
     private var active = false
@@ -199,7 +216,21 @@ nonisolated final class VisionVehicleConsumer: FrameConsumer, HazardDetector, @u
             boxes: boxes,
             timestamp: frame.presentationTime,
             isDiscontinuity: frame.isDiscontinuity
-        ) else { return }
+        ) else {
+            // Still publish the view-only boxes (nothing approaching this frame)
+            // so the rider sees what the detector is looking at. Display only;
+            // never on the alert / near-miss path.
+            publishOverlayBoxes(boxes, approachingArea: nil)
+            return
+        }
+
+        // The approach heuristic flags the largest (by area) qualifying box; mark
+        // that one so the overlay can highlight it in the alert color.
+        let approachingArea = boxes
+            .filter { $0.confidence >= tuning.minConfidence }
+            .map(\.area)
+            .max()
+        publishOverlayBoxes(boxes, approachingArea: approachingArea)
 
         let detection = HazardDetection(
             timestamp: frame.capturedAt,   // wall-clock, not inference-finish time
@@ -212,6 +243,27 @@ nonisolated final class VisionVehicleConsumer: FrameConsumer, HazardDetector, @u
         if let callback {
             DispatchQueue.main.async { callback(detection) }
         }
+    }
+
+    /// Deliver the view-only overlay boxes on the main actor (by contract, like
+    /// `onDetection`). The box flagged with `approachingArea` (the largest
+    /// qualifying box when an approach fired) is marked `isApproaching` so the
+    /// overlay can highlight it. Must be called on `queue`. Does nothing when no
+    /// one is drawing (no observer set).
+    private func publishOverlayBoxes(_ boxes: [ApproachEstimator.Box], approachingArea: Double?) {
+        guard let callback = _onOverlayBoxes else { return }
+        let overlay = boxes.map { box in
+            DetectionOverlayBox(
+                label: box.label,
+                confidence: box.confidence,
+                x: box.x,
+                y: box.y,
+                width: box.width,
+                height: box.height,
+                isApproaching: approachingArea != nil && box.area == approachingArea
+            )
+        }
+        DispatchQueue.main.async { callback(overlay) }
     }
 
     /// Kick off a one-time async model load if we are active and don't have one.

@@ -58,6 +58,13 @@ final class RideModeController {
     /// failed, or signal lost), so the view shows the amber dot instead of red.
     /// Set by the owning coordinator; never hidden.
     private(set) var isTrouble = false
+    /// Whether a pickup was just detected while the screen is dimmed and locked:
+    /// the controller temporarily raised brightness and the view brightens and
+    /// enlarges the "Press and hold to unlock" hint so the rider can stop the
+    /// ride the moment they lift the phone (owner device-testing feedback). It
+    /// auto-clears after a short window if the rider does not unlock, re-dimming
+    /// so the phone still "looks off".
+    private(set) var isPickupPrompting = false
     /// The last transient toast to surface (clip saved / couldn't save), with
     /// the instant it was raised so the view can fade it after ~2 s.
     private(set) var toast: RideModeToast?
@@ -90,11 +97,31 @@ final class RideModeController {
     /// The one active unlock-inactivity timer.
     @ObservationIgnored private var unlockTimer: Cancellable?
 
+    // MARK: Pickup detection (owner device-testing feedback)
+
+    /// The mount-level sensor the controller borrows to detect a pickup while
+    /// dimmed (Core Motion lives in `Services/Camera` via `MountLevelSensor`).
+    /// `nil` disables pickup detection (previews/tests without motion).
+    @ObservationIgnored private let pickupSensor: MountLevelSensing?
+    /// The pure heuristic that turns gravity samples into a pickup signal.
+    @ObservationIgnored private var pickupDetector: PickupDetector
+    /// Timer that reverts the pickup prompt (re-dim) if the rider does not unlock.
+    @ObservationIgnored private var pickupRevertTimer: Cancellable?
+    /// Whether the borrowed sensor is currently running (so start/stop balance).
+    @ObservationIgnored private var pickupSensing = false
+    /// How long the pickup prompt stays brightened before auto re-dimming.
+    @ObservationIgnored private let pickupPromptWindow: TimeInterval = 6
+    /// The readable brightness the screen is raised to on a pickup (not full, to
+    /// stay power-friendly, but easily seen).
+    @ObservationIgnored private let pickupBrightness: Double = 0.6
+
     init(
         screen: ScreenController,
         dimGuardStore: DimGuardStore,
         clock: Clock,
         tuning: RideCameraTuning = RideCameraTuning(),
+        pickupSensor: MountLevelSensing? = nil,
+        pickupDetector: PickupDetector = PickupDetector(),
         isRideActive: @escaping () -> Bool,
         isRideModeEnabled: @escaping () -> Bool
     ) {
@@ -102,10 +129,13 @@ final class RideModeController {
         self.dimGuardStore = dimGuardStore
         self.clock = clock
         self.tuning = tuning
+        self.pickupSensor = pickupSensor
+        self.pickupDetector = pickupDetector
         self.isRideActive = isRideActive
         self.isRideModeEnabled = isRideModeEnabled
         self.currentGuard = dimGuardStore.guardState
         wireSystemBrightness()
+        wirePickupSensor()
     }
 
     // MARK: - Wiring
@@ -119,6 +149,16 @@ final class RideModeController {
             let riderInitiated: Bool
             if case .unlockedTemporarily = self.mode { riderInitiated = true } else { riderInitiated = false }
             self.dispatch(.systemBrightnessChanged(value: value, riderInitiated: riderInitiated))
+        }
+    }
+
+    /// Wire the borrowed mount sensor's gravity stream into the pure
+    /// `PickupDetector`. A pickup while dimmed raises brightness and prompts the
+    /// rider to unlock (and stop). The sensor only runs while dimmed/locked
+    /// (started/stopped in `syncPickupSensing`).
+    private func wirePickupSensor() {
+        pickupSensor?.onGravity = { [weak self] gravity in
+            self?.handleGravity(gravity)
         }
     }
 
@@ -181,6 +221,67 @@ final class RideModeController {
     /// Clear the current toast (the view calls this after the fade).
     func clearToast() { toast = nil }
 
+    // MARK: - Pickup detection (owner device-testing feedback)
+
+    /// Start/stop the borrowed mount sensor to match the mode: it only runs
+    /// while the screen is dimmed and locked (`.dimLocked`), where a pickup is
+    /// worth detecting. Leaving that state clears any active pickup prompt.
+    private func syncPickupSensing(previousMode: ScreenMode) {
+        guard pickupSensor != nil else { return }
+        let wantSensing = (mode == .dimLocked)
+        if wantSensing, !pickupSensing {
+            pickupDetector.reset()
+            pickupSensor?.start()
+            pickupSensing = true
+        } else if !wantSensing, pickupSensing {
+            pickupSensor?.stop()
+            pickupSensing = false
+            clearPickupPrompt()
+        }
+    }
+
+    /// A gravity sample arrived from the borrowed mount sensor: feed the pure
+    /// detector and, on a pickup while dimmed, raise brightness and show the
+    /// prompt. Ignored unless currently dimmed and locked.
+    private func handleGravity(_ gravity: GravityVector) {
+        guard mode == .dimLocked else { return }
+        let now = clock.now().timeIntervalSinceReferenceDate
+        guard pickupDetector.update(gravity: gravity, timestamp: now) else { return }
+        raisePickupPrompt()
+    }
+
+    /// Temporarily raise brightness to a readable level and show the enlarged
+    /// unlock hint, then auto-revert (re-dim) after `pickupPromptWindow` if the
+    /// rider does not unlock. Never unlocks on its own — the rider still holds to
+    /// unlock — so the phone keeps "looking off" if it was a false lift.
+    private func raisePickupPrompt() {
+        isPickupPrompting = true
+        screen.setBrightness(pickupBrightness)
+        pickupRevertTimer?.cancel()
+        pickupRevertTimer = clock.schedule(after: pickupPromptWindow) { [weak self] in
+            self?.revertPickupPrompt()
+        }
+    }
+
+    /// Revert the pickup prompt: if still dimmed and locked, re-apply the dim
+    /// brightness so the phone looks off again.
+    private func revertPickupPrompt() {
+        isPickupPrompting = false
+        pickupRevertTimer?.cancel()
+        pickupRevertTimer = nil
+        if mode == .dimLocked {
+            screen.setBrightness(tuning.dimBrightness)
+        }
+    }
+
+    /// Clear the pickup prompt flag and its timer without touching brightness
+    /// (used when leaving the dimmed state; the reducer already restores it).
+    private func clearPickupPrompt() {
+        isPickupPrompting = false
+        pickupRevertTimer?.cancel()
+        pickupRevertTimer = nil
+    }
+
     // MARK: - The reduce → apply loop
 
     private func dispatch(_ event: ScreenModeEvent) {
@@ -197,6 +298,7 @@ final class RideModeController {
             apply(effect, context: context)
         }
         syncTimers(previousMode: previousMode)
+        syncPickupSensing(previousMode: previousMode)
     }
 
     // MARK: - Effect execution

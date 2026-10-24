@@ -47,6 +47,14 @@ struct ActiveRideView: View {
     /// the camera is off for this ride, which hides the control.
     var onSaveClip: (() -> ClipSaveOutcome)?
 
+    /// The live rear-camera preview + experimental detection boxes for this ride
+    /// (owner device-testing feedback: "the user should be able to see the
+    /// camera"). `nil` when the camera is off — the camera toggle is then hidden
+    /// and only the map shows. The preview is **off by default** (battery); the
+    /// rider turns it on with the small camera button. Display only: it never
+    /// captures, records, or uploads, and the boxes are not the alert path.
+    var cameraPreview: CameraPreviewViewModel?
+
     /// The screen controller that owns the idle timer (and ride-mode
     /// brightness). Defaults to the shared production controller so the idle
     /// timer funnels through the one reason-counting owner, shared with the
@@ -57,24 +65,51 @@ struct ActiveRideView: View {
     /// on the Save clip control (task 23).
     @State private var saveClipMessage: String?
 
+    /// Whether the full-bleed live camera view is shown instead of the map.
+    /// **Off by default** so the preview does not run unless the rider asks for
+    /// it (battery; owner feedback "preview can be turned off").
+    @State private var showCamera = false
+
     var body: some View {
         ZStack(alignment: .top) {
             Theme.Colors.rideBackground.ignoresSafeArea()
 
-            // Live map fills the top; the sheet overlaps its bottom.
-            RouteMapView(
-                points: viewModel.points,
-                mode: .live,
-                currentLocation: viewModel.points.last
-            )
-            .ignoresSafeArea(edges: .top)
+            if isShowingCamera, let cameraPreview, let host = cameraPreview.previewHost {
+                // Full-bleed live rear-camera preview with the experimental
+                // detection boxes drawn on top (owner feedback). Display only;
+                // footage/frames never leave the device.
+                CameraPreviewView(host: host)
+                    .ignoresSafeArea()
+                DetectionOverlay(boxes: cameraPreview.boxes)
+                    .ignoresSafeArea()
+                // A readable scrim behind the three numbers so they stay legible
+                // over bright road footage.
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.55)],
+                    startPoint: .center,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+            } else {
+                // Live map fills the top; the sheet overlaps its bottom.
+                RouteMapView(
+                    points: viewModel.points,
+                    mode: .live,
+                    currentLocation: viewModel.points.last
+                )
+                .ignoresSafeArea(edges: .top)
+            }
 
             topChrome
             bottomSheet
         }
         .preferredColorScheme(.dark)
         .onAppear { screen.setIdleTimerDisabled(true) }
-        .onDisappear { screen.setIdleTimerDisabled(false) }
+        .onDisappear {
+            screen.setIdleTimerDisabled(false)
+            cameraPreview?.clear()
+        }
         .onChange(of: viewModel.banner) { _, banner in
             announceBanner(banner)
         }
@@ -129,6 +164,9 @@ struct ActiveRideView: View {
                 HStack(alignment: .top) {
                     stateChip
                     Spacer()
+                    if canToggleCamera {
+                        cameraToggleButton
+                    }
                 }
             }
             Spacer()
@@ -142,6 +180,40 @@ struct ActiveRideView: View {
         }
         .padding(Theme.Spacing.lg)
         .padding(.bottom, 300) // keep chrome above the bottom sheet
+    }
+
+    /// Whether the map/camera toggle is available: only when a live preview host
+    /// exists for this ride (rear camera on). Off by default; the rider opts in.
+    private var canToggleCamera: Bool {
+        cameraPreview?.previewHost != nil
+    }
+
+    /// Whether the camera view is currently shown (guarded by availability so a
+    /// stale `true` can never show an empty black screen).
+    private var isShowingCamera: Bool {
+        showCamera && canToggleCamera
+    }
+
+    /// Small button to switch between the map and the live camera view (owner
+    /// feedback: "a small camera button to switch between map and camera view").
+    private var cameraToggleButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { showCamera.toggle() }
+            if !showCamera { cameraPreview?.clear() }
+        } label: {
+            Image(systemName: isShowingCamera ? "map.fill" : "video.fill")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: Theme.Size.minTouchTarget, height: Theme.Size.minTouchTarget)
+                .background(Theme.Colors.rideCard.opacity(0.85))
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Theme.Colors.rideChipStroke, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isShowingCamera ? "Show map" : "Show rear camera")
+        .accessibilityHint(isShowingCamera
+            ? "Switches back to the route map."
+            : "Shows the live rear camera with experimental detection boxes. Uses more battery.")
     }
 
     /// The real camera/recording chip when recording this ride; otherwise the

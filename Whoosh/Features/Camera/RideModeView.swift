@@ -26,13 +26,29 @@ struct RideModeView: View {
     /// The ride-mode controller (read-only state + intents).
     @Bindable var controller: RideModeController
 
+    /// The in-ride controls shown while temporarily unlocked (big Stop,
+    /// Pause/Resume, Save clip). `nil` in previews/tests that only exercise the
+    /// dim/lock visuals; the ride can then still be stopped by unlocking to the
+    /// active-ride screen underneath. Owner device-testing feedback: a ride must
+    /// always be stoppable from ride mode.
+    var controls: RideModeControls?
+
     /// Drives the OLED-protecting dot shift (toggles every `redDotShiftPeriod`).
     @State private var dotShifted = false
 
+    /// Whether the ride-mode overlay is in its unlocked (controls-visible) state.
+    private var isUnlocked: Bool {
+        if case .unlockedTemporarily = controller.mode { return true }
+        return false
+    }
+
     var body: some View {
         ZStack {
-            // True black; ignores safe areas and hides system chrome.
-            Color.black.ignoresSafeArea()
+            // True black while dimmed/locked so the phone "looks off". While
+            // temporarily unlocked, a lighter scrim lets the rider read the big
+            // Stop / Pause / Save controls (owner feedback).
+            (isUnlocked ? Color.black.opacity(0.82) : Color.black)
+                .ignoresSafeArea()
 
             switch controller.mode {
             case .graceCountdown:
@@ -40,9 +56,12 @@ struct RideModeView: View {
             case .dimLocked:
                 lockedScreen
             case .unlockedTemporarily:
-                // Controls are owned by the active-ride screen underneath; the
-                // overlay only needs to let touches through while unlocked, so
-                // it renders just the dot (kept visible, Requirement 10.6).
+                // The big in-ride controls (Stop / Pause / Save). A ride must
+                // always be stoppable from ride mode (owner feedback). The dot
+                // stays visible. Any touch here extends the unlock window.
+                unlockedControls
+                    .contentShape(Rectangle())
+                    .onTapGesture { controller.touchActivity() }
                 recordingDot
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                     .padding(Theme.Spacing.lg)
@@ -124,12 +143,21 @@ struct RideModeView: View {
 
     private var lockedScreen: some View {
         ZStack {
-            // A full-screen touch-absorbing layer whose only recognised gesture
-            // is a deliberate two-finger long press (incidental touches ignored).
-            TwoFingerLongPressLock(minimumDuration: controller.unlockHoldDuration) {
+            // A full-screen touch-absorbing layer whose only recognised gestures
+            // are deliberate one- or two-finger long presses (incidental touches
+            // ignored). One finger is enough once the phone is in hand; two
+            // fingers still works as before.
+            RideModeUnlockLock(minimumDuration: controller.unlockHoldDuration) {
                 controller.twoFingerHoldCompleted()
             }
             .ignoresSafeArea()
+
+            // Always-visible, faint unlock hint so a rider who picks the phone up
+            // mid-ride always sees how to stop (owner device-testing feedback).
+            // Brightens while a pickup is detected (the controller raises
+            // brightness and sets this flag) so it is readable the moment the
+            // phone is lifted.
+            unlockHint
 
             recordingDot
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
@@ -143,6 +171,101 @@ struct RideModeView: View {
         .accessibilityAddTraits(.isModal)
         .accessibilityAction(named: Text("Unlock controls")) {
             controller.accessibilityUnlock()
+        }
+    }
+
+    /// The faint, always-visible "Press and hold to unlock" hint on the black
+    /// locked screen. Normally very dim (OLED-friendly, unobtrusive); it
+    /// brightens and enlarges while the controller reports a pickup so the rider
+    /// can see how to stop the moment they lift the phone.
+    private var unlockHint: some View {
+        VStack(spacing: Theme.Spacing.sm) {
+            Spacer()
+            Image(systemName: "hand.tap.fill")
+                .font(.system(size: controller.isPickupPrompting ? 30 : 20, weight: .semibold))
+            Text("Press and hold to unlock")
+                .font(.system(size: controller.isPickupPrompting ? 17 : 13, weight: .semibold))
+            Spacer()
+        }
+        .foregroundStyle(.white.opacity(controller.isPickupPrompting ? 0.9 : 0.18))
+        .animation(.easeInOut(duration: 0.3), value: controller.isPickupPrompting)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true) // the accessibility unlock action is on the lock
+    }
+
+    // MARK: - Unlocked controls
+
+    /// The big, eyes-on controls shown while temporarily unlocked: a huge Stop
+    /// (press-and-hold so a ride is never ended by accident), Pause/Resume, and
+    /// Save clip. Reuses `HoldToStopButton`. When no `controls` are injected
+    /// (previews) it shows a short hint instead.
+    @ViewBuilder private var unlockedControls: some View {
+        if let controls {
+            VStack(spacing: Theme.Spacing.lg) {
+                Spacer()
+
+                Text("Ride controls")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.6))
+
+                // Big press-and-hold Stop so the ride is always stoppable here.
+                HoldToStopButton(onStop: controls.onStop)
+                    .frame(width: 220, height: 64)
+
+                HStack(spacing: Theme.Spacing.md) {
+                    Button {
+                        controller.touchActivity()
+                        controls.onTogglePause()
+                    } label: {
+                        HStack(spacing: Theme.Spacing.sm) {
+                            Image(systemName: controls.isPaused ? "play.fill" : "pause.fill")
+                                .font(.system(size: 17, weight: .bold))
+                            Text(controls.isPaused ? "Resume" : "Pause")
+                                .font(.system(size: 17, weight: .bold))
+                        }
+                        .foregroundStyle(Theme.Palette.ink)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: Theme.Size.minTouchTarget)
+                        .background(Theme.Palette.lime)
+                        .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(controls.isPaused ? "Resume ride" : "Pause ride")
+
+                    if let onSaveClip = controls.onSaveClip {
+                        Button {
+                            controller.touchActivity()
+                            _ = onSaveClip()
+                        } label: {
+                            Label("Save clip", systemImage: "bookmark.fill")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: Theme.Size.minTouchTarget)
+                                .overlay(Capsule().stroke(.white.opacity(0.6), lineWidth: 1.5))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Save clip")
+                        .accessibilityHint("Saves a clip of the last moments to this phone.")
+                    }
+                }
+                .frame(maxWidth: 360)
+
+                Text("Locks again after a few seconds")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .padding(.bottom, Theme.Spacing.xl)
+            }
+            .padding(Theme.Spacing.lg)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        } else {
+            VStack {
+                Spacer()
+                Text("Unlocked")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.6))
+                Spacer()
+            }
         }
     }
 

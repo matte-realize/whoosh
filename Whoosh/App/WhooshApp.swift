@@ -50,6 +50,11 @@ struct WhooshApp: App {
     /// detector on the shared frame pipeline and runs it only while recording;
     /// its `detectionState` drives the ride-screen camera chip.
     @State private var rideDetection: RideDetectionCoordinator?
+    /// The live rear-camera preview + detection-box view model for the active
+    /// ride screen (owner device-testing feedback). `nil` when the camera is off
+    /// for this ride; the ride screen then shows only the map with no camera
+    /// toggle. Display only — it never captures, records, or uploads.
+    @State private var cameraPreview: CameraPreviewViewModel?
     @Environment(\.scenePhase) private var scenePhase
 
     /// Routes pushed on the Home-rooted stack.
@@ -226,7 +231,8 @@ struct WhooshApp: App {
                     crashAlertsOn: environment.crash.isFeatureOn,
                     cameraState: cameraCoordinator?.state,
                     detectionState: rideDetection?.detectionState,
-                    onSaveClip: cameraCoordinator == nil ? nil : { cameraCoordinator?.saveClip() ?? .nothingToSave }
+                    onSaveClip: cameraCoordinator == nil ? nil : { cameraCoordinator?.saveClip() ?? .nothingToSave },
+                    cameraPreview: cameraPreview
                 )
                 .interactiveDismissDisabled()
                 .overlay(alignment: .top) {
@@ -247,15 +253,23 @@ struct WhooshApp: App {
                 // ride content when the camera is on with ride mode enabled.
                 .overlay {
                     if let rideModeController, rideModeController.isOverlayPresented {
-                        RideModeView(controller: rideModeController)
-                            .overlay(alignment: .bottom) {
-                                // While temporarily unlocked, a big Save clip
-                                // control is reachable (rear-camera task 23).
-                                if rideModeController.isShowingControls, cameraCoordinator != nil {
-                                    saveClipButton
-                                        .padding(.bottom, 120)
-                                }
-                            }
+                        RideModeView(
+                            controller: rideModeController,
+                            controls: RideModeControls(
+                                isPaused: session.rideState == .paused,
+                                onStop: { session.stop() },
+                                onTogglePause: {
+                                    if session.rideState == .paused {
+                                        session.resume()
+                                    } else {
+                                        session.pause()
+                                    }
+                                },
+                                onSaveClip: cameraCoordinator == nil
+                                    ? nil
+                                    : { cameraCoordinator?.saveClip() ?? .nothingToSave }
+                            )
+                        )
                     }
                 }
             case .summary(let ride):
@@ -273,25 +287,6 @@ struct WhooshApp: App {
                 Color.clear.onAppear { clearRideSession() }
             }
         }
-    }
-
-    // MARK: - Save clip control (ride mode, unlocked)
-
-    private var saveClipButton: some View {
-        Button {
-            cameraCoordinator?.saveClip()
-        } label: {
-            Label("Save clip", systemImage: "bookmark.fill")
-                .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(Theme.Palette.ink)
-                .frame(maxWidth: 240)
-                .frame(height: Theme.Size.minTouchTarget)
-                .background(Theme.Palette.lime)
-                .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Save clip")
-        .accessibilityHint("Saves a clip of the last moments to this phone.")
     }
 
     // MARK: - Mount & frame binding
@@ -355,6 +350,12 @@ struct WhooshApp: App {
         rideDetection = detection
         detection?.beginRide()
 
+        // The live-preview view model for the ride screen's camera toggle (owner
+        // device-testing feedback). It subscribes to the detector's view-only
+        // overlay-box seam; the preview itself is off by default (battery). Nil
+        // when the camera is off for this ride.
+        cameraPreview = environment.makeCameraPreviewViewModel(detection: detection)
+
         // Ride mode (dim, touch-locked) when the rider left it on in Settings.
         var rideMode: RideModeController?
         if environment.rearCameraSettingsViewModel.settings.rideModeEnabled {
@@ -401,6 +402,8 @@ struct WhooshApp: App {
         cameraCoordinator = nil
         rideDetection?.endRide()
         rideDetection = nil
+        cameraPreview?.clear()
+        cameraPreview = nil
         rideModeController?.rideEnded()
         rideModeController = nil
         environment.clearRideSession()

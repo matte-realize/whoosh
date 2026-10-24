@@ -48,6 +48,15 @@ final class RideDetectionCoordinator {
         didSet { coordinator.onDetection = onDetection }
     }
 
+    /// **View-only** per-frame detection boxes for drawing the camera preview
+    /// overlay on the active ride screen (owner feedback: "the user should be
+    /// able to see the camera"). Forwarded straight to the consumer's additive
+    /// overlay seam; it is not on the alert / near-miss path and nothing leaves
+    /// the device. Set by the composition (`CameraPreviewViewModel`).
+    @ObservationIgnored var onOverlayBoxes: (([DetectionOverlayBox]) -> Void)? {
+        didSet { consumer.onOverlayBoxes = onOverlayBoxes }
+    }
+
     @ObservationIgnored private let consumer: VisionVehicleConsumer
     @ObservationIgnored private let coordinator: DetectionCoordinator
     /// Whether rear detection is allowed to run at all (rear camera recording on).
