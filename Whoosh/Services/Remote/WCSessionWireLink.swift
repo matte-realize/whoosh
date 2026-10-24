@@ -308,3 +308,29 @@ enum PhoneRemoteFactory {
         return PhoneRemoteComposition(remote: remote, statusHolder: holder, watchLink: link)
     }
 }
+
+// MARK: - PhoneWatchConnectionFactory
+
+/// Builds the phone's "Apple Watch" readiness/connect `WatchConnectionProviding`
+/// (watch-companion task 22). Lives here because this is the only phone file
+/// allowed to read the WatchConnectivity paired / installed facts (privacy rule
+/// 14); it hands those facts to `WatchConnection` as plain closures so the
+/// readiness view model and views never import the framework.
+///
+/// A fresh `WCSessionWireLink` is always created so the readiness screen works
+/// even before/without a usable watch (the checklist is informational — it
+/// never blocks a ride). The facts update live as pairing/installation change.
+@MainActor
+enum PhoneWatchConnectionFactory {
+    /// Reuses the remote's link (WCSession allows one delegate); with no
+    /// usable watch there is no link and the connection is inert.
+    static func make(clock: Clock, sharedLink: (any WireLink)?) -> WatchConnectionProviding {
+        guard let link = sharedLink as? WCSessionWireLink else { return NoopWatchConnection() }
+        return WatchConnection(
+            link: link,
+            clock: clock,
+            pairedFact: { link.isPaired },
+            installedFact: { link.isWatchAppInstalled }
+        )
+    }
+}

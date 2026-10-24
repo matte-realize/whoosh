@@ -408,7 +408,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 11, 13, 20; crash-response 12, 20; rear-camera 30 (forced un-dim)
   - _Parallel:_ Group P4
 
-- [ ] 22. `[iOS]` `[DEMO]` Phone Apple Watch screen: readiness, haptics test, patterns, settings
+- [x] 22. `[iOS]` `[DEMO]` Phone Apple Watch screen: readiness, haptics test, patterns, settings
   - `WatchReadinessView(+VM)` driven by `WatchReadinessEvaluator`: checklist rows with icon + text, the
     haptics test (send test alert; show the reply; "I felt it" / "I didn't"; troubleshooting after three
     misses), **Feel the patterns**, install/pair instructions, reminders, watch battery; Home entry and a

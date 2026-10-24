@@ -26,6 +26,9 @@ struct SettingsView: View {
     /// Demo mode's controller, so Settings can show the off-by-default "Demo
     /// mode" section and its tools (demo-mode Requirement 1.1).
     var demo: DemoModeController
+    /// Drives the "Apple Watch" screen pushed from the watch row (watch-
+    /// companion task 22). The view just pushes `WatchReadinessView`.
+    var watchReadiness: WatchReadinessViewModel
     @State private var showDeleteConfirmation = false
     @Environment(\.openURL) private var openURL
 
@@ -40,6 +43,7 @@ struct SettingsView: View {
                 cloudSyncSection
                 rideSection
                 RearCameraSettingsSection(viewModel: rearCamera)
+                appleWatchSection
                 crashAlertsSection
                 DemoModeSection(controller: demo)
                 deleteAllButton
@@ -239,6 +243,44 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Apple Watch (opt-in; pushes the readiness/connect screen)
+
+    private var appleWatchSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            sectionHeader("Apple Watch")
+            NavigationLink {
+                WatchReadinessView(viewModel: watchReadiness)
+            } label: {
+                HStack(spacing: Theme.Spacing.md) {
+                    Image(systemName: "applewatch")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Theme.Colors.textPrimary)
+                        .frame(width: 24)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Apple Watch")
+                            .font(Theme.Typography.body)
+                            .foregroundStyle(Theme.Colors.textPrimary)
+                        Text("Connect your watch, test the wrist buzz, and feel the ride cues.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                }
+                .padding(Theme.Spacing.md)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .cardStyle()
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Apple Watch")
+            .accessibilityHint("Opens watch connection, haptics test, and ride cue previews")
+        }
+    }
+
     // MARK: - Safety · Crash alerts (opt-in; pushes the Emergency setup hub)
 
     @ViewBuilder private var crashAlertsSection: some View {
@@ -340,6 +382,6 @@ private extension View {
 #Preview("Settings") {
     let env = AppEnvironment.preview()
     return NavigationStack {
-        SettingsView(viewModel: env.settingsViewModel, rearCamera: env.rearCameraSettingsViewModel, demo: env.demo)
+        SettingsView(viewModel: env.settingsViewModel, rearCamera: env.rearCameraSettingsViewModel, demo: env.demo, watchReadiness: env.makeWatchReadinessViewModel())
     }
 }

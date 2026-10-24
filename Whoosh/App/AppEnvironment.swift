@@ -93,6 +93,14 @@ final class AppEnvironment {
     /// `makeRideStatusPublisher()`.
     let remote: RideRemoteControlling
 
+    /// The phone's "Apple Watch" readiness/connect adapter (watch-companion task
+    /// 22). Exposes paired / installed / reachable facts and the rider-initiated
+    /// test buzz and pattern previews the Settings "Apple Watch" screen and the
+    /// pre-ride connect step use. The live build reads the WatchConnectivity
+    /// facts inside `Services/Remote/`; previews/tests inject a fake. It never
+    /// touches the network and never blocks a ride.
+    let watchConnection: WatchConnectionProviding
+
     /// Launches/wakes the watch app for its keep-alive workout (watch-companion
     /// task 16). A `NoopWatchLauncher`-equivalent is not needed: the real
     /// launcher is a no-op when Health is unavailable, and it is only *used* on a
@@ -137,7 +145,8 @@ final class AppEnvironment {
         makeRideTracker: @escaping () -> LocationTracking,
         remote: RideRemoteControlling,
         watchLauncher: (any WatchLaunching)? = nil,
-        watchStatusHolder: WatchLiveStatusHolder = WatchLiveStatusHolder()
+        watchStatusHolder: WatchLiveStatusHolder = WatchLiveStatusHolder(),
+        watchConnection: WatchConnectionProviding? = nil
     ) {
         self.repository = repository
         self.clock = clock
@@ -146,6 +155,7 @@ final class AppEnvironment {
         self.remote = remote
         self.watchLauncher = watchLauncher
         self.watchStatusHolder = watchStatusHolder
+        self.watchConnection = watchConnection ?? NoopWatchConnection()
         self.nearMissRepository = nearMissRepository
         self.nearMissRecorder = NearMissRecorder(repository: nearMissRepository)
         self.crash = crash
@@ -497,6 +507,24 @@ final class AppEnvironment {
         )
     }
 
+    /// Build the Settings "Apple Watch" readiness screen view model (watch-
+    /// companion task 22), reading the shared `watchConnection` adapter.
+    func makeWatchReadinessViewModel() -> WatchReadinessViewModel {
+        WatchReadinessViewModel(connection: watchConnection)
+    }
+
+    /// Whether the pre-ride "Connect your watch" step should be shown before the
+    /// ride (owner request): only when a watch is paired and the rider hasn't
+    /// suppressed it. With no watch the ride flow is unchanged.
+    var shouldPresentWatchConnectStep: Bool {
+        WatchConnectStepViewModel.shouldPresent(connection: watchConnection, defaults: .standard)
+    }
+
+    /// Build the pre-ride "Connect your watch" step view model.
+    func makeWatchConnectStepViewModel() -> WatchConnectStepViewModel {
+        WatchConnectStepViewModel(connection: watchConnection, defaults: .standard)
+    }
+
     /// Build the ride-mode controller for a ride (rear-camera task 21). Ride
     /// mode is on only when the rider enabled it in Settings; the controller
     /// restores brightness on every exit path.
@@ -665,6 +693,14 @@ final class AppEnvironment {
             appState: { .foregroundActiveScreen }
         )
 
+        // The "Apple Watch" readiness/connect adapter (watch-companion task 22),
+        // over the SAME link as the remote: the connectivity session has one
+        // delegate, so a second link would steal the live feed. Informational only.
+        let watchConnection = PhoneWatchConnectionFactory.make(
+            clock: clock,
+            sharedLink: remoteComposition.watchLink
+        )
+
         return AppEnvironment(
             repository: repository,
             clock: clock,
@@ -690,7 +726,8 @@ final class AppEnvironment {
             makeRideTracker: { CoreLocationTracker() },
             remote: remote,
             watchLauncher: WatchLauncher(),
-            watchStatusHolder: remoteComposition.statusHolder
+            watchStatusHolder: remoteComposition.statusHolder,
+            watchConnection: watchConnection
         )
     }
 
@@ -805,7 +842,8 @@ final class AppEnvironment {
             cameraServices: cameraServices,
             makeHomeTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) },
             makeRideTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) },
-            remote: NoopRideRemote()
+            remote: NoopRideRemote(),
+            watchConnection: FakeWatchConnection()
         )
     }
 }
