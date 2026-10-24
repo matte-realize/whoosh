@@ -6,6 +6,14 @@ and apply to all code, copy, and the web dashboard.
 
 ## Data Handling
 
+> **Hackathon build defaults (owner decision, October 24, 2026).** For the demo build, ride
+> sync, sharing new rides on the website, rear camera recording and crash alerts start **on**;
+> the rider can switch each off and the choice is remembered. Crash alerts still arm only after
+> the rider adds a contact and accepts the consent screen, and automatic alert SMS still goes
+> only through the backend (never silently from the phone). Where this file says "opt-in" or
+> "off by default" for those four features, this note overrides it for the hackathon build.
+
+
 - **Local-first.** Rides are recorded and stored on-device (SwiftData). Every core feature
   (record, summary, history, delete) works with no network and no account.
 - **Cloud sync is opt-in.** Uploading rides to Supabase (for the web dashboard) is off by
