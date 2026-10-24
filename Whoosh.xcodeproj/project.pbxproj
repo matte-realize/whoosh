@@ -322,7 +322,7 @@
 				DEVELOPMENT_TEAM = Z87CXCTTK6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Whoosh;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Whoosh uses the rear camera to experimentally detect approaching vehicles. Video is processed on your device and is not uploaded.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Whoosh uses the rear camera to record video of the road behind you during rides. Video is saved on your device and is not uploaded.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Whoosh uses your location to record your cycling route and show your ride map.";
 				INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY = "$(SUPABASE_PUBLISHABLE_KEY)";
 				INFOPLIST_KEY_SUPABASE_URL = "$(SUPABASE_URL)";
@@ -368,7 +368,7 @@
 				DEVELOPMENT_TEAM = Z87CXCTTK6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Whoosh;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Whoosh uses the rear camera to experimentally detect approaching vehicles. Video is processed on your device and is not uploaded.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Whoosh uses the rear camera to record video of the road behind you during rides. Video is saved on your device and is not uploaded.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Whoosh uses your location to record your cycling route and show your ride map.";
 				INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY = "$(SUPABASE_PUBLISHABLE_KEY)";
 				INFOPLIST_KEY_SUPABASE_URL = "$(SUPABASE_URL)";

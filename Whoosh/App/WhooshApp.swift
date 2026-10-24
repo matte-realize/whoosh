@@ -132,6 +132,7 @@ struct WhooshApp: App {
         case .settings:
             SettingsView(
                 viewModel: environment.settingsViewModel,
+                rearCamera: environment.rearCameraSettingsViewModel,
                 demo: environment.demo,
                 onOpenCrashAlerts: { path.append(.crashAlerts) }
             )

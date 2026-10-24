@@ -17,10 +17,14 @@ import SwiftUI
 ///   calls `SettingsViewModel.deleteAllRides()` and surfaces any error message.
 struct SettingsView: View {
     @Bindable var viewModel: SettingsViewModel
+    /// Drives the "Rear camera" section and its first-enable permission flow
+    /// (rear-camera spec Requirement 2/18.1, task 20).
+    var rearCamera: RearCameraSettingsViewModel
     /// Demo mode's controller, so Settings can show the off-by-default "Demo
     /// mode" section and its tools (demo-mode Requirement 1.1).
     var demo: DemoModeController
     @State private var showDeleteConfirmation = false
+    @Environment(\.openURL) private var openURL
 
     /// Navigation hook to push the Emergency setup hub (crash-response task 16).
     /// Defaults to a no-op so the composition root (task 26) wires the push
@@ -32,6 +36,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                 cloudSyncSection
                 rideSection
+                RearCameraSettingsSection(viewModel: rearCamera)
                 crashAlertsSection
                 safetySection
                 DemoModeSection(controller: demo)
@@ -42,6 +47,15 @@ struct SettingsView: View {
         .background(Theme.Colors.screenBackground)
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.large)
+        // Wire the rear-camera "Open Settings" path to the system Settings app
+        // (the view model stays UIKit-free; the view owns the URL open).
+        .onAppear {
+            rearCamera.onOpenSystemSettings = {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    openURL(url)
+                }
+            }
+        }
         .alert("Delete all rides?", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Delete all", role: .destructive) {
@@ -347,6 +361,6 @@ private extension View {
 #Preview("Settings") {
     let env = AppEnvironment.preview()
     return NavigationStack {
-        SettingsView(viewModel: env.settingsViewModel, demo: env.demo)
+        SettingsView(viewModel: env.settingsViewModel, rearCamera: env.rearCameraSettingsViewModel, demo: env.demo)
     }
 }

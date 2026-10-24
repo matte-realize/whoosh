@@ -67,7 +67,11 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Whoosh
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Whoosh uses your location to record your cycling route and show your ride map."
-        INFOPLIST_KEY_NSCameraUsageDescription: "Whoosh uses the rear camera to experimentally detect approaching vehicles. Video is processed on your device and is not uploaded."
+        # Camera is requested only when the rider enables "Record rear camera"
+        # (rear-camera spec Requirement 2.7; privacy.md). Honest recording
+        # statement — footage stays on the device and is never uploaded. No
+        # microphone string: audio recording is off (O-CAM5).
+        INFOPLIST_KEY_NSCameraUsageDescription: "Whoosh uses the rear camera to record video of the road behind you during rides. Video is saved on your device and is not uploaded."
         # Opt-in Supabase sync (task 28b): the gitignored Secrets.xcconfig values
         # flow into the generated Info.plist so the app reads URL + publishable
         # key at runtime; no key is hard-coded in Swift. With no Secrets.xcconfig

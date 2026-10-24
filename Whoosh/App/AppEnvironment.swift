@@ -41,6 +41,10 @@ final class AppEnvironment {
 
     /// Persisted GPS-accuracy setting; fed into `RideTuning` for each new ride.
     let settingsViewModel: SettingsViewModel
+    /// Drives the "Rear camera" Settings section and the first-enable camera
+    /// permission flow (rear-camera spec Requirement 2/18.1, task 20). Off by
+    /// default; the camera is requested only when the rider enables recording.
+    let rearCameraSettingsViewModel: RearCameraSettingsViewModel
     /// The Home hub view model (owns its own tracker for authorization).
     let homeViewModel: HomeViewModel
 
@@ -71,6 +75,8 @@ final class AppEnvironment {
         supabaseProvider: SupabaseClientProvider?,
         appVersion: String,
         pendingDeletes: PendingRemoteDeleteStore,
+        cameraPermission: CameraPermission,
+        rearCameraStore: RearCameraSettingsStore,
         makeHomeTracker: () -> LocationTracking,
         makeRideTracker: @escaping () -> LocationTracking
     ) {
@@ -83,6 +89,11 @@ final class AppEnvironment {
         self.makeRideTracker = makeRideTracker
         let settings = SettingsViewModel(repository: repository, defaults: defaults)
         self.settingsViewModel = settings
+        self.rearCameraSettingsViewModel = RearCameraSettingsViewModel(
+            permission: cameraPermission,
+            store: rearCameraStore,
+            clipRepository: InMemoryClipRepository()
+        )
         self.homeViewModel = HomeViewModel(
             repository: repository,
             clock: clock,
@@ -286,6 +297,8 @@ final class AppEnvironment {
             supabaseProvider: SupabaseClientProvider(),
             appVersion: Self.appVersion(),
             pendingDeletes: UserDefaultsPendingRemoteDeleteStore(),
+            cameraPermission: AVCameraPermission(),
+            rearCameraStore: UserDefaultsRearCameraSettingsStore(),
             makeHomeTracker: { CoreLocationTracker() },
             makeRideTracker: { CoreLocationTracker() }
         )
@@ -372,6 +385,8 @@ final class AppEnvironment {
             supabaseProvider: nil,
             appVersion: "preview",
             pendingDeletes: InMemoryPendingRemoteDeleteStore(),
+            cameraPermission: FakeCameraPermission(status: .notDetermined),
+            rearCameraStore: InMemoryRearCameraSettingsStore(),
             makeHomeTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) },
             makeRideTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) }
         )

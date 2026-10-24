@@ -83,8 +83,10 @@ enum CameraCaptureEvent: Equatable, Sendable {
 /// ordering, discontinuity flags) is exercisable now. The real pipeline delivers
 /// the image; this seam delivers the timing/ordering contract both agree on.
 ///
-/// Foundation-only value type; `Equatable`, `Sendable`.
-struct CameraCaptureFrame: Equatable, Sendable {
+/// Foundation-only value type; `Equatable`, `Sendable`. `nonisolated` so the
+/// capture service can build it on its video queue (off the main actor); it
+/// crosses actors by its `Sendable` contract.
+nonisolated struct CameraCaptureFrame: Equatable, Sendable {
     /// Monotonic capture-session time in seconds (ordering / intervals).
     let presentationTime: TimeInterval
     /// Wall-clock capture instant (the value a detector copies into a detection
@@ -118,6 +120,7 @@ struct CameraCaptureFrame: Equatable, Sendable {
 /// `Sendable` because `offer` is called off the main actor on the capture queue.
 protocol CameraFrameSink: Sendable {
     /// Offer a captured frame to the sink. Must return quickly and never block
-    /// capture, the writer, or another consumer.
-    func offer(_ frame: CameraCaptureFrame)
+    /// capture, the writer, or another consumer. `nonisolated` because it is
+    /// called off the main actor on the capture queue.
+    nonisolated func offer(_ frame: CameraCaptureFrame)
 }
