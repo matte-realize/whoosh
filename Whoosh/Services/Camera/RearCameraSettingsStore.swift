@@ -9,8 +9,9 @@ import Foundation
 /// by default**, **back** wide camera, **Standard** quality, ride mode **on**,
 /// a 10-minute buffer.
 struct RearCameraSettings: Equatable, Codable, Sendable {
-    /// Whether rear camera recording is enabled (OFF by default; enabling is
-    /// what first triggers the camera permission prompt, Requirement 2.1).
+    /// Whether rear camera recording is enabled. ON by default in the hackathon
+    /// build (owner decision, October 24, 2026); the camera permission prompt
+    /// appears the first time a ride needs the camera.
     var recordingEnabled: Bool
     /// Which camera to record with (back by default; front option).
     var cameraPosition: CameraDevicePosition
@@ -24,7 +25,7 @@ struct RearCameraSettings: Equatable, Codable, Sendable {
     var bufferLengthSeconds: TimeInterval
 
     init(
-        recordingEnabled: Bool = false,
+        recordingEnabled: Bool = true,
         cameraPosition: CameraDevicePosition = .back,
         quality: CaptureQuality = .standard,
         rideModeEnabled: Bool = true,

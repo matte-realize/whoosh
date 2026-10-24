@@ -136,7 +136,7 @@ struct SettingsView: View {
             }
             .cardStyle()
 
-            Text("Uploads finished rides (stats + privacy-trimmed route) so they appear on the Whoosh website. Camera video is never uploaded. Off by default. Sharing is a separate choice and only applies to rides finished while it's on.")
+            Text("Uploads finished rides (stats + privacy-trimmed route) so they appear on the Whoosh website. Camera video is never uploaded. On by default; turn it off anytime. Sharing is a separate choice and only applies to rides finished while it's on.")
                 .font(.system(size: 11))
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -253,7 +253,7 @@ struct SettingsView: View {
                             Text("Crash alerts")
                                 .font(Theme.Typography.body)
                                 .foregroundStyle(Theme.Colors.textPrimary)
-                            Text("Opt-in. Off by default.")
+                            Text("Add a contact and agree to the consent screen to arm alerts.")
                                 .font(.system(size: 11))
                                 .foregroundStyle(Theme.Colors.textSecondary)
                         }
@@ -269,7 +269,7 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
                 .cardStyle()
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("Crash alerts, opt-in, off by default")
+                .accessibilityLabel("Crash alerts, needs a contact and consent")
                 .accessibilityHint("Opens emergency contact and crash alert setup")
             }
         }

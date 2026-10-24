@@ -20,7 +20,7 @@ struct CrashAlertSettings: Equatable, Codable, Sendable {
     var freshInstallMarker: Bool
 
     init(
-        enabled: Bool = false,
+        enabled: Bool = true,
         riderLabel: String? = nil,
         countdownSeconds: TimeInterval? = nil,
         developerToolsEnabled: Bool = false,

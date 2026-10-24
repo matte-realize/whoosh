@@ -62,8 +62,11 @@ final class SettingsViewModel {
         } else {
             self.accuracy = RideTuning().accuracy
         }
-        self.syncEnabled = defaults.bool(forKey: Self.syncEnabledDefaultsKey)
-        self.shareNewRidesPublicly = defaults.bool(forKey: Self.shareNewRidesDefaultsKey)
+        // Hackathon build: sync and sharing default ON so rides reach the website
+        // without setup (owner decision, October 24, 2026); the rider can turn
+        // either off, and an explicit choice is remembered.
+        self.syncEnabled = (defaults.object(forKey: Self.syncEnabledDefaultsKey) as? Bool) ?? true
+        self.shareNewRidesPublicly = (defaults.object(forKey: Self.shareNewRidesDefaultsKey) as? Bool) ?? true
     }
 
     /// The `TrackingAccuracy` to feed into `RideTuning.accuracy` for the next

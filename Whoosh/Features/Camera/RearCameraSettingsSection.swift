@@ -60,7 +60,7 @@ struct RearCameraSettingsSection: View {
                 Text("Record rear camera")
                     .font(Theme.Typography.rowTitle)
                     .foregroundStyle(Theme.Colors.textPrimary)
-                Text("Off by default")
+                Text("On by default; video stays on this iPhone")
                     .font(.system(size: 11))
                     .foregroundStyle(Theme.Colors.textSecondary)
             }

@@ -30,6 +30,10 @@ struct WhooshApp: App {
     @State private var crashStatusPresented = false
     /// Routes crash backup-notification taps to the status screen.
     @State private var notificationRouter = CrashNotificationRouter()
+    /// Presents the crash-alert setup hub. It is a sheet, not a push: the hub
+    /// owns its own NavigationStack, and nesting one stack inside the Home
+    /// stack crashes SwiftUI (AnyNavigationPath comparisonTypeMismatch).
+    @State private var crashAlertsPresented = false
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -38,7 +42,6 @@ struct WhooshApp: App {
         case history
         case settings
         case summary(Ride)
-        case crashAlerts
     }
 
     var body: some Scene {
@@ -134,33 +137,38 @@ struct WhooshApp: App {
                 viewModel: environment.settingsViewModel,
                 rearCamera: environment.rearCameraSettingsViewModel,
                 demo: environment.demo,
-                onOpenCrashAlerts: { path.append(.crashAlerts) }
+                onOpenCrashAlerts: { crashAlertsPresented = true }
             )
-        case .summary(let ride):
-            RideSummaryView(ride: ride, presentation: .historyDetail)
-        case .crashAlerts:
-            EmergencySetupHostView(
-                contactStore: environment.crash.contactStore,
-                consentStore: environment.crash.consentStore,
-                settingsStore: environment.crash.settingsStore,
-                notifier: environment.crash.noopNotifier,
-                connectivity: environment.crash.connectivity,
-                scheduler: environment.crash.scheduler,
-                repository: environment.crash.repository,
-                clock: environment.clock,
-                isMessagingConnected: environment.crash.isMessagingConnected,
-                onConsentRevoked: {
-                    // Revoking disarms immediately and cancels any queued unsent
-                    // alert (Requirement 3.7).
-                    environment.crash.coordinator.consentRevoked()
-                    environment.crash.reevaluateArming()
-                }
-            )
-            .onDisappear {
+            .sheet(isPresented: $crashAlertsPresented, onDismiss: {
                 // Contacts / consent / toggle may have changed in setup; re-arm.
                 environment.crash.reevaluateArming()
+            }) {
+                crashAlertsSetup
             }
+        case .summary(let ride):
+            RideSummaryView(ride: ride, presentation: .historyDetail)
         }
+    }
+
+    /// The crash-alert setup hub, presented as a sheet from Settings.
+    private var crashAlertsSetup: some View {
+        EmergencySetupHostView(
+            contactStore: environment.crash.contactStore,
+            consentStore: environment.crash.consentStore,
+            settingsStore: environment.crash.settingsStore,
+            notifier: environment.crash.noopNotifier,
+            connectivity: environment.crash.connectivity,
+            scheduler: environment.crash.scheduler,
+            repository: environment.crash.repository,
+            clock: environment.clock,
+            isMessagingConnected: environment.crash.isMessagingConnected,
+            onConsentRevoked: {
+                // Revoking disarms immediately and cancels any queued unsent
+                // alert (Requirement 3.7).
+                environment.crash.coordinator.consentRevoked()
+                environment.crash.reevaluateArming()
+            }
+        )
     }
 
     // MARK: - Ride cover
