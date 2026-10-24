@@ -31,11 +31,25 @@ struct ActiveRideView: View {
     /// up / MVP previews); it adds no fourth ride number.
     var crashAlertsOn: Bool?
 
+    /// The current rear-camera recording state, when recording this ride
+    /// (rear-camera task 23). `nil` when the camera is off — the existing
+    /// "Rear detection off" chip then stays. Drives a calm Recording / trouble
+    /// chip, icon + text.
+    var cameraState: CameraRecordingState?
+
+    /// Save a clip on an explicit rider action (rear-camera task 23). `nil` when
+    /// the camera is off for this ride, which hides the control.
+    var onSaveClip: (() -> ClipSaveOutcome)?
+
     /// The screen controller that owns the idle timer (and ride-mode
     /// brightness). Defaults to the shared production controller so the idle
     /// timer funnels through the one reason-counting owner, shared with the
     /// crash countdown. Tests/previews can inject a fake.
     var screen: ScreenController = UIKitScreenController.shared
+
+    /// Brief, transient "Clip saved" / "Nothing to save yet" confirmation shown
+    /// on the Save clip control (task 23).
+    @State private var saveClipMessage: String?
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -113,7 +127,7 @@ struct ActiveRideView: View {
             }
             Spacer()
             HStack {
-                StateChip(variant: .rearDetectionOff, scheme: .dark)
+                cameraOrDetectionChip
                 if let crashAlertsOn {
                     CrashAlertStateChip(isOn: crashAlertsOn, scheme: .dark)
                 }
@@ -122,6 +136,26 @@ struct ActiveRideView: View {
         }
         .padding(Theme.Spacing.lg)
         .padding(.bottom, 300) // keep chrome above the bottom sheet
+    }
+
+    /// The real camera/recording chip when recording this ride; otherwise the
+    /// existing inert "Rear detection off" chip (Requirement 18.3). Icon + text,
+    /// never colour alone; a trouble state shows a calm amber chip.
+    @ViewBuilder private var cameraOrDetectionChip: some View {
+        if let cameraState {
+            switch cameraState {
+            case .recording, .degraded:
+                StateChip(variant: .recording, scheme: .dark)
+                    .accessibilityLabel("Recording video")
+            case .off:
+                StateChip(variant: .rearDetectionOff, scheme: .dark)
+            case .preparing, .interrupted, .stopped, .stopping, .failed:
+                StateChip(variant: .paused, scheme: .dark)
+                    .accessibilityLabel("Camera attention needed")
+            }
+        } else {
+            StateChip(variant: .rearDetectionOff, scheme: .dark)
+        }
     }
 
     private var stateChip: some View {
@@ -142,6 +176,10 @@ struct ActiveRideView: View {
                 rideTime
                 metricsRow
                 controls
+
+                if onSaveClip != nil {
+                    saveClipControl
+                }
 
                 Text("Hold Stop to end ride")
                     .font(.system(size: 10))
@@ -236,6 +274,36 @@ struct ActiveRideView: View {
                 .frame(width: 78, height: Theme.Size.minTouchTarget)
         }
         .padding(.horizontal, Theme.Spacing.lg)
+    }
+
+    /// The "Save clip" control shown on the ride screen when recording (task 23).
+    /// Tapping saves a clip from the ring buffer and shows a brief confirmation;
+    /// honest copy only — it never claims a moment was guaranteed to be captured.
+    private var saveClipControl: some View {
+        Button {
+            guard let onSaveClip else { return }
+            let outcome = onSaveClip()
+            saveClipMessage = outcome == .nothingToSave ? "Nothing to save yet" : "Clip saved"
+        } label: {
+            Label(saveClipMessage ?? "Save clip", systemImage: "bookmark.fill")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(Theme.Palette.ink)
+                .frame(maxWidth: .infinity)
+                .frame(height: Theme.Size.minTouchTarget)
+                .background(Theme.Palette.lime)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, Theme.Spacing.lg)
+        .accessibilityLabel(saveClipMessage ?? "Save clip")
+        .accessibilityHint("Saves a clip of the last moments to this phone.")
+        .onChange(of: saveClipMessage) { _, message in
+            guard message != nil else { return }
+            Task {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                saveClipMessage = nil
+            }
+        }
     }
 
     // MARK: - Derived display values
