@@ -53,17 +53,23 @@ final class HapticAudioAlertManager: AlertManager {
     /// fires inside the cooldown window surfaces at most one cue. Any haptic or
     /// audio failure is swallowed so recording is never affected.
     func fire(_ kind: AlertKind) {
+        switch kind {
+        case .cautionRearVehicle:
+            break
+        case .cameraInterrupted, .cameraResumed, .cameraStopped, .clipSaved, .clipNotSaved, .phoneBatteryLow:
+            // Camera status notices go to the eyes-free surfaces (rear-camera
+            // AlertSink fan-out). A rear-mounted phone buzzing helps no one, and
+            // a notice must not use up the rear-vehicle cooldown.
+            return
+        }
+
         let now = clock.now()
         guard AlertCooldown.shouldFire(lastFiredAt: lastFiredAt, now: now, cooldown: cooldown) else {
             return
         }
         lastFiredAt = now
-
-        switch kind {
-        case .cautionRearVehicle:
-            haptics.playCaution()
-            tone.playCautionTone()
-        }
+        haptics.playCaution()
+        tone.playCautionTone()
     }
 }
 
