@@ -46,6 +46,10 @@ enum GSM7Sanitizer {
         for character in input {
             if let replacement = punctuationMap[character] {
                 mapped.append(replacement)
+            } else if character.isWhitespace {
+                // Tabs and other whitespace aren't in the GSM-7 subset; turn them
+                // into spaces so `collapseWhitespace` keeps the word break.
+                mapped.append(" ")
             } else if isGSM7(character) {
                 mapped.append(character)
             }
