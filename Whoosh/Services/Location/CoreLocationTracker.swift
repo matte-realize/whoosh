@@ -34,10 +34,14 @@ final class CoreLocationTracker: NSObject, LocationTracking {
         manager.pausesLocationUpdatesAutomatically = false
     }
 
-    /// Current authorization, mapped from the manager's status.
-    var authorizationStatus: LocationAuthorizationStatus {
-        CoreLocationMapping.authorizationStatus(from: manager.authorizationStatus)
-    }
+    /// Current authorization, cached from the delegate. Reading
+    /// `manager.authorizationStatus` directly is a synchronous XPC call to
+    /// `locationd`; at app launch that call hung the main thread indefinitely
+    /// (white screen on the simulator). Core Location calls
+    /// `locationManagerDidChangeAuthorization` right after the manager is
+    /// created, so the real status arrives through `onAuthorizationChange`
+    /// moments later, and the view models already handle a late status.
+    private(set) var authorizationStatus: LocationAuthorizationStatus = .notDetermined
 
     func requestWhenInUseAuthorization() {
         manager.requestWhenInUseAuthorization()
@@ -81,9 +85,10 @@ extension CoreLocationTracker: CLLocationManagerDelegate {
         // `CLAuthorizationStatus` is Sendable; capture it before hopping.
         let systemStatus = manager.authorizationStatus
         Task { @MainActor [weak self] in
-            self?.onAuthorizationChange?(
-                CoreLocationMapping.authorizationStatus(from: systemStatus)
-            )
+            guard let self else { return }
+            let status = CoreLocationMapping.authorizationStatus(from: systemStatus)
+            self.authorizationStatus = status
+            self.onAuthorizationChange?(status)
         }
     }
 
