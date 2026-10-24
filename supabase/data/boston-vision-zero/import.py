@@ -1,0 +1,251 @@
+#!/usr/bin/env python3
+"""Import City of Boston Vision Zero crash records into Whoosh's public_crash_records table.
+
+Standard library only. Two inputs:
+  * a saved snapshot (the default, works offline):  bike_crashes_mass_ave.json in this folder
+  * --fetch: page through the live CKAN API (needs network), optionally all streets and modes
+
+Outputs, all deterministic so diffs are reviewable:
+  --sql PATH       upsert SQL (insert ... on conflict do update), safe to run more than once
+  --fixture PATH   the website's fixture JSON (web/fixtures/city_crashes.json)
+  --save PATH      with --fetch, save the fetched records as a new snapshot
+
+Examples:
+  python3 import.py --sql ../../migrations/20261024160100_boston_bike_crashes_mass_ave.sql \
+                    --fixture ../../../web/fixtures/city_crashes.json
+  python3 import.py --fetch --mode bike --save all_bike.json --sql /tmp/boston_bike.sql
+  psql "$DATABASE_URL" -f /tmp/boston_bike.sql          # hosted project, as Role C
+
+Source: https://data.boston.gov/dataset/vision-zero-crash-records (PDDL, public domain).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import urllib.parse
+import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+DEFAULT_SNAPSHOT = HERE / "bike_crashes_mass_ave.json"
+API = "https://data.boston.gov/api/3/action/datastore_search"
+RESOURCE_ID = "e4bfe397-6bfc-49c5-9367-c879fac7401d"
+SOURCE_KEY = "boston_vision_zero"
+SOURCE = {
+    "key": SOURCE_KEY,
+    "name": "Vision Zero Crash Records",
+    "publisher": "City of Boston, Department of Innovation and Technology",
+    "url": "https://data.boston.gov/dataset/vision-zero-crash-records",
+    "license": "Open Data Commons Public Domain Dedication and License (PDDL)",
+    "notes": (
+        "911 dispatch records verified as needing a public safety response. The time is when "
+        "responders were dispatched, not the crash. mode is the most vulnerable person involved. "
+        "Severity is not published. City-owned Boston streets only."
+    ),
+}
+# Generous Boston bounding box: anything outside is a bad coordinate, not a Boston crash.
+BBOX = (42.22, 42.41, -71.20, -70.98)
+MODES = {"bike", "ped", "mv"}
+
+
+class ImportErrorWithLine(Exception):
+    pass
+
+
+def fetch(mode: str | None, street: str | None) -> list[dict]:
+    """Pages through the CKAN datastore API. Needs network access."""
+    filters = {}
+    if mode:
+        filters["mode_type"] = mode
+    if street:
+        filters["street"] = street
+    records: list[dict] = []
+    offset = 0
+    while True:
+        query = urllib.parse.urlencode({
+            "resource_id": RESOURCE_ID,
+            "limit": 1000,
+            "offset": offset,
+            "filters": json.dumps(filters),
+        })
+        with urllib.request.urlopen(f"{API}?{query}", timeout=30) as response:
+            payload = json.load(response)
+        if not payload.get("success"):
+            raise SystemExit("error: the API did not return success")
+        batch = payload["result"]["records"]
+        records.extend(batch)
+        total = payload["result"].get("total", len(records))
+        offset += len(batch)
+        if not batch or offset >= total:
+            break
+    return records
+
+
+def clean(record: dict) -> dict:
+    """Validates and normalizes one source record. Raises on anything unusable."""
+    rid = record.get("_id")
+    if rid is None:
+        raise ImportErrorWithLine("missing _id")
+    mode = (record.get("mode_type") or "bike").strip().lower()
+    if mode not in MODES:
+        raise ImportErrorWithLine(f"record {rid}: unknown mode {mode!r}")
+    try:
+        ts = datetime.strptime(record["dispatch_ts"].replace("+00", "+0000"), "%Y-%m-%d %H:%M:%S%z")
+        lat = float(record["lat"])
+        lon = float(record["long"])
+    except (KeyError, ValueError) as error:
+        raise ImportErrorWithLine(f"record {rid}: {error}") from None
+    if not (BBOX[0] <= lat <= BBOX[1] and BBOX[2] <= lon <= BBOX[3]):
+        raise ImportErrorWithLine(f"record {rid}: coordinates outside Boston ({lat}, {lon})")
+
+    def text(key: str) -> str | None:
+        value = (record.get(key) or "").strip()
+        return value[:120] or None
+
+    return {
+        "source_record_id": str(rid),
+        "occurred_at": ts.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "mode": mode,
+        "location_type": (record.get("location_type") or "").strip()[:40] or None,
+        "street": text("street"),
+        "cross_street_1": text("xstreet1"),
+        "cross_street_2": text("xstreet2"),
+        "latitude": round(lat, 6),
+        "longitude": round(lon, 6),
+    }
+
+
+def q(value) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, (int, float)):
+        return repr(value)
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def to_sql(rows: list[dict], retrieved_on: str, data_through: str | None, label: str) -> str:
+    out = [
+        f"-- GENERATED by supabase/data/boston-vision-zero/import.py from {label}.",
+        "-- Do not edit by hand; regenerate. Safe to run more than once (upserts).",
+        f"-- {len(rows)} records. Source: {SOURCE['url']} ({SOURCE['license']}).",
+        "",
+        "insert into public.data_sources (key, name, publisher, url, license, retrieved_on, data_through, notes)",
+        "values (" + ", ".join(q(v) for v in [
+            SOURCE["key"], SOURCE["name"], SOURCE["publisher"], SOURCE["url"], SOURCE["license"],
+            retrieved_on, data_through, SOURCE["notes"],
+        ]) + ")",
+        "on conflict (key) do update set",
+        "  name = excluded.name, publisher = excluded.publisher, url = excluded.url,",
+        "  license = excluded.license, retrieved_on = excluded.retrieved_on,",
+        "  data_through = excluded.data_through, notes = excluded.notes, updated_at = now();",
+        "",
+        "insert into public.public_crash_records",
+        "  (source, source_record_id, occurred_at, mode, location_type, street, cross_street_1, cross_street_2, latitude, longitude)",
+        "values",
+    ]
+    values = [
+        "  (" + ", ".join(q(v) for v in [
+            SOURCE_KEY, r["source_record_id"], r["occurred_at"], r["mode"], r["location_type"],
+            r["street"], r["cross_street_1"], r["cross_street_2"], r["latitude"], r["longitude"],
+        ]) + ")"
+        for r in rows
+    ]
+    out.append(",\n".join(values))
+    out += [
+        "on conflict (source, source_record_id) do update set",
+        "  occurred_at = excluded.occurred_at, mode = excluded.mode, location_type = excluded.location_type,",
+        "  street = excluded.street, cross_street_1 = excluded.cross_street_1,",
+        "  cross_street_2 = excluded.cross_street_2, latitude = excluded.latitude,",
+        "  longitude = excluded.longitude, imported_at = now();",
+        "",
+    ]
+    return "\n".join(out)
+
+
+def to_fixture(rows: list[dict], retrieved_on: str, data_through: str | None) -> dict:
+    """The website's fixture: the same fields public_crash_points exposes."""
+    return {
+        "source": {k: SOURCE[k] for k in ("key", "name", "publisher", "url", "license")}
+        | {"retrieved_on": retrieved_on, "data_through": data_through},
+        "points": [
+            {
+                "source_record_id": r["source_record_id"],
+                "occurred_at": r["occurred_at"],
+                "mode": r["mode"],
+                "street": r["street"],
+                "cross_street_1": r["cross_street_1"],
+                "cross_street_2": r["cross_street_2"],
+                "latitude": r["latitude"],
+                "longitude": r["longitude"],
+            }
+            for r in rows
+        ],
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--snapshot", type=Path, default=DEFAULT_SNAPSHOT)
+    parser.add_argument("--fetch", action="store_true", help="fetch from the live API instead of a snapshot")
+    parser.add_argument("--mode", default="bike", help="with --fetch: bike, ped, mv, or 'all'")
+    parser.add_argument("--street", default=None, help="with --fetch: exact street name, e.g. 'MASSACHUSETTS AVE'")
+    parser.add_argument("--save", type=Path, help="with --fetch: write the fetched records as a snapshot")
+    parser.add_argument("--sql", type=Path)
+    parser.add_argument("--fixture", type=Path)
+    args = parser.parse_args()
+
+    if args.fetch:
+        mode = None if args.mode == "all" else args.mode
+        raw = fetch(mode, args.street)
+        retrieved_on = datetime.now(timezone.utc).date().isoformat()
+        data_through = None
+        label = f"a live fetch on {retrieved_on} (mode={args.mode}, street={args.street or 'all'})"
+        if args.save:
+            args.save.write_text(json.dumps({
+                **{k: SOURCE[k] for k in ("url", "license")},
+                "resource_id": RESOURCE_ID,
+                "query": {"mode_type": mode, "street": args.street},
+                "retrieved_on": retrieved_on,
+                "records": raw,
+            }, indent=2) + "\n")
+    else:
+        snapshot = json.loads(args.snapshot.read_text())
+        raw = snapshot["records"]
+        # Records saved with a mode filter don't repeat mode_type; restore it from the query.
+        for record in raw:
+            record.setdefault("mode_type", snapshot.get("query", {}).get("mode_type"))
+        retrieved_on = snapshot["retrieved_on"]
+        data_through = snapshot.get("data_through")
+        label = f"the snapshot {args.snapshot.name} (retrieved {retrieved_on})"
+
+    rows, problems = [], []
+    seen = set()
+    for record in raw:
+        try:
+            row = clean(record)
+        except ImportErrorWithLine as error:
+            problems.append(str(error))
+            continue
+        if row["source_record_id"] in seen:
+            problems.append(f"record {row['source_record_id']}: duplicate")
+            continue
+        seen.add(row["source_record_id"])
+        rows.append(row)
+    rows.sort(key=lambda r: int(r["source_record_id"]))
+
+    for problem in problems:
+        print(f"skipped: {problem}", file=sys.stderr)
+    print(f"{len(rows)} records ready, {len(problems)} skipped", file=sys.stderr)
+
+    if args.sql:
+        args.sql.write_text(to_sql(rows, retrieved_on, data_through, label))
+    if args.fixture:
+        args.fixture.write_text(json.dumps(to_fixture(rows, retrieved_on, data_through), indent=2) + "\n")
+    return 0 if rows else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

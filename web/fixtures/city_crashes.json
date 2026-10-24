@@ -1,0 +1,663 @@
+{
+  "source": {
+    "key": "boston_vision_zero",
+    "name": "Vision Zero Crash Records",
+    "publisher": "City of Boston, Department of Innovation and Technology",
+    "url": "https://data.boston.gov/dataset/vision-zero-crash-records",
+    "license": "Open Data Commons Public Domain Dedication and License (PDDL)",
+    "retrieved_on": "2026-10-24",
+    "data_through": "2026-08-31"
+  },
+  "points": [
+    {
+      "source_record_id": "903",
+      "occurred_at": "2016-10-11T21:12:14Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CLEARWAY ST",
+      "cross_street_2": "SAINT STEPHEN ST",
+      "latitude": 42.344862,
+      "longitude": -71.086548
+    },
+    {
+      "source_record_id": "949",
+      "occurred_at": "2017-06-23T11:58:30Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "BEACON ST",
+      "cross_street_2": "PUBLIC ALLEY NO. 414",
+      "latitude": 42.350705,
+      "longitude": -71.089419
+    },
+    {
+      "source_record_id": "1207",
+      "occurred_at": "2016-06-18T11:51:07Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "BELVIDERE ST",
+      "cross_street_2": "SAINT GERMAIN ST",
+      "latitude": 42.346358,
+      "longitude": -71.087283
+    },
+    {
+      "source_record_id": "1418",
+      "occurred_at": "2023-12-08T12:27:15Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "GERARD ST",
+      "cross_street_2": "ISLAND ST",
+      "latitude": 42.331927,
+      "longitude": -71.071238
+    },
+    {
+      "source_record_id": "1846",
+      "occurred_at": "2015-09-01T12:59:46Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "WASHINGTON ST",
+      "cross_street_2": "SHAWMUT AVE",
+      "latitude": 42.336887,
+      "longitude": -71.07739
+    },
+    {
+      "source_record_id": "2208",
+      "occurred_at": "2021-08-24T18:20:44Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "NAPA ST",
+      "cross_street_2": "SHIRLEY ST",
+      "latitude": 42.326984,
+      "longitude": -71.067023
+    },
+    {
+      "source_record_id": "3825",
+      "occurred_at": "2020-09-30T20:40:15Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CHESTER PARK",
+      "cross_street_2": "TREMONT ST",
+      "latitude": 42.338801,
+      "longitude": -71.079703
+    },
+    {
+      "source_record_id": "3882",
+      "occurred_at": "2021-07-19T10:47:09Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "MAGAZINE ST",
+      "cross_street_2": "PROCTOR ST",
+      "latitude": 42.327657,
+      "longitude": -71.067591
+    },
+    {
+      "source_record_id": "4209",
+      "occurred_at": "2024-10-01T12:13:16Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "NEWMARKET SQ",
+      "cross_street_2": "ALLSTATE RD",
+      "latitude": 42.326512,
+      "longitude": -71.06663
+    },
+    {
+      "source_record_id": "4533",
+      "occurred_at": "2015-10-17T18:26:14Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "COLUMBUS AVE",
+      "cross_street_2": "SAINT BOTOLPH ST",
+      "latitude": 42.341404,
+      "longitude": -71.082841
+    },
+    {
+      "source_record_id": "4967",
+      "occurred_at": "2020-07-13T14:32:41Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "ISLAND ST",
+      "cross_street_2": "CHESTERTON ST",
+      "latitude": 42.330602,
+      "longitude": -71.070071
+    },
+    {
+      "source_record_id": "5357",
+      "occurred_at": "2023-06-06T13:58:57Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "MAGAZINE ST",
+      "cross_street_2": "PROCTOR ST",
+      "latitude": 42.327657,
+      "longitude": -71.067591
+    },
+    {
+      "source_record_id": "6722",
+      "occurred_at": "2019-06-01T01:00:04Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "GERARD ST",
+      "cross_street_2": "ISLAND ST",
+      "latitude": 42.331361,
+      "longitude": -71.070717
+    },
+    {
+      "source_record_id": "6968",
+      "occurred_at": "2018-10-09T19:20:25Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "GERARD ST",
+      "cross_street_2": "ISLAND ST",
+      "latitude": 42.331464,
+      "longitude": -71.070804
+    },
+    {
+      "source_record_id": "7228",
+      "occurred_at": "2023-06-24T08:07:11Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "COLUMBUS AVE",
+      "cross_street_2": "SAINT BOTOLPH ST",
+      "latitude": 42.341171,
+      "longitude": -71.082505
+    },
+    {
+      "source_record_id": "7679",
+      "occurred_at": "2018-08-20T11:14:20Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "NAPA ST",
+      "cross_street_2": "SHIRLEY ST",
+      "latitude": 42.326984,
+      "longitude": -71.067023
+    },
+    {
+      "source_record_id": "7770",
+      "occurred_at": "2015-10-16T21:19:38Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CLEARWAY ST",
+      "cross_street_2": "SAINT STEPHEN ST",
+      "latitude": 42.345232,
+      "longitude": -71.086731
+    },
+    {
+      "source_record_id": "8984",
+      "occurred_at": "2020-10-03T18:27:59Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CLAPP ST",
+      "cross_street_2": "COLUMBIA RD",
+      "latitude": 42.322211,
+      "longitude": -71.062994
+    },
+    {
+      "source_record_id": "9457",
+      "occurred_at": "2019-01-23T05:17:06Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CLEARWAY ST",
+      "cross_street_2": "SAINT STEPHEN ST",
+      "latitude": 42.344444,
+      "longitude": -71.086342
+    },
+    {
+      "source_record_id": "9969",
+      "occurred_at": "2018-06-01T15:27:16Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CHESTER PARK",
+      "cross_street_2": "SHAWMUT AVE",
+      "latitude": 42.337432,
+      "longitude": -71.078204
+    },
+    {
+      "source_record_id": "9987",
+      "occurred_at": "2023-09-05T23:05:37Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "ISLAND ST",
+      "cross_street_2": "CHESTERTON ST",
+      "latitude": 42.330602,
+      "longitude": -71.070071
+    },
+    {
+      "source_record_id": "10434",
+      "occurred_at": "2026-08-27T19:21:30Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "PEIRSON ST",
+      "cross_street_2": "RUSFIELD ST",
+      "latitude": 42.329443,
+      "longitude": -71.0691
+    },
+    {
+      "source_record_id": "10460",
+      "occurred_at": "2019-09-14T22:51:12Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "NEWMARKET SQ",
+      "cross_street_2": "ALLSTATE RD",
+      "latitude": 42.326103,
+      "longitude": -71.066281
+    },
+    {
+      "source_record_id": "11356",
+      "occurred_at": "2025-11-26T21:42:49Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "PROCTOR ST",
+      "cross_street_2": "NAPA ST",
+      "latitude": 42.327276,
+      "longitude": -71.067269
+    },
+    {
+      "source_record_id": "12908",
+      "occurred_at": "2022-05-13T20:20:01Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CLAPP ST",
+      "cross_street_2": "COLUMBIA RD",
+      "latitude": 42.320935,
+      "longitude": -71.061919
+    },
+    {
+      "source_record_id": "13170",
+      "occurred_at": "2015-12-04T01:11:30Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "COLUMBUS AVE",
+      "cross_street_2": "SAINT BOTOLPH ST",
+      "latitude": 42.341404,
+      "longitude": -71.082841
+    },
+    {
+      "source_record_id": "14314",
+      "occurred_at": "2019-01-09T11:14:07Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "COLUMBUS AVE",
+      "cross_street_2": "TREMONT ST",
+      "latitude": 42.340439,
+      "longitude": -71.081611
+    },
+    {
+      "source_record_id": "15141",
+      "occurred_at": "2017-08-18T19:59:58Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "PUBLIC ALLEY NO. 414",
+      "cross_street_2": "MARLBOROUGH ST",
+      "latitude": 42.350371,
+      "longitude": -71.089252
+    },
+    {
+      "source_record_id": "16161",
+      "occurred_at": "2026-02-05T16:04:11Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "SAINT BOTOLPH ST",
+      "cross_street_2": "COLUMBUS AVE",
+      "latitude": 42.341623,
+      "longitude": -71.083315
+    },
+    {
+      "source_record_id": "16585",
+      "occurred_at": "2024-08-19T15:29:44Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "ALBANY ST",
+      "cross_street_2": "MELNEA CASS BLVD",
+      "latitude": 42.332892,
+      "longitude": -71.072678
+    },
+    {
+      "source_record_id": "19633",
+      "occurred_at": "2025-08-24T21:41:48Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "HARRISON AVE",
+      "cross_street_2": "ALBANY ST",
+      "latitude": 42.334454,
+      "longitude": -71.074569
+    },
+    {
+      "source_record_id": "19919",
+      "occurred_at": "2015-08-29T02:24:08Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CLAPP ST",
+      "cross_street_2": "COLUMBIA RD",
+      "latitude": 42.320935,
+      "longitude": -71.061919
+    },
+    {
+      "source_record_id": "20148",
+      "occurred_at": "2020-09-15T20:33:56Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CLAPP ST",
+      "cross_street_2": "COLUMBIA RD",
+      "latitude": 42.321366,
+      "longitude": -71.062284
+    },
+    {
+      "source_record_id": "20305",
+      "occurred_at": "2019-06-10T22:36:50Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "BOYLSTON ST",
+      "cross_street_2": "PUBLIC ALLEY NO. 909",
+      "latitude": 42.347094,
+      "longitude": -71.087646
+    },
+    {
+      "source_record_id": "20816",
+      "occurred_at": "2022-09-11T06:53:07Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "NAPA ST",
+      "cross_street_2": "SHIRLEY ST",
+      "latitude": 42.326984,
+      "longitude": -71.067023
+    },
+    {
+      "source_record_id": "21663",
+      "occurred_at": "2021-09-12T07:49:35Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "SHAWMUT AVE",
+      "cross_street_2": "CHESTER PARK",
+      "latitude": 42.337727,
+      "longitude": -71.078403
+    },
+    {
+      "source_record_id": "21862",
+      "occurred_at": "2019-03-19T13:08:34Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "GERARD ST",
+      "cross_street_2": "ISLAND ST",
+      "latitude": 42.331361,
+      "longitude": -71.070717
+    },
+    {
+      "source_record_id": "22170",
+      "occurred_at": "2020-07-01T21:02:48Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "COLUMBUS AVE",
+      "cross_street_2": "SAINT BOTOLPH ST",
+      "latitude": 42.341404,
+      "longitude": -71.082841
+    },
+    {
+      "source_record_id": "22394",
+      "occurred_at": "2019-07-02T21:47:33Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "SAINT BOTOLPH ST",
+      "cross_street_2": "COLUMBUS AVE",
+      "latitude": 42.34174,
+      "longitude": -71.083496
+    },
+    {
+      "source_record_id": "22779",
+      "occurred_at": "2015-08-15T03:00:59Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "SAINT BOTOLPH ST",
+      "cross_street_2": "COLUMBUS AVE",
+      "latitude": 42.341623,
+      "longitude": -71.083315
+    },
+    {
+      "source_record_id": "23321",
+      "occurred_at": "2015-07-13T15:14:12Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "HARRISON AVE",
+      "cross_street_2": "PUBLIC ALLEY NO. 715",
+      "latitude": 42.335376,
+      "longitude": -71.07554
+    },
+    {
+      "source_record_id": "23615",
+      "occurred_at": "2022-08-03T21:32:47Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CLAPP ST",
+      "cross_street_2": "COLUMBIA RD",
+      "latitude": 42.320945,
+      "longitude": -71.061928
+    },
+    {
+      "source_record_id": "23659",
+      "occurred_at": "2016-11-02T18:09:57Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "GERARD ST",
+      "cross_street_2": "ISLAND ST",
+      "latitude": 42.331361,
+      "longitude": -71.070717
+    },
+    {
+      "source_record_id": "25059",
+      "occurred_at": "2019-04-07T03:04:15Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "SAINT GERMAIN ST",
+      "cross_street_2": "CLEARWAY ST",
+      "latitude": 42.345682,
+      "longitude": -71.086951
+    },
+    {
+      "source_record_id": "25130",
+      "occurred_at": "2026-01-27T17:43:57Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "GERARD ST",
+      "cross_street_2": "ISLAND ST",
+      "latitude": 42.331361,
+      "longitude": -71.070717
+    },
+    {
+      "source_record_id": "25365",
+      "occurred_at": "2016-11-03T17:32:08Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "MAGAZINE ST",
+      "cross_street_2": "PROCTOR ST",
+      "latitude": 42.327657,
+      "longitude": -71.067591
+    },
+    {
+      "source_record_id": "26682",
+      "occurred_at": "2023-08-25T14:54:18Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "ALBANY ST",
+      "cross_street_2": "MELNEA CASS BLVD",
+      "latitude": 42.333168,
+      "longitude": -71.07305
+    },
+    {
+      "source_record_id": "27089",
+      "occurred_at": "2024-03-03T17:43:10Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CLEARWAY ST",
+      "cross_street_2": "WESTLAND AVE",
+      "latitude": 42.344134,
+      "longitude": -71.086188
+    },
+    {
+      "source_record_id": "28089",
+      "occurred_at": "2020-10-21T15:17:05Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "GENERAL CASIMIR PULASKI SKWY",
+      "cross_street_2": "ALBANY ST",
+      "latitude": 42.333514,
+      "longitude": -71.073269
+    },
+    {
+      "source_record_id": "28480",
+      "occurred_at": "2025-09-18T13:58:03Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "BELVIDERE ST",
+      "cross_street_2": "SAINT GERMAIN ST",
+      "latitude": 42.346112,
+      "longitude": -71.087162
+    },
+    {
+      "source_record_id": "30327",
+      "occurred_at": "2022-04-25T21:45:32Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "PUBLIC ALLEY NO. 909",
+      "cross_street_2": "HAVILAND ST",
+      "latitude": 42.346889,
+      "longitude": -71.087541
+    },
+    {
+      "source_record_id": "32571",
+      "occurred_at": "2016-08-30T19:23:12Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "MAGAZINE ST",
+      "cross_street_2": "PROCTOR ST",
+      "latitude": 42.327657,
+      "longitude": -71.067591
+    },
+    {
+      "source_record_id": "33069",
+      "occurred_at": "2023-07-07T00:17:48Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "CLEARWAY ST",
+      "cross_street_2": "WESTLAND AVE",
+      "latitude": 42.344134,
+      "longitude": -71.086188
+    },
+    {
+      "source_record_id": "34548",
+      "occurred_at": "2019-07-03T05:11:40Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "ALBANY ST",
+      "cross_street_2": "MELNEA CASS BLVD",
+      "latitude": 42.332892,
+      "longitude": -71.072678
+    },
+    {
+      "source_record_id": "35319",
+      "occurred_at": "2018-06-06T23:01:12Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "WASHINGTON ST",
+      "cross_street_2": "SHAWMUT AVE",
+      "latitude": 42.336887,
+      "longitude": -71.07739
+    },
+    {
+      "source_record_id": "35771",
+      "occurred_at": "2023-10-28T02:36:56Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "SAINT BOTOLPH ST",
+      "cross_street_2": "COLUMBUS AVE",
+      "latitude": 42.342031,
+      "longitude": -71.083947
+    },
+    {
+      "source_record_id": "36797",
+      "occurred_at": "2024-05-03T15:09:55Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "BELVIDERE ST",
+      "cross_street_2": "SAINT GERMAIN ST",
+      "latitude": 42.346237,
+      "longitude": -71.087223
+    },
+    {
+      "source_record_id": "37877",
+      "occurred_at": "2019-06-06T12:31:13Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "BOYLSTON ST",
+      "cross_street_2": "PUBLIC ALLEY NO. 909",
+      "latitude": 42.347059,
+      "longitude": -71.087628
+    },
+    {
+      "source_record_id": "37998",
+      "occurred_at": "2024-07-17T12:51:44Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "POMPEII ST",
+      "cross_street_2": "PEIRSON ST",
+      "latitude": 42.329652,
+      "longitude": -71.069275
+    },
+    {
+      "source_record_id": "38529",
+      "occurred_at": "2015-10-30T22:09:50Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "PROCTOR ST",
+      "cross_street_2": "NAPA ST",
+      "latitude": 42.327276,
+      "longitude": -71.067269
+    },
+    {
+      "source_record_id": "40411",
+      "occurred_at": "2025-05-27T12:32:38Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "SAINT BOTOLPH ST",
+      "cross_street_2": "COLUMBUS AVE",
+      "latitude": 42.341432,
+      "longitude": -71.083036
+    },
+    {
+      "source_record_id": "41726",
+      "occurred_at": "2024-10-03T17:51:09Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "ISLAND ST",
+      "cross_street_2": "CHESTERTON ST",
+      "latitude": 42.330662,
+      "longitude": -71.070122
+    },
+    {
+      "source_record_id": "41807",
+      "occurred_at": "2023-07-18T17:41:11Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "GERARD ST",
+      "cross_street_2": "ISLAND ST",
+      "latitude": 42.331927,
+      "longitude": -71.071238
+    },
+    {
+      "source_record_id": "41825",
+      "occurred_at": "2015-07-27T14:10:47Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "WASHINGTON ST",
+      "cross_street_2": "SHAWMUT AVE",
+      "latitude": 42.336887,
+      "longitude": -71.07739
+    },
+    {
+      "source_record_id": "44879",
+      "occurred_at": "2017-09-29T21:12:50Z",
+      "mode": "bike",
+      "street": "MASSACHUSETTS AVE",
+      "cross_street_1": "COLUMBUS AVE",
+      "cross_street_2": "SAINT BOTOLPH ST",
+      "latitude": 42.341958,
+      "longitude": -71.083639
+    }
+  ]
+}
