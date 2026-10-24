@@ -44,6 +44,9 @@ Docker, or Node, so runs happen in the user's own terminal.
 | Demo script and runbook | Not done: drafted, never rehearsed | `.kiro/team/demo-plan.md` |
 | iOS share-toggle proposal | Not done: awaiting the iOS owner | `.kiro/team/ios-share-toggle-proposal.md` |
 | Incident map: iOS side | Not done: awaiting the iOS owner (mark-a-near-miss, trim-zone drop, opt-in) | `.kiro/team/incident-mapping-proposal.md` |
+| Real city crash data: database | Not done: written; SQL (36 assertions) not yet run | Migrations `20261024160000_public_crash_records.sql`, `…160100_boston_bike_crashes_mass_ave.sql`; `supabase/tests/public_crash_records.test.sql` |
+| Real city crash data: importer | **Done**, output is reproducible from the snapshot | `supabase/data/boston-vision-zero/` (65 Mass Ave bike crashes, PDDL) |
+| Real city crash data: website | Not done: type-checks and builds; not checked in a browser | `web/src/lib/cityCrashes.ts`, map layer and two insights |
 
 Next, by you: install Node 22+, then `cd web && npm install && npm run typecheck && npm run build`
 and paste any errors. After that: the hosted project, the contract sign-offs, and a rehearsal.

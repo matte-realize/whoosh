@@ -81,6 +81,8 @@ RLS is consulted. Every migration therefore states its grants in the same file a
 | `public_incident_cells` (view) | none | select | none |
 | `public_stats` (view) | none | select | none |
 | `is_valid_route(jsonb)` (function) | execute | none | execute |
+| `data_sources`, `public_crash_records` | none | none | all (imports only) |
+| `public_crash_points`, `public_data_sources`, `public_street_cells` (views) | none | select | none |
 
 Grants only decide whether a role can touch the table. RLS still decides which rows. Do not
 fix a `42501` by granting `anon` access to a raw table.
@@ -151,6 +153,40 @@ confidence. The thresholds reduce re-identification risk and do not remove it.
 
 The app must drop incidents inside the privacy-trim zone (first and last 160 m) before upload.
 The database cannot check that.
+
+## Public crash data (real city records)
+
+From migrations `20261024160000_public_crash_records.sql` (schema) and
+`20261024160100_boston_bike_crashes_mass_ave.sql` (data). This is published, de-identified city
+data, not rider data. It gives the map real history before any rider shares anything.
+
+- `data_sources`: one row per external dataset (`key`, `name`, `publisher`, `url` (https only),
+  `license`, `retrieved_on`, `data_through`, `notes`).
+- `public_crash_records`: one row per published record, unique on `(source, source_record_id)`.
+  Columns: `occurred_at`, `mode` (`bike` / `ped` / `mv`, the most vulnerable person involved),
+  `location_type`, `street`, `cross_street_1`, `cross_street_2`, `latitude`, `longitude`,
+  `imported_at`. Imports upsert on the unique key, so re-running one never duplicates rows.
+- First source: City of Boston, Vision Zero Crash Records
+  (<https://data.boston.gov/dataset/vision-zero-crash-records>), PDDL (public domain). The
+  snapshot is the 65 bike crashes on Massachusetts Ave, 2015 through August 2026, retrieved
+  October 24, 2026. Times are 911 dispatch times. Severity is not published. City-owned streets
+  only.
+- Importer: `supabase/data/boston-vision-zero/import.py` (stdlib Python). It rebuilds the data
+  migration and `web/fixtures/city_crashes.json` from the saved snapshot, or with `--fetch`
+  pulls from the city's API (`--mode bike|ped|mv|all`, `--street`, `--save`).
+
+Views, `anon` only:
+
+| View | Columns |
+| ---- | ------- |
+| `public_crash_points` | `source`, `source_record_id`, `occurred_at`, `mode`, `street`, `cross_street_1`, `cross_street_2`, `latitude`, `longitude`, `source_name`, `source_license`, `source_url` |
+| `public_data_sources` | `key`, `name`, `publisher`, `url`, `license`, `retrieved_on`, `data_through`, `notes` |
+| `public_street_cells` | `latitude`, `longitude` (3 decimals, the same cells as `public_incident_cells`), `city_bike_crashes`, `city_bike_crashes_5y`, `city_ped_crashes`, `last_city_bike_crash_month`, `whoosh_reports` |
+
+`public_street_cells` is a full join: a cell appears if it has city crashes, Whoosh reports, or
+both, with 0 (not null) for the missing side. Whoosh counts come from `public_incident_cells`,
+so they keep its thresholds. Both are counts, not rates: there is no data yet on how many
+riders use each block.
 
 ## Upload limits
 
@@ -224,6 +260,8 @@ slow, switch it to a materialized view refreshed on a schedule.
       (`input_limits_and_stats.test.sql`, 27 assertions).
 - [x] Incident map view, `near_misses.source` / `share_publicly`, nullable `confidence`, and
       performance indexes: applied and tested locally (`incident_cells.test.sql`, 20 assertions).
+- [ ] Public crash data (migrations `160000`, `160100`) and `public_crash_records.test.sql`
+      (36 assertions): written, not yet run. Run `supabase db reset && supabase test db`.
 - [ ] Apply to the real project: `supabase link`, `supabase db push --dry-run`, then push.
       Re-check isolation with two real anonymous sessions, and enable anonymous sign-ins in
       the project.

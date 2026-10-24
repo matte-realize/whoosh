@@ -112,9 +112,19 @@ browser.
 
 The rides and incident cells are each fetched once per page load and shared by all three parts.
 
+### City crash records (real data)
+
+The map's amber layer and two insights ("by year", "blocks with the most") use real crash
+records published by the City of Boston (Vision Zero, public domain). They are real in both
+modes: `fixtures` reads `fixtures/city_crashes.json`, a snapshot of the 65 bike crashes on
+Massachusetts Ave; `supabase` reads the `public_crash_points` and `public_data_sources` views.
+The attribution under the map comes from the source row. To refresh or widen the data, see
+`supabase/data/boston-vision-zero/import.py`.
+
 ## Data and privacy
 
-- The site reads only the `public_rides` view, as role `anon`. It never signs in.
+- The site reads only `anon` views (`public_rides`, `public_incident_cells`, `public_stats`,
+  `public_crash_points`, `public_data_sources`), never raw tables. It never signs in.
 - It shows only rides the rider opted in to share.
 - Routes arrive already trimmed by the app (160 m from each end by default). The site does not
   receive `user_id`, `ended_at`, `app_version`, or `created_at`.
