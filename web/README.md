@@ -21,6 +21,19 @@ dashboard. `npm run typecheck` runs `tsc --noEmit`.
 The project page's feature statuses come from `src/lib/projectStatus.ts`. Update that file
 before a demo so the page never claims more than has been tested.
 
+pnpm works too: `pnpm install`, `pnpm typecheck`, `pnpm build`, `pnpm start`. Pick one package
+manager for the team and commit only its lockfile.
+
+### Interface notes
+
+- Light and dark themes follow the system setting. All animation (scroll reveal, count-up,
+  hero illustration, skeleton shimmer) turns off for "reduce motion".
+- Interactive parts work from the keyboard: feature filter chips, "How it works" tabs (arrow
+  keys, Home, End), FAQ, map layer toggles, ride sorting, and the ride list.
+- The community map does not capture the scroll wheel until you click it, so the page scrolls
+  past it. Layer toggles add or remove a layer without rebuilding the map.
+- No new dependencies: everything is React, CSS, and Leaflet.
+
 The first `npm install` creates `package-lock.json`. Commit it so everyone gets the same
 dependency versions. It is not included yet because it was not possible to generate one here.
 

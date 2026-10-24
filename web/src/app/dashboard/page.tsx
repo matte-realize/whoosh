@@ -10,15 +10,18 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <main className="page">
-      <header>
-        <h1>Live dashboard</h1>
-        <p className="subtitle">Rides and reports that riders chose to share.</p>
+    <main className="page dashboard">
+      <header className="page-header">
+        <p className="eyebrow">Live dashboard</p>
+        <h1>Shared by Whoosh riders</h1>
+        <p className="subtitle">Rides and reports that riders chose to share. Nothing else is shown.</p>
       </header>
       <StatsPanel />
       <CommunityMapSection />
-      <section className="rides-section" aria-labelledby="rides-heading">
-        <h2 id="rides-heading">Shared rides</h2>
+      <section className="rides-section card" aria-labelledby="rides-heading">
+        <div className="section-head">
+          <h2 id="rides-heading">Shared rides</h2>
+        </div>
         <Dashboard />
       </section>
     </main>

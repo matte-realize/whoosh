@@ -6,8 +6,8 @@ import dynamic from "next/dynamic";
 export const CommunityMapClient = dynamic(() => import("./CommunityMap"), {
   ssr: false,
   loading: () => (
-    <div className="ride-map community-map ride-map--loading" role="status">
-      Loading map…
+    <div className="skeleton skeleton--map" role="status">
+      <span className="visually-hidden">Loading map…</span>
     </div>
   ),
 });

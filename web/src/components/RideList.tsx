@@ -9,10 +9,10 @@ interface RideListProps {
   onSelect: (id: string) => void;
 }
 
-/** Rides in the order given (newest first). Each ride is a button. */
+/** Rides in the order given. Each ride is a button. */
 export function RideList({ rides, selectedId, onSelect }: RideListProps) {
   return (
-    <ul className="ride-list" aria-label="Rides, newest first">
+    <ul className="ride-list" aria-label="Rides">
       {rides.map((ride) => {
         const selected = ride.id === selectedId;
         return (

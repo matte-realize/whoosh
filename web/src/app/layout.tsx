@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { SiteNav } from "@/components/SiteNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,16 +11,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <nav className="site-nav" aria-label="Site">
-          <Link href="/" className="site-nav__brand">
-            Whoosh
-          </Link>
-          <Link href="/">Project</Link>
-          <Link href="/dashboard">Live dashboard</Link>
-        </nav>
-        {children}
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
+        <SiteNav />
+        <div id="main">{children}</div>
         <footer className="site-footer">
-          Hackathon prototype. Experimental vehicle detection; not a safety device.
+          <span>Whoosh, a Hackachusetts prototype.</span>
+          <span>Experimental vehicle detection; not a safety device. Map data © OpenStreetMap contributors.</span>
         </footer>
       </body>
     </html>
