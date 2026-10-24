@@ -32,3 +32,13 @@ Secrets.xcconfig
 
 # Local git worktrees for parallel agent work
 .worktrees/
+
+# CV (cv/): venv, local test clips/output, downloadable weights. The exported .tflite IS committed.
+cv/.venv/
+cv/.venv-coreml/
+cv/models/*.mlpackage/
+cv/.smoke/
+cv/out/
+cv/clips/
+cv/models/*.pt
+__pycache__/
