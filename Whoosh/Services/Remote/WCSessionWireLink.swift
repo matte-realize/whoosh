@@ -255,22 +255,56 @@ extension WCSessionWireLink: @preconcurrency WCSessionDelegate {
 
 // MARK: - PhoneRemoteFactory
 
-/// Builds the phone's eyes-free remote (watch-companion tasks 16/17). Lives in
-/// the phone WatchConnectivity adapter file (the only phone file allowed to name
-/// the connectivity session), so the composition root (`AppEnvironment`) never
-/// touches the framework — it only receives a `RideRemoteControlling`.
+/// Everything the composition root needs to make the watch live, built in the
+/// one phone file allowed to name the WatchConnectivity session so
+/// `AppEnvironment` never touches the framework (privacy rule 14).
 ///
-/// Selects a watch-backed `WireLinkRideRemote` over the phone adapter **only**
-/// when an Apple Watch is paired and the Whoosh watch app is installed; otherwise
-/// the inert `NoopRideRemote`, so with no usable watch the phone behaves exactly
-/// as before (nothing published, no command ever received — Requirement 1.5).
+/// - `remote` is the `RideRemoteControlling` the ride flow publishes to and
+///   routes wrist commands through (a `WatchRideRemote` when a usable watch is
+///   paired, else the inert `NoopRideRemote`).
+/// - `statusHolder` is the mutable live snapshot the `WatchLiveCoordinator`
+///   writes ~1 Hz; the remote reads it to publish and to decide commands.
+/// - `watchLink` is the **same** `WireLink` the remote speaks over, shared so
+///   the `WatchAlertSink` buzzes the wrist on the one activated session (`nil`
+///   when no usable watch, so the alert fan-out stays phone-audio only).
+@MainActor
+struct PhoneRemoteComposition {
+    let remote: RideRemoteControlling
+    let statusHolder: WatchLiveStatusHolder
+    let watchLink: (any WireLink)?
+}
+
+/// Builds the phone's eyes-free remote (watch-companion tasks 16/17; "make the
+/// watch live"). Lives in the phone WatchConnectivity adapter file (the only
+/// phone file allowed to name the connectivity session), so the composition root
+/// (`AppEnvironment`) never touches the framework — it only receives a
+/// `PhoneRemoteComposition`.
+///
+/// Selects a watch-backed `WatchRideRemote` over the phone adapter **only** when
+/// an Apple Watch is paired and the Whoosh watch app is installed; otherwise the
+/// inert `NoopRideRemote` and no link, so with no usable watch the phone behaves
+/// exactly as before (nothing published, no command ever received, the alert
+/// fan-out is phone-audio only — Requirement 1.5).
+///
+/// The `WatchRideRemote` is the richer remote: its snapshot carries the crash
+/// sub-object and arming, so a crash countdown (real or a demo drill with no
+/// active ride) reaches the wrist. Its snapshot closure reads the shared
+/// `WatchLiveStatusHolder` the `WatchLiveCoordinator` keeps current.
 @MainActor
 enum PhoneRemoteFactory {
-    static func make(clock: Clock) -> RideRemoteControlling {
+    static func make(clock: Clock) -> PhoneRemoteComposition {
         let link = WCSessionWireLink()
         guard link.isPaired, link.isWatchAppInstalled else {
-            return NoopRideRemote()
+            return PhoneRemoteComposition(
+                remote: NoopRideRemote(),
+                statusHolder: WatchLiveStatusHolder(),
+                watchLink: nil
+            )
         }
-        return WireLinkRideRemote(link: link, clock: clock)
+        let holder = WatchLiveStatusHolder()
+        let remote = WatchRideRemote(link: link, clock: clock) {
+            holder.current
+        }
+        return PhoneRemoteComposition(remote: remote, statusHolder: holder, watchLink: link)
     }
 }

@@ -97,6 +97,19 @@ final class AppEnvironment {
     /// rescue path. `nil` in previews/tests.
     let watchLauncher: (any WatchLaunching)?
 
+    /// The mutable live snapshot the `WatchLiveCoordinator` keeps current so the
+    /// `remote` can publish ride/crash status to the watch and decide wrist
+    /// commands against the latest state (watch-companion "make the watch live").
+    /// A fresh idle holder in previews/tests (the `NoopRideRemote` ignores it).
+    let watchStatusHolder: WatchLiveStatusHolder
+
+    /// Drives the Apple Watch live during a ride and a crash countdown
+    /// (watch-companion tasks 16/17/21; "make the watch live"). Built once for
+    /// the app session over the shared `remote`, status holder, and crash
+    /// coordinator. A no-op `remote` (no usable watch) makes every publish
+    /// harmless, so the ride flow is unchanged.
+    let watchLive: WatchLiveCoordinator
+
     /// Builds a fresh `LocationTracking` for a ride session. Injectable so
     /// previews/tests supply a `FakeLocationTracker`.
     private let makeRideTracker: () -> LocationTracking
@@ -121,7 +134,8 @@ final class AppEnvironment {
         makeHomeTracker: () -> LocationTracking,
         makeRideTracker: @escaping () -> LocationTracking,
         remote: RideRemoteControlling,
-        watchLauncher: (any WatchLaunching)? = nil
+        watchLauncher: (any WatchLaunching)? = nil,
+        watchStatusHolder: WatchLiveStatusHolder = WatchLiveStatusHolder()
     ) {
         self.repository = repository
         self.clock = clock
@@ -129,6 +143,7 @@ final class AppEnvironment {
         self.alertManager = alertManager
         self.remote = remote
         self.watchLauncher = watchLauncher
+        self.watchStatusHolder = watchStatusHolder
         self.nearMissRepository = nearMissRepository
         self.nearMissRecorder = NearMissRecorder(repository: nearMissRepository)
         self.crash = crash
@@ -177,6 +192,17 @@ final class AppEnvironment {
             // arming (drills only), use the `drill` template, hide "Call 911",
             // and never send a real alert.
             triggerCrashDrill: { [crash] in crash.triggerCrashDrill() }
+        )
+
+        // Drive the Apple Watch live over the shared remote/holder and the crash
+        // coordinator ("make the watch live"). The demo flag marks a demo ride so
+        // the wrist labels it DEMO; a crash drill marks itself.
+        self.watchLive = WatchLiveCoordinator(
+            remote: remote,
+            holder: watchStatusHolder,
+            crash: crash.coordinator,
+            clock: clock,
+            isDemoRide: { [weak demo = self.demo] in demo?.isEnabled ?? false }
         )
 
         // Choose the sync service: the real Supabase one only when a client is
@@ -598,24 +624,41 @@ final class AppEnvironment {
             clock: clock
         )
 
-        // The app-wide alert manager is a `FanOutAlertManager` with a phone
-        // audio sink (the no-watch fallback channel), so camera notices and the
-        // rear-vehicle cue surface on the phone (rear-camera task 29). A watch
-        // sink is added later. It stays inert until `fire(_:)` is called.
+        // Eyes-free remote (watch-companion tasks 16/17; "make the watch live").
+        // Built inside `Services/Remote/` (the only place allowed to touch the
+        // WatchConnectivity framework): `PhoneRemoteFactory.make(clock:)` returns
+        // a `WatchRideRemote` over the shared `WireLink` **only** when an Apple
+        // Watch is paired AND the Whoosh watch app is installed; otherwise the
+        // inert `NoopRideRemote` and no link, so with no usable watch the phone
+        // behaves exactly as before (nothing published, no command ever received).
+        let remoteComposition = PhoneRemoteFactory.make(clock: clock)
+        let remote = remoteComposition.remote
+
+        // The app-wide alert manager is a `FanOutAlertManager`. The phone audio
+        // sink is the always-present no-watch fallback channel (rear-camera task
+        // 29). When a usable watch is paired, a `WatchAlertSink` over the **same**
+        // link the remote speaks buzzes the wrist for the rear-vehicle cue and
+        // camera notices, escalating to phone audio when the watch does not
+        // confirm (watch-companion task 14). With no watch there is one sink and
+        // the behavior is unchanged. It stays inert until `fire(_:)` is called.
+        let phoneAudioSink = PhoneAudioAlertSink()
+        var sinks: [AlertSink] = [phoneAudioSink]
+        if let watchLink = remoteComposition.watchLink {
+            let watchSink = WatchAlertSink(
+                link: watchLink,
+                clock: clock,
+                isReachable: { remote.isReachable },
+                escalate: { kind, context in
+                    try? phoneAudioSink.deliver(kind, context: context)
+                }
+            )
+            sinks.append(watchSink)
+        }
         let alertManager = FanOutAlertManager(
-            sinks: [PhoneAudioAlertSink()],
+            sinks: sinks,
             clock: clock,
             appState: { .foregroundActiveScreen }
         )
-
-        // Eyes-free remote (watch-companion tasks 16/17). The phone adapter is
-        // built inside `Services/Remote/` (the only place allowed to touch the
-        // WatchConnectivity framework): `PhoneRemoteFactory.make(clock:)` returns
-        // a watch-backed `RideRemoteControlling` only when an Apple Watch is
-        // paired AND the Whoosh watch app is installed; otherwise the inert
-        // `NoopRideRemote`, so with no usable watch the phone behaves exactly as
-        // before (nothing published, no command ever received).
-        let remote = PhoneRemoteFactory.make(clock: clock)
 
         return AppEnvironment(
             repository: repository,
@@ -641,7 +684,8 @@ final class AppEnvironment {
             makeHomeTracker: { CoreLocationTracker() },
             makeRideTracker: { CoreLocationTracker() },
             remote: remote,
-            watchLauncher: WatchLauncher()
+            watchLauncher: WatchLauncher(),
+            watchStatusHolder: remoteComposition.statusHolder
         )
     }
 

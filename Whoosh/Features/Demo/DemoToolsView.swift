@@ -21,6 +21,7 @@ struct DemoToolsView: View {
             simulatedRideTool
             forcedAlertTool
             crashDrillTool
+            watchTool
             statePreviewsTool
             sampleDataTool
 
@@ -124,6 +125,20 @@ struct DemoToolsView: View {
                 controller.simulateCrashDrill()
             }
             Text("Runs the real countdown labelled DEMO — not real. Call 911 is hidden and nothing is sent.")
+                .font(.system(size: 11))
+                .foregroundStyle(Theme.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // MARK: - Apple Watch (watch task 26, owner request)
+
+    private var watchTool: some View {
+        toolCard(title: "Apple Watch") {
+            toolButton("Send test alerts to watch", systemImage: "applewatch.radiowaves.left.and.right") {
+                controller.sendTestAlertsToWatch()
+            }
+            Text("Shows the rear-vehicle cue and a camera notice on the watch, exactly as during a ride. Experimental cue — cannot guarantee detection or delivery. If no watch is reachable, the cue plays on the phone instead.")
                 .font(.system(size: 11))
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)

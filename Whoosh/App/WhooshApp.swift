@@ -138,6 +138,12 @@ struct WhooshApp: App {
                     notificationRouter.shouldOpenStatus = false
                 }
             }
+            // Push the crash countdown to the wrist the instant it starts/ends
+            // (real or a demo drill), so the watch shows its Cancel takeover
+            // without waiting for the next 1 Hz tick.
+            .onChange(of: environment.crash.coordinator.isTakeoverPresented) { _, _ in
+                environment.watchLive.publishNow()
+            }
         }
     }
 
@@ -337,10 +343,22 @@ struct WhooshApp: App {
         rideSession = session
         session.start()
 
+        // Make the watch live for this ride: publish ride/camera/crash status
+        // ~1 Hz and route wrist commands (pause/resume/stop/save clip/cancel
+        // crash) to the ride engine. A no-op remote (no usable watch) makes this
+        // harmless, so the ride flow is unchanged.
+        environment.watchLive.attach(ride: session, camera: nil)
+        attachWatchCommands(to: session)
+
         guard withCamera, environment.isRearCameraRecordingEnabled else { return }
 
         let coordinator = environment.makeCameraCoordinator(for: session)
         cameraCoordinator = coordinator
+
+        // Now that the camera coordinator exists, re-attach so the watch sees the
+        // live camera state and "Save clip" from the wrist works.
+        environment.watchLive.attach(ride: session, camera: coordinator)
+        attachWatchCommands(to: session)
 
         // Rear-vehicle detection on the SAME frame pipeline the camera records
         // through: load the model once (it was preloaded when the feature was
@@ -382,6 +400,20 @@ struct WhooshApp: App {
         coordinator.rideStarted()
     }
 
+    /// Route wrist commands to the ride engine and the crash cancel. Called when
+    /// a ride begins and again once the camera coordinator exists (so "Save clip"
+    /// from the wrist saves a real clip). A no-op remote (no usable watch) never
+    /// invokes the handler, so nothing changes when no watch is paired.
+    private func attachWatchCommands(to session: RideSessionViewModel) {
+        environment.attachRemoteCommands(
+            to: session,
+            saveClip: { [weak cameraCoordinator] in
+                cameraCoordinator?.saveClip() ?? .nothingToSave
+            },
+            cancelCrashCountdown: { environment.crash.coordinator.riderCancel() }
+        )
+    }
+
     /// "Done" on the finished-ride summary: upload it (no-op while sync is off),
     /// clear the session (dismisses the cover) and refresh Home so the new ride
     /// appears in stats/recent.
@@ -406,6 +438,9 @@ struct WhooshApp: App {
         cameraPreview = nil
         rideModeController?.rideEnded()
         rideModeController = nil
+        // Drop the ride binding but keep the watch coordinator ticking so a crash
+        // drill triggered later from Home still reaches the wrist.
+        environment.watchLive.detachRide()
         environment.clearRideSession()
         rideSession = nil
     }
@@ -422,6 +457,10 @@ struct WhooshApp: App {
         // Warm the rear-vehicle detection model once if the feature is on, so it
         // is ready before the first ride (no-op when rear camera is off).
         environment.preloadRearDetectionModelIfNeeded()
+        // Begin the watch live feed so a crash drill triggered from Home (demo,
+        // no ride) still reaches the wrist. A no-op remote (no usable watch) makes
+        // this a harmless no-op.
+        environment.watchLive.start()
     }
 
     private func handleScenePhase(_ phase: ScenePhase) {
