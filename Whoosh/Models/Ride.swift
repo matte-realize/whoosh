@@ -6,7 +6,7 @@ import Foundation
 /// SwiftData) so view models and metrics operate on cheap, framework-free value
 /// types; storage concerns never leak upward. Mapping happens only at the
 /// repository boundary.
-struct Ride: Identifiable, Equatable, Hashable, Codable, Sendable {
+nonisolated struct Ride: Identifiable, Equatable, Hashable, Codable, Sendable {
     let id: UUID
     let startedAt: Date
     var endedAt: Date?
@@ -18,6 +18,18 @@ struct Ride: Identifiable, Equatable, Hashable, Codable, Sendable {
     /// until opt-in sync runs; the `SyncCoordinator` advances it to `.pending`
     /// or `.synced`.
     var syncStatus: SyncStatus
+    /// Whether this ride is (to be) publicly visible on the Whoosh website
+    /// (Requirement 12.11–12.15). Stamped at finalize from the global
+    /// "Share new rides on the Whoosh website" setting; defaults to `false` so
+    /// sharing is opt-in and never retroactive. Separate consent from sync.
+    var sharePublicly: Bool
+    /// Whether this ride was produced by demo mode (a simulated ride or seeded
+    /// sample data). Defaults to `false` so every existing caller and stored
+    /// ride is unaffected. Demo rides are **never uploaded** by the
+    /// `SyncCoordinator` and are **excluded from the Home This-Week stats**
+    /// (O-DM2), keeping real numbers honest (demo-mode spec, Requirements 5.5,
+    /// 7.4, 9.3).
+    var isDemo: Bool
 
     init(
         id: UUID = UUID(),
@@ -25,13 +37,17 @@ struct Ride: Identifiable, Equatable, Hashable, Codable, Sendable {
         endedAt: Date? = nil,
         points: [RoutePoint] = [],
         summary: RideSummary = .zero,
-        syncStatus: SyncStatus = .localOnly
+        sharePublicly: Bool = false,
+        syncStatus: SyncStatus = .localOnly,
+        isDemo: Bool = false
     ) {
         self.id = id
         self.startedAt = startedAt
         self.endedAt = endedAt
         self.points = points
         self.summary = summary
+        self.sharePublicly = sharePublicly
         self.syncStatus = syncStatus
+        self.isDemo = isDemo
     }
 }

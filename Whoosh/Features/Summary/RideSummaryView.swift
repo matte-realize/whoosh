@@ -25,10 +25,25 @@ struct RideSummaryView: View {
 
     let ride: Ride
     var presentation: Presentation = .justFinished
-    /// Sync status for the row (everything is `.localOnly` until sync ships).
-    var syncStatus: SyncStatus = .localOnly
+    /// Sync status for the row. Defaults to the ride's stored status; callers
+    /// may override (e.g. previews).
+    var syncStatus: SyncStatus?
+    /// Near-miss events recorded during this ride (rear-camera Req 15, task 28).
+    /// Shown as markers on the map and a count row. Empty by default so existing
+    /// callers are unaffected.
+    var nearMisses: [NearMissEvent] = []
     /// Called when "Done" is tapped (only used in `.justFinished`).
     var onDone: () -> Void = {}
+
+    /// The effective sync status shown in the row.
+    private var effectiveSyncStatus: SyncStatus { syncStatus ?? ride.syncStatus }
+
+    /// Whether the ride has been synced (so the privacy note + sharing row apply).
+    private var isSynced: Bool { effectiveSyncStatus == .synced }
+
+    private var sharingState: SharingState {
+        SharingState.forRide(sharePublicly: ride.sharePublicly, syncStatus: effectiveSyncStatus)
+    }
 
     var body: some View {
         ScrollView {
@@ -40,7 +55,16 @@ struct RideSummaryView: View {
                     rideTimeTile
                     avgSpeedTile
                 }
+                if !markableNearMisses.isEmpty {
+                    nearMissRow
+                }
                 syncRow
+                if effectiveSyncStatus != .localOnly {
+                    sharingRow
+                }
+                if isSynced {
+                    privacyNote
+                }
                 if presentation == .justFinished {
                     PrimaryButton("Done") { onDone() }
                         .padding(.top, Theme.Spacing.sm)
@@ -57,10 +81,28 @@ struct RideSummaryView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-            Text(titleText)
-                .font(Theme.Typography.title)
-                .foregroundStyle(Theme.Colors.textPrimary)
-                .accessibilityAddTraits(.isHeader)
+            HStack(spacing: Theme.Spacing.sm) {
+                Text(titleText)
+                    .font(Theme.Typography.title)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
+                if ride.isDemo {
+                    // A "Demo ride" tag so a simulated ride is never confused
+                    // with a real one (demo-mode Requirement 2.3).
+                    HStack(spacing: 3) {
+                        Image(systemName: "wrench.and.screwdriver.fill")
+                            .font(.system(size: 10, weight: .bold))
+                        Text("Demo ride")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .foregroundStyle(Theme.Palette.ink)
+                    .padding(.horizontal, Theme.Spacing.sm)
+                    .padding(.vertical, 3)
+                    .background(Theme.Palette.amber)
+                    .clipShape(Capsule())
+                    .accessibilityLabel("Demo ride")
+                }
+            }
             Text(subtitleText)
                 .font(Theme.Typography.caption)
                 .foregroundStyle(Theme.Colors.textSecondary)
@@ -96,7 +138,7 @@ struct RideSummaryView: View {
         if ride.points.isEmpty {
             noRoutePlaceholder
         } else {
-            RouteMapView(points: ride.points, mode: .static)
+            RouteMapView(points: ride.points, mode: .static, nearMisses: markableNearMisses)
                 .frame(height: 190)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
         }
@@ -161,14 +203,48 @@ struct RideSummaryView: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
     }
 
+    // MARK: - Near-miss row
+
+    /// Near-miss events that have a coordinate to mark on the map.
+    private var markableNearMisses: [NearMissEvent] {
+        nearMisses.filter { $0.latitude != nil && $0.longitude != nil }
+    }
+
+    private var nearMissCountText: String {
+        let count = markableNearMisses.count
+        return count == 1 ? "1 near miss" : "\(count) near misses"
+    }
+
+    private var nearMissRow: some View {
+        HStack(spacing: Theme.Spacing.md) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Theme.Palette.amber)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(nearMissCountText)
+                    .font(Theme.Typography.rowTitle)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                Text("Experimental vehicle detection")
+                    .font(Theme.Typography.caption)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+            }
+            Spacer()
+        }
+        .padding(Theme.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.Colors.cardSurface)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(nearMissCountText), experimental vehicle detection")
+    }
+
     // MARK: - Sync status row
 
-    private var syncRow: some View {
-        HStack(spacing: Theme.Spacing.md) {
+    private var syncRow: some View {        HStack(spacing: Theme.Spacing.md) {
             Image(systemName: syncVariant.systemImage)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Theme.Colors.textSecondary)
-            Text(syncStatus.title)
+            Text(effectiveSyncStatus.title)
                 .font(Theme.Typography.rowTitle)
                 .foregroundStyle(Theme.Colors.textPrimary)
             Spacer()
@@ -178,15 +254,52 @@ struct RideSummaryView: View {
         .background(Theme.Colors.cardSurface)
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Sync status, \(syncStatus.title)")
+        .accessibilityLabel("Sync status, \(effectiveSyncStatus.title)")
     }
 
     private var syncVariant: StateChip.Variant {
-        switch syncStatus {
+        switch effectiveSyncStatus {
         case .localOnly: return .onDevice
         case .pending: return .pending
         case .synced: return .synced
+        case .failed: return .failed
         }
+    }
+
+    // MARK: - Sharing row + privacy note
+
+    private var sharingRow: some View {
+        HStack(spacing: Theme.Spacing.md) {
+            Image(systemName: sharingVariant.systemImage)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Theme.Colors.textSecondary)
+            Text(sharingState.title)
+                .font(Theme.Typography.rowTitle)
+                .foregroundStyle(Theme.Colors.textPrimary)
+            Spacer()
+        }
+        .padding(Theme.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.Colors.cardSurface)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Sharing, \(sharingState.title)")
+    }
+
+    private var sharingVariant: StateChip.Variant {
+        switch sharingState {
+        case .private: return .privateRide
+        case .shared: return .shared
+        case .sharingPending: return .sharingPending
+        }
+    }
+
+    private var privacyNote: some View {
+        Text("Start and end trimmed for privacy")
+            .font(Theme.Typography.caption)
+            .foregroundStyle(Theme.Colors.textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityLabel("Start and end trimmed for privacy")
     }
 
     // MARK: - Helpers

@@ -7,6 +7,29 @@ import Foundation
 enum AlertKind: Equatable, Sendable {
     /// A cautionary cue that a vehicle may be approaching from the rear.
     case cautionRearVehicle
+    // Rear-camera additions (rear-camera spec Requirement 13, design routing
+    // table). Additive: existing switches that handle `cautionRearVehicle` keep
+    // compiling with a `default`/`@unknown` as the compiler requires.
+    /// The camera session was interrupted (lock, call, other app).
+    case cameraInterrupted
+    /// The camera session resumed after an interruption.
+    case cameraResumed
+    /// The camera stopped by policy or failure; carries the reason.
+    case cameraStopped(CameraStopReason)
+    /// A clip was saved from the ring buffer.
+    case clipSaved
+    /// A clip save produced no clip; carries the reason.
+    case clipNotSaved(ClipNotSavedReason)
+    /// The phone battery is low (camera may stop so GPS can finish the ride).
+    case phoneBatteryLow
+    // Watch-companion additions (watch-companion spec task 9, design "Fan-out,
+    // routing, and escalation"; Requirement 13). These route to **phone audio
+    // only** — they announce the watch link, so the watch itself cannot carry
+    // them.
+    /// The watch link was lost during a ride (announced on phone audio).
+    case watchDisconnected
+    /// The watch link came back during a ride (announced on phone audio).
+    case watchReconnected
 }
 
 /// Abstraction for haptic/audio safety alerts.
@@ -27,6 +50,14 @@ protocol AlertManager {
     /// Fire an alert of the given kind. Must return immediately and never block
     /// or interrupt recording.
     func fire(_ kind: AlertKind)
+
+    /// Fire skipping the per-kind cooldown, for repeated proximity cues as a
+    /// car closes in. Defaults to `fire(_:)`.
+    func fireUrgent(_ kind: AlertKind)
+}
+
+extension AlertManager {
+    func fireUrgent(_ kind: AlertKind) { fire(kind) }
 }
 
 /// The MVP's inert `AlertManager`: accepts `fire(_:)` and does nothing.

@@ -15,8 +15,10 @@ import UIKit
 ///
 /// When the session's banner is `signalLost` an amber "GPS signal lost" banner
 /// appears; a `permissionRevoked` banner uses the same calm styling with copy
-/// that the ride is saved-and-stoppable. Keeps the screen awake while visible
-/// (`isIdleTimerDisabled`). State is always icon + text, never color alone.
+/// that the ride is saved-and-stoppable. Keeps the screen awake while visible by
+/// asking the injected `ScreenController` to hold the idle timer (the screen
+/// controller is the one owner of that toggle; rear-camera task 21). State is
+/// always icon + text, never color alone.
 ///
 /// Per the layering table this view touches no framework service types — it
 /// reads the injected `RideSessionViewModel` and renders maps through the
@@ -24,24 +26,119 @@ import UIKit
 struct ActiveRideView: View {
     let viewModel: RideSessionViewModel
 
+    /// Whether crash alerts are set up and on, for the small dark status chip
+    /// on the ride screen (Requirement 18.6). `nil` hides it (feature not set
+    /// up / MVP previews); it adds no fourth ride number.
+    var crashAlertsOn: Bool?
+
+    /// The current rear-camera recording state, when recording this ride
+    /// (rear-camera task 23). `nil` when the camera is off — the existing
+    /// "Rear detection off" chip then stays. Drives a calm Recording / trouble
+    /// chip, icon + text.
+    var cameraState: CameraRecordingState?
+
+    /// The rear-vehicle **detection** state, when the detector is composed for
+    /// this ride (on / model loading / unavailable / off). `nil` or `.off` keeps
+    /// the existing recording/"off" chip. Honest: detection is experimental and
+    /// cannot guarantee detection or delivery — this only reports readiness.
+    var detectionState: DetectionState?
+
+    /// Save a clip on an explicit rider action (rear-camera task 23). `nil` when
+    /// the camera is off for this ride, which hides the control.
+    var onSaveClip: (() -> ClipSaveOutcome)?
+
+    /// The live rear-camera preview + experimental detection boxes for this ride
+    /// (owner device-testing feedback: "the user should be able to see the
+    /// camera"). `nil` when the camera is off — the camera toggle is then hidden
+    /// and only the map shows. The preview is **off by default** (battery); the
+    /// rider turns it on with the small camera button. Display only: it never
+    /// captures, records, or uploads, and the boxes are not the alert path.
+    var cameraPreview: CameraPreviewViewModel?
+
+    /// Demo mode: the recorded road clip stands in for the rear camera and is
+    /// shown in place of the map (toggle back to the map with the same button).
+    var demoFeed: DemoVideoFeed?
+
+    /// The screen controller that owns the idle timer (and ride-mode
+    /// brightness). Defaults to the shared production controller so the idle
+    /// timer funnels through the one reason-counting owner, shared with the
+    /// crash countdown. Tests/previews can inject a fake.
+    var screen: ScreenController = UIKitScreenController.shared
+
+    /// Brief, transient "Clip saved" / "Nothing to save yet" confirmation shown
+    /// on the Save clip control (task 23).
+    @State private var saveClipMessage: String?
+
+    /// Whether the full-bleed live camera view is shown instead of the map.
+    /// **Off by default** so the preview does not run unless the rider asks for
+    /// it (battery; owner feedback "preview can be turned off").
+    @State private var showCamera = false
+
     var body: some View {
         ZStack(alignment: .top) {
             Theme.Colors.rideBackground.ignoresSafeArea()
 
-            // Live map fills the top; the sheet overlaps its bottom.
-            RouteMapView(
-                points: viewModel.points,
-                mode: .live,
-                currentLocation: viewModel.points.last
-            )
-            .ignoresSafeArea(edges: .top)
+            if isShowingCamera, let demoFeed {
+                VStack(spacing: 0) {
+                    DemoFeedSurface(feed: demoFeed)
+                        .padding(.top, 110) // below the top chrome
+                    Spacer()
+                }
+                .ignoresSafeArea(edges: .top)
+                VStack(spacing: 6) {
+                    Spacer().frame(height: 110 + 200)
+                    ProgressView(value: demoFeed.proximity)
+                        .tint(demoFeed.proximity > 0.6 ? Theme.Palette.alert : Theme.Palette.amber)
+                        .animation(.easeOut(duration: 0.2), value: demoFeed.proximity)
+                        .padding(.horizontal, Theme.Spacing.lg)
+                        .accessibilityLabel("Approaching car closeness")
+                    Spacer()
+                }
+                .ignoresSafeArea(edges: .top)
+                .allowsHitTesting(false)
+            } else if isShowingCamera, let cameraPreview, let host = cameraPreview.previewHost {
+                // Full-bleed live rear-camera preview with the experimental
+                // detection boxes drawn on top (owner feedback). Display only;
+                // footage/frames never leave the device.
+                CameraPreviewView(host: host)
+                    .ignoresSafeArea()
+                DetectionOverlay(boxes: cameraPreview.boxes)
+                    .ignoresSafeArea()
+                // A readable scrim behind the three numbers so they stay legible
+                // over bright road footage.
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.55)],
+                    startPoint: .center,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+            } else {
+                // Live map fills the top; the sheet overlaps its bottom.
+                RouteMapView(
+                    points: viewModel.points,
+                    mode: .live,
+                    currentLocation: viewModel.points.last
+                )
+                .ignoresSafeArea(edges: .top)
+            }
 
             topChrome
             bottomSheet
         }
         .preferredColorScheme(.dark)
-        .onAppear { setIdleTimer(disabled: true) }
-        .onDisappear { setIdleTimer(disabled: false) }
+        .onAppear {
+            screen.setIdleTimerDisabled(true)
+            if let demoFeed {
+                showCamera = true
+                demoFeed.start()
+            }
+        }
+        .onDisappear {
+            screen.setIdleTimerDisabled(false)
+            cameraPreview?.clear()
+            demoFeed?.stop()
+        }
         .onChange(of: viewModel.banner) { _, banner in
             announceBanner(banner)
         }
@@ -55,7 +152,7 @@ struct ActiveRideView: View {
     /// Post a VoiceOver announcement when a state banner appears so a
     /// non-visual user hears the signal-lost / permission-revoked change.
     private func announceBanner(_ banner: RideBanner?) {
-        guard let banner else { return }
+        guard demoFeed == nil, let banner else { return }
         let message: String?
         switch banner {
         case .signalLost:
@@ -90,22 +187,107 @@ struct ActiveRideView: View {
 
     private var topChrome: some View {
         VStack(spacing: Theme.Spacing.sm) {
-            if let banner = viewModel.banner, banner.isBannerWorthy {
+            // Demo rides have no real GPS; don't show the signal-lost banner.
+            if demoFeed == nil, let banner = viewModel.banner, banner.isBannerWorthy {
                 RideBannerView(banner: banner)
             } else {
                 HStack(alignment: .top) {
                     stateChip
                     Spacer()
+                    if canToggleCamera {
+                        cameraToggleButton
+                    }
                 }
             }
             Spacer()
             HStack {
-                StateChip(variant: .rearDetectionOff, scheme: .dark)
+                cameraOrDetectionChip
+                if let crashAlertsOn {
+                    CrashAlertStateChip(isOn: crashAlertsOn, scheme: .dark)
+                }
                 Spacer()
             }
         }
         .padding(Theme.Spacing.lg)
         .padding(.bottom, 300) // keep chrome above the bottom sheet
+    }
+
+    /// Whether the map/camera toggle is available: only when a live preview host
+    /// exists for this ride (rear camera on). Off by default; the rider opts in.
+    private var canToggleCamera: Bool {
+        cameraPreview?.previewHost != nil || demoFeed != nil
+    }
+
+    /// Whether the camera view is currently shown (guarded by availability so a
+    /// stale `true` can never show an empty black screen).
+    private var isShowingCamera: Bool {
+        showCamera && canToggleCamera
+    }
+
+    /// Small button to switch between the map and the live camera view (owner
+    /// feedback: "a small camera button to switch between map and camera view").
+    private var cameraToggleButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { showCamera.toggle() }
+            if !showCamera { cameraPreview?.clear() }
+        } label: {
+            Image(systemName: isShowingCamera ? "map.fill" : "video.fill")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: Theme.Size.minTouchTarget, height: Theme.Size.minTouchTarget)
+                .background(Theme.Colors.rideCard.opacity(0.85))
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Theme.Colors.rideChipStroke, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isShowingCamera ? "Show map" : "Show rear camera")
+        .accessibilityHint(isShowingCamera
+            ? "Switches back to the route map."
+            : "Shows the live rear camera with experimental detection boxes. Uses more battery.")
+    }
+
+    /// The real camera/recording chip when recording this ride; otherwise the
+    /// existing inert "Rear detection off" chip (Requirement 18.3). Icon + text,
+    /// never colour alone; a trouble state shows a calm amber chip. While
+    /// recording, the detector's state (on / model loading / unavailable) is
+    /// surfaced so the rider knows whether experimental detection is running.
+    @ViewBuilder private var cameraOrDetectionChip: some View {
+        if demoFeed != nil {
+            // Demo: the real detector runs on the recorded clip.
+            detectionChip
+        } else if let cameraState {
+            switch cameraState {
+            case .recording, .degraded:
+                detectionChip
+            case .off:
+                StateChip(variant: .rearDetectionOff, scheme: .dark)
+            case .preparing, .interrupted, .stopped, .stopping, .failed:
+                StateChip(variant: .paused, scheme: .dark)
+                    .accessibilityLabel("Camera attention needed")
+            }
+        } else {
+            StateChip(variant: .rearDetectionOff, scheme: .dark)
+        }
+    }
+
+    /// The detection chip shown while recording: reflects the detector's
+    /// readiness. Falls back to the "Recording video" chip when no detector is
+    /// composed for this ride (e.g. the model is off).
+    @ViewBuilder private var detectionChip: some View {
+        switch detectionState {
+        case .on:
+            StateChip(variant: .rearDetectionOn, scheme: .dark)
+                .accessibilityLabel("Rear detection on, experimental")
+        case .loading:
+            StateChip(variant: .rearDetectionLoading, scheme: .dark)
+                .accessibilityLabel("Rear detection loading")
+        case .unavailable:
+            StateChip(variant: .rearDetectionUnavailable, scheme: .dark)
+                .accessibilityLabel("Rear detection unavailable")
+        case .off, .none:
+            StateChip(variant: .recording, scheme: .dark)
+                .accessibilityLabel("Recording video")
+        }
     }
 
     private var stateChip: some View {
@@ -126,6 +308,10 @@ struct ActiveRideView: View {
                 rideTime
                 metricsRow
                 controls
+
+                if onSaveClip != nil {
+                    saveClipControl
+                }
 
                 Text("Hold Stop to end ride")
                     .font(.system(size: 10))
@@ -222,6 +408,36 @@ struct ActiveRideView: View {
         .padding(.horizontal, Theme.Spacing.lg)
     }
 
+    /// The "Save clip" control shown on the ride screen when recording (task 23).
+    /// Tapping saves a clip from the ring buffer and shows a brief confirmation;
+    /// honest copy only — it never claims a moment was guaranteed to be captured.
+    private var saveClipControl: some View {
+        Button {
+            guard let onSaveClip else { return }
+            let outcome = onSaveClip()
+            saveClipMessage = outcome == .nothingToSave ? "Nothing to save yet" : "Clip saved"
+        } label: {
+            Label(saveClipMessage ?? "Save clip", systemImage: "bookmark.fill")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(Theme.Palette.ink)
+                .frame(maxWidth: .infinity)
+                .frame(height: Theme.Size.minTouchTarget)
+                .background(Theme.Palette.lime)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, Theme.Spacing.lg)
+        .accessibilityLabel(saveClipMessage ?? "Save clip")
+        .accessibilityHint("Saves a clip of the last moments to this phone.")
+        .onChange(of: saveClipMessage) { _, message in
+            guard message != nil else { return }
+            Task {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                saveClipMessage = nil
+            }
+        }
+    }
+
     // MARK: - Derived display values
 
     private var isPaused: Bool { viewModel.rideState == .paused }
@@ -260,12 +476,6 @@ struct ActiveRideView: View {
         } else {
             viewModel.pause()
         }
-    }
-
-    private func setIdleTimer(disabled: Bool) {
-        #if canImport(UIKit)
-        UIApplication.shared.isIdleTimerDisabled = disabled
-        #endif
     }
 }
 

@@ -87,6 +87,7 @@ create table public.crash_alert_deliveries (
   provider_error_code  integer,
   segments             integer not null default 0,
   attempt_count        integer not null default 0,
+
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now(),
   terminal_at          timestamptz,
@@ -466,3 +467,4 @@ revoke all on function public.crash_alert_purge()
   from public, anon, authenticated;
 grant execute on function public.crash_alert_purge()
   to service_role;
+

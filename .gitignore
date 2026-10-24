@@ -33,6 +33,10 @@ Secrets.xcconfig
 # Local git worktrees for parallel agent work
 .worktrees/
 
+# Kiro CLI auto-generated language-server config (not project settings)
+.kiro/settings/lsp.json
+
+
 # CV (cv/): venv, local test clips/output, downloadable weights. The exported .tflite IS committed.
 cv/.venv/
 cv/.venv-coreml/

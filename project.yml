@@ -13,9 +13,10 @@ name: Whoosh
 
 options:
   minimumXcodeGenVersion: "2.46.0"
-  bundleIdPrefix: com.whoosh
+  bundleIdPrefix: com.alexmcgreevy
   deploymentTarget:
     iOS: "17.0"
+    watchOS: "10.0"
   createIntermediateGroups: true
 
 # Swift 6 language mode + Xcode 26 default concurrency, applied project-wide.
@@ -30,6 +31,28 @@ configFiles:
   Debug: Config/Shared.xcconfig
   Release: Config/Shared.xcconfig
 
+# Opt-in Supabase sync (Requirement 12). Pinned to the EXACT version per the
+# tech steering ("Exact Version"). The only third-party dependency allowed to
+# touch the network, and only from Whoosh/Services/Sync (privacy steering).
+#
+# WhooshVision is Teammate B's on-device vehicle detector (frames in, boxes out;
+# Core ML + Vision, no network), vendored as a LOCAL Swift package at
+# cv/ios/WhooshVision. It is wrapped by Whoosh/Services/Detection; the detector
+# never owns capture, requests permission, or writes video (rear-camera spec
+# "HazardDetector seam update", Requirement 4.9).
+#
+# WhooshWire is the shared, Foundation-only wire contract compiled into BOTH the
+# iOS app and the watchOS app (watch-companion design "Why a shared package");
+# tested on a Mac with `swift test` in Packages/WhooshWire.
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    exactVersion: "2.55.4"
+  WhooshVision:
+    path: cv/ios/WhooshVision
+  WhooshWire:
+    path: Packages/WhooshWire
+
 targets:
   Whoosh:
     type: application
@@ -42,12 +65,24 @@ targets:
     configFiles:
       Debug: Config/Shared.xcconfig
       Release: Config/Shared.xcconfig
+    dependencies:
+      - package: Supabase
+        product: Supabase
+      - package: WhooshVision
+        product: WhooshVision
+      # Shared Foundation-only wire contract (watch-companion Req 2.3).
+      - package: WhooshWire
+      # Embed the watchOS companion app inside the iOS app so it installs with
+      # the phone app (watch-companion Req 2.1). embed/link default to the
+      # correct watch-app behavior for a watchOS2 application target.
+      - target: WhooshWatch
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.whoosh.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.alexmcgreevy.whoosh
         PRODUCT_NAME: Whoosh
         DEVELOPMENT_TEAM: Z87CXCTTK6
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: Config/Whoosh.entitlements   # Time Sensitive Notifications (crash-response 13.3)
         TARGETED_DEVICE_FAMILY: "1"                      # iPhone only
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
@@ -55,7 +90,67 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Whoosh
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Whoosh uses your location to record your cycling route and show your ride map."
-        INFOPLIST_KEY_NSCameraUsageDescription: "Whoosh uses the rear camera to experimentally detect approaching vehicles. Video is processed on your device and is not uploaded."
+        # Camera is requested only when the rider enables "Record rear camera"
+        # (rear-camera spec Requirement 2.7; privacy.md). Honest recording
+        # statement — footage stays on the device and is never uploaded. No
+        # microphone string: audio recording is off (O-CAM5).
+        INFOPLIST_KEY_NSCameraUsageDescription: "Whoosh uses the rear camera to record video of the road behind you during rides. Video is saved on your device and is not uploaded."
+        # HealthKit (entitlement in Config/Whoosh.entitlements) is only for
+        # WatchLauncher's startWatchApp, which wakes the watch's keep-alive
+        # cycling workout. The strings are required once the capability exists.
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Whoosh starts a cycling workout on your Apple Watch so wrist alerts keep working during your ride."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Whoosh starts a cycling workout on your Apple Watch so wrist alerts keep working during your ride."
+        # Opt-in Supabase sync (task 28b): the gitignored Secrets.xcconfig values
+        # flow into the generated Info.plist so the app reads URL + publishable
+        # key at runtime; no key is hard-coded in Swift. With no Secrets.xcconfig
+        # these resolve to the placeholder/empty values and sync stays unavailable.
+        INFOPLIST_KEY_SUPABASE_URL: "$(SUPABASE_URL)"
+        INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY: "$(SUPABASE_PUBLISHABLE_KEY)"
+
+  # watchOS companion app (watch-companion Requirement 2). A companion of the
+  # iOS app (bundle id com.alexmcgreevy.whoosh.watchkitapp, WKCompanionAppBundleIdentifier
+  # points at the iOS app); deployment target watchOS 10.0 (O-W1, owner's Apple
+  # Watch SE). The app is thin and phone-authoritative, holds no ride data, and
+  # makes no network request (enforced by scripts/privacy-check.sh).
+  #
+  # Capabilities for the cycling HKWorkoutSession keep-alive path (O-W2, approved):
+  # HealthKit + the Workout processing background mode, with the write-only
+  # workout-sharing usage strings (copy finalized in task 29). The Audio
+  # background mode and watch notification permission are added only when the
+  # task 1 spike / task 21 need them (see the "_Pending task 1 spike_" note in
+  # tasks.md).
+  WhooshWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: WhooshWatch
+        type: syncedFolder
+        excludes:
+          - "**/.gitkeep"
+    dependencies:
+      - package: WhooshWire
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alexmcgreevy.whoosh.watchkitapp
+        PRODUCT_NAME: Whoosh
+        DEVELOPMENT_TEAM: Z87CXCTTK6
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "4"                      # Apple Watch
+        WATCHOS_DEPLOYMENT_TARGET: "10.0"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Whoosh
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.alexmcgreevy.whoosh
+        INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp: NO
+        # Keep-alive: the watch holds a cycling HKWorkoutSession during a ride so
+        # the app keeps running and may play haptics with the wrist down
+        # (watch-companion Req 4.1, 4.6). Write-only workout sharing; reads none.
+        INFOPLIST_KEY_UIBackgroundModes: workout-processing
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Whoosh uses a cycling workout so haptic alerts keep working with your wrist down, and can save your ride to Apple Health when you choose."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Whoosh uses a cycling workout so haptic alerts keep working with your wrist down, and can save your ride to Apple Health when you choose."
+    entitlements:
+      path: WhooshWatch/WhooshWatch.entitlements
+      properties:
+        com.apple.developer.healthkit: true
 
   WhooshTests:
     type: bundle.unit-test
@@ -67,7 +162,7 @@ targets:
       - target: Whoosh
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.whoosh.app.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.alexmcgreevy.whoosh.tests
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:
@@ -80,3 +175,12 @@ schemes:
       targets:
         - WhooshTests
       gatherCoverageData: false
+
+  # Scheme for building the watchOS companion app directly
+  # (xcodebuild -scheme WhooshWatch ...). The watch app's pure logic is tested
+  # in the WhooshWire package (`swift test`); the watch target itself is verified
+  # by build and on-device checks (watch-companion tasks 17–21, 28).
+  WhooshWatch:
+    build:
+      targets:
+        WhooshWatch: all

@@ -26,6 +26,15 @@ struct HomeView: View {
     var onOpenSettings: () -> Void = {}
     var onSelectRide: (Ride) -> Void = { _ in }
 
+    /// Whether crash alerts are set up and on, for the small status chip
+    /// (Requirement 18.6). `nil` hides the chip (feature not set up / MVP
+    /// previews); a non-nil value shows the on/off chip.
+    var crashAlertsOn: Bool?
+
+    /// Whether rear camera recording (experimental rear detection) is turned on,
+    /// for the real Home card state (rear-camera task 23, Requirement 18.2).
+    var rearCameraOn: Bool = false
+
     /// Used to deep-link to this app's Settings page (injected so previews/tests
     /// don't touch `UIApplication`).
     var openAppSettings: () -> Void = {
@@ -143,34 +152,48 @@ struct HomeView: View {
         .accessibilityLabel("No rides yet. Your first ride will show up here.")
     }
 
-    // MARK: - Rear-detection placeholder (inert; never requests camera)
+    // MARK: - Rear vehicle detection (real; opens Settings to toggle)
 
     private var rearDetectionPlaceholder: some View {
-        HStack(spacing: Theme.Spacing.md) {
-            Image(systemName: "car.rear")
-                .font(.system(size: 18))
-                .foregroundStyle(Theme.Colors.textSecondary)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Rear vehicle detection")
-                    .font(Theme.Typography.rowTitle)
-                    .foregroundStyle(Theme.Colors.textPrimary)
-                Text("Experimental · coming soon")
-                    .font(Theme.Typography.caption)
-                    .foregroundStyle(Theme.Colors.textSecondary)
+        Button(action: onOpenSettings) {
+            HStack(spacing: Theme.Spacing.md) {
+                Image(systemName: rearCameraOn ? "car.rear.and.collision.road.lane" : "car.rear")
+                    .font(.system(size: 18))
+                    .foregroundStyle(rearCameraOn ? Theme.Palette.lime : Theme.Colors.textSecondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Rear vehicle detection")
+                        .font(Theme.Typography.rowTitle)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+                    Text(rearCameraOn
+                         ? "Experimental · on. Records the road behind you."
+                         : "Experimental · off. Tap to turn on in Settings.")
+                        .font(Theme.Typography.caption)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                }
+                Spacer()
+                Text(rearCameraOn ? "On" : "Off")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(rearCameraOn ? Theme.Palette.ink : Theme.Colors.textSecondary)
+                    .padding(.horizontal, Theme.Spacing.md)
+                    .padding(.vertical, Theme.Spacing.xs)
+                    .background(rearCameraOn ? Theme.Palette.lime : Theme.Colors.subtleFill)
+                    .clipShape(Capsule())
             }
-            Spacer()
+            .padding(Theme.Spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.Radius.card)
+                    .strokeBorder(
+                        (rearCameraOn ? Theme.Palette.lime : Theme.Colors.textSecondary).opacity(0.4),
+                        style: StrokeStyle(lineWidth: 1, dash: rearCameraOn ? [] : [4, 4])
+                    )
+            )
         }
-        .padding(Theme.Spacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.Radius.card)
-                .strokeBorder(
-                    Theme.Colors.textSecondary.opacity(0.4),
-                    style: StrokeStyle(lineWidth: 1, dash: [4, 4])
-                )
-        )
+        .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Rear vehicle detection, experimental, coming soon")
+        .accessibilityLabel("Rear vehicle detection, experimental, \(rearCameraOn ? "on" : "off")")
+        .accessibilityHint("Opens Settings to turn rear camera recording on or off")
     }
 
     // MARK: - Start area
@@ -181,7 +204,12 @@ struct HomeView: View {
                 viewModel.requestLocationIfNeeded()
                 onStartRide()
             }
-            StateChip(variant: .gpsReady)
+            HStack(spacing: Theme.Spacing.sm) {
+                StateChip(variant: .gpsReady)
+                if let crashAlertsOn {
+                    CrashAlertStateChip(isOn: crashAlertsOn)
+                }
+            }
         }
         .padding(.top, Theme.Spacing.sm)
     }

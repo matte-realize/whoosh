@@ -33,4 +33,18 @@ protocol RideSyncService {
     /// Request remote deletion of the ride with the given `id`. Idempotent;
     /// deleting an already-absent remote row is not an error.
     func deleteRemote(id: UUID) async throws
+
+    /// Update the remote `share_publicly` flag for a ride (Requirement 12.11–
+    /// 12.15). The Supabase implementation re-sends the full row so a partial
+    /// update can't trip the backend's `rides_active_within_elapsed` check.
+    /// Idempotent on `id`.
+    func setSharing(id: UUID, shared: Bool) async throws
+
+    /// Upsert the near-miss events for a ride (rear-camera spec Requirement 15,
+    /// task 28). Called by the `SyncCoordinator` **after** the ride row is
+    /// uploaded, so the `near_misses.ride_id` foreign key always resolves. The
+    /// payloads are already privacy-filtered and mapped (no footage reference,
+    /// trim-zone and demo events dropped) by the caller. Idempotent on each
+    /// event id; a failure is thrown so the coordinator can retry later.
+    func uploadNearMisses(_ payloads: [NearMissUploadMapper.Payload]) async throws
 }

@@ -17,3 +17,4 @@ Deno.serve((req) =>
     return json(await handleCallback(makeDeps(), authToken, publicUrl, params, req.headers.get("X-Twilio-Signature")));
   }),
 );
+

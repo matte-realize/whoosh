@@ -61,7 +61,11 @@ struct HistoryView: View {
                         Button {
                             onSelectRide(ride)
                         } label: {
-                            RideRow(ride: ride, showSpeed: false)
+                            RideRow(
+                                ride: ride,
+                                showSpeed: false,
+                                nearMissCount: viewModel.nearMissCount(for: ride.id)
+                            )
                         }
                         .buttonStyle(.plain)
                         .listRowInsets(EdgeInsets())
@@ -132,6 +136,7 @@ struct HistoryView: View {
         case .localOnly: return .onDevice
         case .pending: return .pending
         case .synced: return .synced
+        case .failed: return .failed
         }
     }
 

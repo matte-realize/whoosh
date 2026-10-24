@@ -32,6 +32,11 @@ struct RouteMapView: View {
     var mode: Mode = .static
     /// The current location for the live user indicator (optional; `nil` hides it).
     var currentLocation: RoutePoint?
+    /// Near-miss events to mark on the route (summary / history detail). Each is
+    /// drawn as an amber dot at its stored (nearest accepted route point)
+    /// coordinate. Events without a coordinate are skipped. Empty by default so
+    /// every existing caller is unaffected.
+    var nearMisses: [NearMissEvent] = []
 
     @State private var cameraPosition: MapCameraPosition = .automatic
     /// `true` once the user manually pans in live mode, pausing auto-follow.
@@ -66,6 +71,16 @@ struct RouteMapView: View {
             if mode == .live, let current = currentLocation {
                 Annotation("You", coordinate: current.coordinate) {
                     UserDot()
+                }
+                .annotationTitles(.hidden)
+            }
+
+            // Near-miss markers (summary / history detail). Amber dots at each
+            // event's stored coordinate; experimental framing (a logged event,
+            // not a claim of a collision).
+            ForEach(nearMissCoordinates, id: \.id) { marked in
+                Annotation("Near miss", coordinate: marked.coordinate) {
+                    NearMissMarker()
                 }
                 .annotationTitles(.hidden)
             }
@@ -153,6 +168,22 @@ struct RouteMapView: View {
         return points.map(\.coordinate)
     }
 
+    /// A small identifiable coordinate for each near-miss event that has one.
+    private struct MarkedCoordinate: Identifiable {
+        let id: UUID
+        let coordinate: CLLocationCoordinate2D
+    }
+
+    private var nearMissCoordinates: [MarkedCoordinate] {
+        nearMisses.compactMap { event in
+            guard let lat = event.latitude, let lon = event.longitude else { return nil }
+            return MarkedCoordinate(
+                id: event.id,
+                coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            )
+        }
+    }
+
     /// A region that encloses all points with padding, or `nil` if there are none.
     /// A single point yields a small region centered on it.
     private func boundingRegion(for points: [RoutePoint]) -> MKCoordinateRegion? {
@@ -226,6 +257,20 @@ private struct EndMarker: View {
             Circle().fill(Theme.Palette.lime).frame(width: 7, height: 7)
         }
         .accessibilityHidden(true)
+    }
+}
+
+/// An amber marker for a logged near-miss event (experimental; a recorded event,
+/// not a claim that a collision happened or was avoided).
+private struct NearMissMarker: View {
+    var body: some View {
+        Image(systemName: "exclamationmark.triangle.fill")
+            .font(.system(size: 14, weight: .bold))
+            .foregroundStyle(Theme.Palette.amber)
+            .background(
+                Circle().fill(Theme.Palette.ink).frame(width: 22, height: 22)
+            )
+            .accessibilityHidden(true)
     }
 }
 

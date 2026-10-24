@@ -32,7 +32,7 @@ public final class VehicleDetector: @unchecked Sendable {
     ///   - iouThreshold: overlap at which the model's NMS merges duplicate boxes.
     public static func load(minimumConfidence: Float = 0.25, iouThreshold: Double = 0.7) async throws -> VehicleDetector {
         guard let url = WhooshVisionModel.url else { throw DetectorError.modelMissing }
-        let compiled = try await MLModel.compileModel(at: url)
+        let compiled = url.pathExtension == "mlmodelc" ? url : try await MLModel.compileModel(at: url)
         let configuration = MLModelConfiguration()
         configuration.computeUnits = .all
         let model = try VNCoreMLModel(for: MLModel(contentsOf: compiled, configuration: configuration))

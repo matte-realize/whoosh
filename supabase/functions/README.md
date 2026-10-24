@@ -36,6 +36,9 @@ The Node checks need Node 23.6 or later. They also run under Deno.
 
 ## Run locally
 
+Enable anonymous sign-ins by setting `enable_anonymous_sign_ins = true` under `[auth]` in
+`supabase/config.toml` before starting the local stack.
+
 ```sh
 cp supabase/functions/.env.example supabase/functions/.env   # gitignored; fill in Twilio test values
 supabase start
@@ -43,6 +46,9 @@ supabase functions serve --env-file supabase/functions/.env
 ```
 
 ## Deploy (Role C, hosted project)
+
+Enable anonymous sign-ins in the hosted project's Authentication settings. Before deployment,
+re-check isolation with two real anonymous sessions.
 
 1. Apply the migrations: `supabase db push`.
 2. Set secrets: `supabase secrets set --env-file supabase/functions/.env`. Use real values here,
@@ -67,3 +73,4 @@ supabase functions serve --env-file supabase/functions/.env
   detected as a conflict.
 - **Production:** sender registration (10DLC or toll-free), App Attest, and a provider data
   agreement (contract section 14).
+

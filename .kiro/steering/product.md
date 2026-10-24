@@ -8,8 +8,10 @@ specialized hardware.
 
 Long term, Whoosh aims to provide:
 
-- Real-time vehicle hazard warnings from a rear-facing camera
-- Haptic and audio alerts that don't require looking at the screen
+- Rear-facing camera recording from a seat-mounted phone (in scope next), then real-time vehicle
+  hazard warnings from the same frames
+- Haptic and audio alerts that don't require looking at the screen (wrist haptics via an Apple
+  Watch companion is the recommended path for a rear-mounted phone)
 - GPS ride tracking and ride summaries
 - Near-miss logging and reporting
 - Bike-infrastructure analysis
@@ -41,7 +43,9 @@ Long term, Whoosh aims to provide:
 11. A modular architecture with service protocols ready for camera-based detection and haptic
     warnings to be added later, plus a visible, non-functional, experimental rear-detection
     placeholder (Home card, ride-screen "off" chip, Settings "Soon" row) that never requests
-    camera permission.
+    camera permission. _Update:_ the MVP as shipped never requests the camera; camera permission is
+    now requested only when the rider enables **rear camera recording** (see the rear-mounted camera
+    section below). The placeholders stay until a real detector exists.
 
 Units are US customary (miles, mph, feet). The team is in Boston and the judges are US-based.
 
@@ -74,18 +78,84 @@ contract in `.kiro/team/crash-alert-contract.md`. It is **off by default**, **op
 - Pre-crash camera footage, if it ever exists, stays on the device and is never uploaded or
   sent in a message. Crash alerts work only while the app is open during an active ride (v1).
 
+## Rear-mounted camera recording (in scope — next feature, opt-in)
+
+Specified in `.kiro/specs/rear-camera/` (requirements, design, tasks; **approved by the owner,
+October 24, 2026**). The rider clips the phone onto a holder on the back of the seat with the phone's back
+camera facing rearward. Whoosh records the road behind the bike (dashcam-style rolling segments in
+a bounded on-device buffer) while GPS tracks the ride. **Recording ships first, without the vision
+model**; Teammate B's detector later consumes the same frames. This changes earlier assumptions:
+
+- **The phone is not the in-ride UI.** The rider can neither see nor touch a rear-mounted screen.
+  The ride is started and the camera framed on the phone first ("Mount & frame"); in-ride controls
+  and alerts move to another surface. The **recommended in-ride surface is an Apple Watch
+  companion** (pause/resume, save clip, stop, live time/distance, wrist haptics for rear-vehicle and
+  camera warnings, cancel for the crash countdown) plus audio cues. The watch app is a separate
+  follow-up spec (open decision O-CAM1); this feature defines the seams it needs.
+- **"Record when the screen is off" is done with ride mode, not the background.** iOS does not let
+  a third-party app keep a camera session running while the app is backgrounded or the phone is
+  locked. Ride mode keeps the app in the foreground with a true-black, minimum-brightness,
+  touch-locked screen so the phone looks off while camera and GPS run. If the phone locks anyway,
+  video stops cleanly and the rider is told; GPS continues because the `location` background mode is
+  recommended now (open decision O-CAM2).
+- **Clips, not a firehose.** Footage is a bounded ring buffer; clips are saved on demand (manual,
+  detection event, crash event), attached to the ride, viewable and deletable in the app, and
+  exported to Photos only by explicit action. Footage never leaves the device. Role C's database
+  receives near-miss **events** only, never video.
+- **Camera trouble is never silent.** The rider cannot see the screen, so every stop or degradation
+  (heat, storage, battery, interruption) is announced on the eyes-free surface and noted in the
+  summary.
+
+The MVP ride flow is unchanged when rear camera recording is off.
+
+## Developer/demo mode (off by default)
+
+Specified in `.kiro/specs/demo-mode/`. A single off-by-default Settings toggle that unlocks
+demo tools so the whole app can be shown standing still indoors: a simulated Boston-loop ride
+(through the existing location seam, flagged as a demo ride, excluded from sync), an on-demand
+rear-vehicle alert that bypasses the normal "only while moving" gate, a crash **drill** (the
+real countdown with the "DEMO — NOT REAL" template, Call 911 hidden, no real send), seed/remove
+sample data, and permission/state previews. While on, an unmissable "DEMO MODE" badge appears on
+Home, the ride screen, and the emergency screens. It never sends a real alert, never dials, never
+uploads, and changes nothing when off.
+
+## Apple Watch companion (specified — approved, opt-in, post-MVP)
+
+Specified in `.kiro/specs/watch-companion/` (requirements, design, tasks; **approved by the owner,
+October 24, 2026**). With the phone rear-mounted, the wrist is the only surface the rider can see and touch
+during a ride, so the watch app provides: live ride time/distance/speed and camera/link state; pause,
+resume, press-and-hold stop, "Save clip", and an armed start from the wrist; distinct wrist haptics for
+the experimental rear-vehicle cue and camera/battery notices; and the crash-countdown Cancel (drills
+labeled DEMO). The phone stays authoritative; the watch only displays, requests, and plays haptics.
+
+- A cycling workout session keeps the watch app running with the wrist down. This is the design's central
+  bet; a **feasibility spike gates all production watch code**, with fallbacks down to phone audio.
+- Nothing about the ride (location, route, video, contacts) is sent to the watch beyond what it displays,
+  and nothing leaves the rider's own devices. Honest framing: haptics are a cue, not a guarantee.
+- The owner's Apple Watch SE is the target (watchOS 10 and later). A Garmin fenix 6x and a Whoop are
+  **out of scope**.
+- Without a watch every flow works as before (phone audio, ride-mode unlock).
+
 ## Explicitly NOT in the MVP demo
 
 These are designed-for but not implemented or not demo-critical:
 
-- Camera capture and on-device hazard detection (protocol defined, no shipping model). Rear
-  vehicle detection appears only as a visible, non-functional, experimental placeholder (Home
-  card, ride-screen "off" chip, Settings "Soon" row) that never requests camera permission.
-- Haptic/audio collision warnings (alert manager defined, driven by stub detector)
-- Background location tracking (foreground-only for the reliable demo path)
+- On-device hazard detection (protocol defined, no shipping model). Rear vehicle detection appears
+  only as a visible, non-functional, experimental placeholder (Home card, ride-screen "off" chip,
+  Settings "Soon" row) until a real detector exists. _Update:_ camera **capture and recording** are
+  now in scope as a separate opt-in feature (section above); only the detection model remains
+  future.
+- Haptic/audio collision warnings (alert manager defined, driven by stub detector). _Update:_ the
+  `AlertSink` fan-out seam and the audio/watch channels are specified in the rear-camera spec.
+- Background location tracking (foreground-only for the reliable demo path). _Update:_ the
+  rear-camera spec recommends enabling the `location` background mode now (open decision O-CAM2) so
+  the route survives an accidental lock.
 - Email/password accounts, routing/directions services
-- Near-miss reporting, infrastructure analysis, safer-route recommendations
-- Smartwatch companion app
+- Near-miss reporting, infrastructure analysis, safer-route recommendations (near-miss **events**
+  are recorded locally by the rear-camera spec; upload is a future task)
+- Smartwatch companion app (_recommended_ as the in-ride surface for a rear-mounted phone). _Update:_
+  now specified as a draft in `.kiro/specs/watch-companion/` (see the section above); still post-MVP
+  and opt-in
 - User-changeable units (units are read-only "Miles · mph" in the MVP Settings)
 - Emergency contacts and crash alerts (post-MVP opt-in feature; see the section above)
 
@@ -102,3 +172,9 @@ These are designed-for but not implemented or not demo-critical:
   cancel, and never claims reliable detection, guaranteed delivery, or that help is coming.
 - **Degrade gracefully.** Permission denial, GPS loss, camera failure, low battery, and
   interrupted rides are expected states, not crashes.
+- **Rear-mounted means eyes-free.** With the phone on the seat post the screen is not an in-ride
+  UI: start and frame before mounting, put in-ride control and alerts on the wrist or audio, and
+  never let a camera problem go unannounced.
+- **Footage is the rider's, on the rider's phone.** Video stays on the device, is never uploaded
+  automatically or sent in a message, and is easy to delete; the database receives events, not
+  video. Other road users appear in footage, so retention is short and guidance is clear.

@@ -1,21 +1,32 @@
 # Supabase Contract — Whoosh
 
-**Status: DRAFT.** Owned by Role C. The iOS app implements sync (tasks 26–28) only after
-this is marked **Agreed** by C and the iOS owner. Change it through a quick review, then
-bump the version.
+**Status: AGREED v1.0.** Owned by Role C; agreed by Role C and the iOS owner on
+October 24, 2026. The iOS app implements sync (tasks 26–28) against this version. Change it
+through a quick review, then bump the version.
 
-Version: 0.2 (draft, October 24, 2026)
+The schema, grants, RLS, limits, and views below are frozen for v1.0. The remaining boxes
+under "Open items for C" are **deployment prerequisites** (applying migrations to the hosted
+project, enabling anonymous sign-ins there, re-checking isolation with two real sessions, and
+the owner-rights view question), not schema changes.
+
+Version: 1.0 (agreed, October 24, 2026)
 
 ## Auth
 
 - Supabase **anonymous sign-in** enabled. Each install gets an anonymous `auth.uid()`.
   Enable it in the dashboard, or with `[auth] enable_anonymous_sign_ins = true` in
-  `supabase/config.toml` (not yet created). Captcha is recommended to limit abuse of
-  anonymous sign-ins.
+  `supabase/config.toml`. **Note:** `supabase/config.toml` currently has
+  `enable_anonymous_sign_ins = false`, which is correct for CI/db-reset but means the app
+  cannot sign in against a local `supabase start`. Set it to `true` for local simulator
+  testing (28g), and enable anonymous sign-ins in the hosted project before the hosted run.
+  Captcha is recommended to limit abuse of anonymous sign-ins.
 - No email, name, or other PII.
 - The app uses only the **public client key**: the new publishable key (`sb_publishable_...`),
-  or the legacy `anon` JWT while it still works. The secret key (`sb_secret_...`) or legacy
-  `service_role` key never goes in the app or in Git; it stays in C's server/CI environment.
+  or the legacy `anon` JWT while it still works. In the iOS build settings this value lives
+  under the name **`SUPABASE_PUBLISHABLE_KEY`** (resolved: the specs and
+  `Secrets.example.xcconfig` use `SUPABASE_PUBLISHABLE_KEY`, not `SUPABASE_ANON_KEY`). The
+  secret key (`sb_secret_...`) or legacy `service_role` key never goes in the app or in Git; it
+  stays in C's server/CI environment.
 - Supabase is deprecating the legacy keys by end of 2026
   ([migration guide](https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys)).
 
@@ -275,28 +286,46 @@ slow, switch it to a materialized view refreshed on a schedule.
 ## App behavior the backend can rely on
 
 - Upload happens only after the ride is saved locally, and only with sync enabled.
-- `upsert` on `id`, so retries never create duplicates.
-- Deleting a ride in the app sends a `delete` by `id` (retried if offline).
+- `upsert` on `id`, so retries never create duplicates. Every upsert sets **every** column in
+  its `on conflict (id) do update` (never a partial update), so a new `active_duration_s`
+  can't be combined with an old `started_at`/`ended_at` and trip `rides_active_within_elapsed`.
+- The app pre-checks all upload limits client-side and never sends a ride it knows will fail;
+  a `23514` that still comes back is treated as a permanent failure for that ride (no retry
+  loop). `42501`/auth errors are retried after an anonymous-session refresh.
+- The route is always a GeoJSON `LineString` in `[lon, lat]` order, privacy-trimmed (160 m
+  each end) and thinned to ≤ 10,000 points; a ride with < 2 points after trimming is kept
+  local and never uploaded.
+- `share_publicly` is set from a **global** iOS setting ("Share new rides on the Whoosh
+  website", off by default), stamped per ride at finish time (not retroactive). Every upload
+  sends an explicit `share_publicly`. Un-sharing sends an update that sets `share_publicly =
+  false` (again, full-column). Deleting a ride in the app sends a `delete` by `id` (retried if
+  offline). User-initiated unshares and deletes may run even while background sync is off.
+- Demo rides are never uploaded.
 
 ## Open items for C
 
-- [ ] Sign off on the website access option (proposed: public demo view). The view is written (B3).
-- [ ] The iOS spec has no "share publicly" toggle (proposal: `ios-share-toggle-proposal.md`).
-      Requirement 12 only covers the sync toggle.
-      Until the iOS owner adds one (a separate opt-in, off by default, that sets
-      `share_publicly`), no synced ride will appear on the website. For the demo, a ride can
-      be flipped to shared manually in the dashboard.
+Resolved at v1.0 sign-off (October 24, 2026) are checked; the unchecked items are
+**deployment prerequisites** for the hosted run (and local simulator testing), not schema
+changes.
+
+- [x] Website access option: **public demo view** (`public_rides`) is the agreed choice. The
+      view is written and tested locally.
+- [x] The iOS "share publicly" control exists in the spec: the owner chose **one global
+      setting** ("Share new rides on the Whoosh website", off by default, only while sync is
+      on, not retroactive) over the proposal's per-ride switch. Requirement 12.11–12.17 and the
+      design's "Global public-sharing model" cover it; every upload sends an explicit
+      `share_publicly`. See `ios-share-toggle-proposal.md` section 8.
 - [ ] The `public_rides` view runs with owner rights, which Supabase's security advisor may
       flag. Decide whether to keep it or switch to the column-grant alternative described in the
-      migration's comments.
-- [ ] Confirm GeoJSON `jsonb` vs PostGIS `geography(LineString)` (PostGIS adds spatial
-      queries for future infrastructure analysis; `jsonb` is simpler to start).
+      migration's comments. **(Deployment prerequisite / review item.)**
+- [x] GeoJSON `jsonb` vs PostGIS: `jsonb` is agreed for v1.0 (PostGIS deferred).
 - [x] `near_misses` insert/update policies now check that `ride_id` belongs to the same user
       (assertions 27 and 29 cover insert and re-point). Passes locally.
 - [x] Explicit Data API grants added to all three migrations (see "Grants"). Applied and
       tested locally. Not yet checked on a hosted project.
-- [ ] Confirm which API key type the project issued, and align the iOS variable name
-      (`SUPABASE_ANON_KEY` in spec files vs `SUPABASE_PUBLISHABLE_KEY`).
+- [x] API key name aligned: the app uses **`SUPABASE_PUBLISHABLE_KEY`** (publishable key, with
+      the legacy `anon` JWT accepted in that slot until Supabase retires it). The spec files and
+      `Secrets.example.xcconfig` are renamed accordingly (iOS task 28b).
 - [x] Run and validate the migrations locally: `supabase db reset` applies all five, and
       `supabase test db` passes all 81 assertions in `supabase/tests/` (October 24, 2026).
 - [x] Upload limits and the `public_stats` view: applied and tested locally
@@ -307,7 +336,10 @@ slow, switch it to a materialized view refreshed on a schedule.
       (36 assertions): written, not yet run. Run `supabase db reset && supabase test db`.
 - [ ] Bike network and counts (migrations `170000` to `170200`) and
       `bike_network_and_counts.test.sql` (48 assertions): written, not yet run.
+- [ ] Enable anonymous sign-ins for testing: set `[auth] enable_anonymous_sign_ins = true` in
+      `supabase/config.toml` for local `supabase start` (currently `false`), and enable it in
+      the hosted project. **(Deployment prerequisite.)**
+
 - [ ] Apply to the real project: `supabase link`, `supabase db push --dry-run`, then push.
-      Re-check isolation with two real anonymous sessions, and enable anonymous sign-ins in
-      the project.
-- [ ] Mark this document **Agreed** and set version 1.0.
+      Re-check isolation with two real anonymous sessions. **(Deployment prerequisite.)**
+- [x] Marked **Agreed**, version **1.0** (October 24, 2026).

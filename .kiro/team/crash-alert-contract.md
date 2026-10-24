@@ -1,11 +1,15 @@
 # Crash Alert Backend Contract — Whoosh
 
-**Status: DRAFT.** Owned by **Role C** (Backend / Data & Integration). The iOS app implements the
-crash-alert notifier (spec `crash-response`, `SupabaseCrashNotifier`) only after this document is
-marked **Agreed** by Role C and the iOS owner. Change it through a quick review, then bump the
-version. Same spirit as `supabase-contract.md`.
+**Status: AGREED v1.0** (iOS owner decision, October 24, 2026 — **pending Role C review**).
+For the hackathon build the iOS owner approves treating this contract as Agreed so the iOS app can
+implement the crash-alert notifier (spec `crash-response`, `SupabaseCrashNotifier`). Role C still
+reviews and confirms the open items in §14 before the live trial-SMS run; any change Role C requires
+is folded back in and the version bumped. Change it through a quick review, then bump the version.
+Same spirit as `supabase-contract.md`.
 
-Version: 0.1 (draft, October 24, 2026)
+Owned by **Role C** (Backend / Data & Integration).
+
+Version: 1.0 (agreed for the hackathon by the iOS owner, October 24, 2026; pending Role C review)
 
 > No backend code lives in this document. It defines behavior, shapes, limits, and tests the two
 > sides must agree on. SQL, function code, and provider configuration are Role C's tasks.

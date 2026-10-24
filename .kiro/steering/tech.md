@@ -8,6 +8,11 @@
   - Enables the Observation framework (`@Observable`), modern MapKit SwiftUI APIs,
     and SwiftData. Chosen to reduce boilerplate during a hackathon.
   - Primary demo device: iPhone 14. iOS 17 keeps teammates' older phones supported.
+- **Watch target (opt-in, post-MVP):** `WhooshWatch`, watchOS 10.0 (watch-companion spec).
+  watchOS 10 pairs with iOS 17 and runs on every Apple Watch SE generation (owner's watch:
+  Apple Watch SE 2nd generation). SwiftUI, Swift 6 language mode; the watch app is thin and
+  phone-authoritative. Shared wire logic lives in the Foundation-only package
+  `Packages/WhooshWire`. _(watch-companion A10)_
 - **IDE / project:** Xcode 26.5. The committed `Whoosh.xcodeproj` is the source of truth and
   can be opened directly. _Amended:_ the original "no XcodeGen" decision is revised —
   [XcodeGen](https://github.com/yonaskolb/XcodeGen) is used **only as a one-time generator**
@@ -18,11 +23,23 @@
   (`xcodegen generate`). The iOS owner is the only person editing the project, so merge
   conflicts are unlikely.
 - **Apple Developer account:** available. Use it for on-device installs, entitlements, and
-  capabilities (e.g., background location later) without free-account limits.
+  capabilities without free-account limits.
+- **Background location decision (rear-camera spec, O-CAM2):** the MVP was foreground-only. A
+  rear-mounted phone locks or backgrounds more easily and iOS interrupts a camera session when it
+  does, so the recommendation is to declare `UIBackgroundModes` = `location` now and, **only while a
+  ride is active and started from the foreground**, enable background updates with the
+  background-location indicator under **When-In-Use** authorization (no
+  `NSLocationAlwaysAndWhenInUseUsageDescription` needed for this). Video still cannot record while
+  locked; the multitasking camera entitlement does not apply to this use (it covers Slide Over,
+  Split View, and Picture in Picture and is restricted to `voip` apps). Re-checked against Apple docs
+  on October 24, 2026; confirm on device.
 - **Concurrency:** Xcode 26 defaults. Default actor isolation = `MainActor`, Approachable
   Concurrency on. View models, the location wrapper, and repositories run on the main actor.
   Heavy work (camera frames, model inference, network sync) must be explicitly moved off the
-  main actor (`nonisolated`, `@concurrent`, or a dedicated actor).
+  main actor (`nonisolated`, `@concurrent`, or a dedicated actor). For the camera: the capture
+  session, sample-buffer callbacks, and the asset writer run on dedicated serial queues; frame
+  consumers run on their own executors; `CVPixelBuffer` crosses actors only inside the documented
+  `VideoFrame` wrapper; only state and intents reach the main actor.
 - **Units:** US customary. Miles, mph, feet. Internal storage stays SI (meters, seconds,
   m/s); conversion happens only in the formatting layer.
 
@@ -36,9 +53,18 @@
 | Location             | Core Location                     | `CLLocationManager` behind a protocol.       |
 | Persistence          | SwiftData                         | Local source of truth; swappable via repo.   |
 | Cloud sync (opt-in)  | Supabase (`supabase-swift`, pinned)| Behind `RideSyncService`; never required.    |
-| Camera (future)      | AVFoundation                      | Isolated; not in demo path.                  |
-| Detection (future)   | Vision / Core ML                  | Behind `HazardDetector` protocol only.       |
-| Alerts (future)      | Core Haptics / AVAudioSession     | Behind `AlertManager` protocol.              |
+| Camera capture + recording | AVFoundation (`AVCaptureSession`, `AVAssetWriter`) | **In scope** (rear-camera spec). Only in `Services/Camera/`, behind `CameraCapturing`; off the main actor. |
+| Clip playback / export | AVKit, AVFoundation composition, PhotoKit (add-only) | Playback in the app; Photos export only in `Services/Camera/PhotosClipExporter.swift`, on explicit rider action. |
+| Mount level indicator | Core Motion                      | `Services/Camera/` (also `Services/Crash/` for the stretch detector). |
+| Screen dim mode      | UIKit (screen brightness, idle timer) | Only in `Services/Screen/`, behind `ScreenController`; restore on every exit. |
+| Background location  | Core Location (`location` background mode) | Recommended now (open decision O-CAM2): When-In-Use + background updates + indicator, only during a ride; no Always prompt. |
+| Detection (future)   | Vision / Core ML                  | A `HazardDetector` that is also a `FrameConsumer`; never owns capture. |
+| Alerts               | Core Haptics / AVAudioSession / local notifications | `AlertSink`s behind the unchanged `AlertManager` (fan-out); audio/watch channels. |
+| In-ride remote (Apple Watch) | WatchConnectivity (Apple Watch companion) | Watch-companion spec (opt-in, post-MVP). Confined to `Whoosh/Services/Remote/WCSessionWireLink.swift` (phone) and `WhooshWatch/Services/Link/` (watch), behind `WireLink`/`RideRemoteControl`. _(watch-companion A10)_ |
+| Watch keep-alive | HealthKit (`HKWorkoutSession`, cycling) | **Watch only.** Write-only workout type (no reads, no upload); only in `WhooshWatch/Services/Workout/` and the single phone `startWatchApp` caller (`Whoosh/Services/Remote/WatchLauncher.swift`). _(watch-companion A10)_ |
+| Watch haptics | WatchKit (`WKInterfaceDevice.play`, `WKHapticType`) | **Watch only.** Only in `WhooshWatch/Services/Haptics/`; pattern selection and limiting are pure in `Packages/WhooshWire`. _(watch-companion A10)_ |
+| Watch complication (Stretch) | WidgetKit | **Watch only**, opt-in, timer + state only; no distance, speed, location, or crash data. _(watch-companion A10)_ |
+| Shared wire contract | Local Swift package (`Packages/WhooshWire`) | Foundation-only; the versioned wire envelope/DTOs, codec, and pure watch-side logic compiled into both the iOS and watch targets; tested with `swift test`. _(watch-companion A10)_ |
 | Testing              | Swift Testing                     | `@Test`, `#expect`, parameterized tables.    |
 
 ## Architecture
@@ -80,8 +106,11 @@ Whoosh/
     Location/          LocationTracking protocol + CoreLocationTracker + Fake
     Persistence/       RideRepository protocol + SwiftData impl + models
     Sync/              RideSyncService protocol + Noop + Supabase impl (later)
-    Detection/         HazardDetector protocol + NoopDetector (future)
-    Alerts/            AlertManager protocol + stub (future)
+    Detection/         HazardDetector protocol + NoopDetector; DetectionCoordinator (frames via FramePipeline)
+    Camera/            Capture, FramePipeline/FrameConsumer, segment recorder, ring buffer, clips, Photos export (rear-camera spec)
+    Screen/            ScreenController (brightness, idle timer) for ride mode
+    Remote/            RideRemoteControl seam (Noop/Fake now; WatchConnectivity later)
+    Alerts/            AlertManager protocol + stub; AlertSink fan-out (rear-camera spec)
   Models/              Domain models (Ride, RoutePoint, RideState)
   Support/             Extensions, formatters, permission helpers
 WhooshTests/           Unit tests with fakes
@@ -106,3 +135,8 @@ WhooshTests/           Unit tests with fakes
 - Run unit tests before marking any task complete.
 - Target: logic (view models, services, repositories) is unit-tested with fakes.
   UI and real Core Location/AVFoundation integration are verified manually on device.
+- Camera: the capture service, asset writer, brightness control, background location, and thermal/
+  battery behavior cannot be exercised by the simulator; they are verified on the iPhone 14 and
+  logged in `.kiro/specs/rear-camera/manual-qa.md`. Pure policies (ring buffer, clip windows,
+  thermal/storage/battery, frame dropping, screen-mode and camera state machines) are test-first
+  with a controllable `Clock` and no AVFoundation.

@@ -11,3 +11,4 @@ Deno.serve((req) =>
     return json(await handleStatus(makeDeps(), userId, url.searchParams.get("crashEventId"), url.searchParams.get("kind")));
   }),
 );
+

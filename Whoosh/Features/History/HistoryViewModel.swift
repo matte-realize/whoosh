@@ -35,14 +35,36 @@ final class HistoryViewModel {
 
     @ObservationIgnored private let repository: RideRepository
     @ObservationIgnored private let calendar: Calendar
+    /// Optional near-miss store so rows can show a count badge (rear-camera Req
+    /// 15, task 28). `nil` in previews/tests that don't care, which keeps the
+    /// count map empty and the rows unchanged.
+    @ObservationIgnored private let nearMissRepository: NearMissRepository?
 
     /// Finished rides grouped into month sections, newest month first.
     private(set) var sections: [MonthSection] = []
 
-    init(repository: RideRepository, calendar: Calendar = .current) {
+    /// Near-miss event count per ride id (0 when absent). Read by the view to
+    /// badge each `RideRow`.
+    private(set) var nearMissCounts: [UUID: Int] = [:]
+
+    /// Called after a ride is deleted locally, so the composition root can
+    /// request its remote deletion (Requirement 12.6). Not set in previews/tests.
+    @ObservationIgnored var onDidDelete: ((Ride) -> Void)?
+
+    init(
+        repository: RideRepository,
+        calendar: Calendar = .current,
+        nearMissRepository: NearMissRepository? = nil
+    ) {
         self.repository = repository
         self.calendar = calendar
+        self.nearMissRepository = nearMissRepository
         load()
+    }
+
+    /// Near-miss count for a ride id (0 when none).
+    func nearMissCount(for rideId: UUID) -> Int {
+        nearMissCounts[rideId] ?? 0
     }
 
     /// `true` when there are no finished rides — drives the friendly empty state.
@@ -55,6 +77,17 @@ final class HistoryViewModel {
     func load() {
         let finished = ((try? repository.allRides()) ?? []).filter { $0.endedAt != nil }
         sections = Self.group(rides: finished, calendar: calendar)
+        // Build per-ride near-miss counts (empty when no store is injected).
+        if let nearMissRepository {
+            var counts: [UUID: Int] = [:]
+            for ride in finished {
+                let count = ((try? nearMissRepository.events(rideId: ride.id)) ?? []).count
+                if count > 0 { counts[ride.id] = count }
+            }
+            nearMissCounts = counts
+        } else {
+            nearMissCounts = [:]
+        }
     }
 
     /// Permanently delete a ride and reload (Requirement 7.4). A missing id is a
@@ -62,6 +95,7 @@ final class HistoryViewModel {
     func delete(_ ride: Ride) {
         try? repository.delete(id: ride.id)
         load()
+        onDidDelete?(ride)
     }
 
     // MARK: - Grouping (pure)

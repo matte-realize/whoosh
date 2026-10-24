@@ -17,8 +17,9 @@ the MVP only as a **visible, non-functional, experimental placeholder** (Home ca
 screen "off" chip, and a disabled Settings row); it never requests camera permission.
 
 In scope as a non-blocking stretch: opt-in sync of finished rides to Supabase (Requirement
-12), so Role C's web dashboard can display them. The Supabase schema is owned by Role C; the
-app implements against it only once it's agreed.
+12), with an optional global "share on the website" setting, so Role C's web dashboard can
+display them. The Supabase schema is owned by Role C; the app implements against it only once
+it's agreed (now Agreed v1.0, October 24, 2026).
 
 New in this revision (post-mockup review): a Home dashboard with a weekly-stats card and
 weekday chart backed by a pure `WeeklyStats` function (Requirement 13); a first-class Settings
@@ -230,7 +231,8 @@ app is working.
 6. The summary view SHALL display a sync-status row using icon + text ("On device",
    "Pending", or "Synced"); until cloud sync exists (Requirement 12) every ride SHALL show
    "On device". Once sync exists AND a ride has been synced, the summary SHALL also show a
-   "Start and end trimmed for privacy" note.
+   "Start and end trimmed for privacy" note and the ride's public-sharing state using icon +
+   text (Private / Shared / Sharing pending, Requirement 12.15).
 
 ## Requirement 7: Ride history and persistence
 
@@ -305,9 +307,13 @@ and alerts later without rewriting the app.
 
 1. The app SHALL include honest, purpose-specific usage description strings for every
    permission it can request, matching the privacy steering.
-2. WHILE cloud sync is disabled THE app SHALL make no network requests. The app SHALL
-   include no analytics or tracking SDKs; the pinned Supabase client is the only networking
-   dependency. Both SHALL be verifiable by inspecting dependencies and code.
+2. WHILE cloud sync is disabled THE app SHALL make no background or automatic network
+   requests. The single exception is a **user-initiated** remote delete or unshare of a ride
+   that was uploaded earlier (Requirements 12.6 and 12.19): it runs only at the moment the
+   user asks, never in the background, and SHALL surface a retryable error if the device is
+   offline. The app SHALL include no analytics or tracking SDKs; the pinned Supabase client is
+   the only networking dependency. Both SHALL be verifiable by inspecting dependencies and
+   code.
 3. UI copy and marketing-style text in the app SHALL NOT claim the app predicts, prevents, or
    guarantees avoidance of collisions; detection-related copy SHALL be framed as experimental.
 4. WHEN the user deletes a ride, or deletes all rides from Settings, THEN deletion SHALL be
@@ -380,15 +386,81 @@ the Whoosh website, without making the app depend on the internet.
 5. Before upload, the system SHALL trim the route's first and last configurable distance
    (default 160 m / ~0.1 mi) as a privacy zone; the local route SHALL remain complete.
 6. WHEN the user deletes a synced ride THEN the system SHALL delete it locally immediately
-   and request remote deletion, retrying if offline.
-7. The app SHALL ship only the Supabase anon key, loaded from a gitignored config file, and
-   SHALL rely on Row Level Security so a user can access only their own rows.
+   and request remote deletion, retrying if offline. This user-initiated remote delete is the
+   one network action permitted while cloud sync is disabled (Requirement 9.2): it runs only
+   at the moment the user asks, never in the background, and surfaces a retryable error if the
+   device is offline.
+7. The app SHALL ship only the Supabase **public client key** — the publishable key
+   (`sb_publishable_...`), or the legacy `anon` JWT while Supabase still accepts it — loaded
+   from a gitignored config file under the build-setting name `SUPABASE_PUBLISHABLE_KEY`. The
+   secret key (`sb_secret_...`) / legacy `service_role` key SHALL never appear in the app or
+   the repo. The app SHALL rely on Row Level Security so a user can access only their own rows.
 8. Identity SHALL use Supabase anonymous sign-in for the hackathon build; no PII SHALL be
    collected.
 9. The app SHALL implement sync only against a schema marked "Agreed" in
    `.kiro/team/supabase-contract.md`.
 10. Each ride row in history SHOULD show its sync status (local only, pending, synced) using
     icon and text, not color alone.
+
+### Public sharing (global setting)
+
+The owner chose a **single global sharing setting** over a per-ride switch (decision of
+October 24, 2026; see `.kiro/team/ios-share-toggle-proposal.md`). Public sharing is separate
+from cloud sync: sync means "my rides are backed up under my anonymous account and only I can
+read them"; sharing means "anyone who opens the Whoosh website can see this ride". They are
+different promises and keep separate, explicit consent.
+
+11. Public sharing SHALL be controlled by one global Settings toggle, "Share new rides on the
+    Whoosh website", that is OFF by default and is available (visible/enabled) only while
+    cloud sync is enabled. While cloud sync is off the toggle SHALL be hidden or disabled with
+    a plain explanation that sync must be on to share.
+12. WHEN the user turns the global sharing setting ON THEN the system SHALL first state in
+    plain text what becomes visible on the public website — the trimmed route, distance, time,
+    and average speed; no name or account — and SHALL require explicit confirmation before the
+    setting takes effect.
+13. The global sharing setting SHALL apply only to rides **finished while it is on**; it SHALL
+    NOT retroactively share rides finished earlier. Each upload SHALL send an explicit
+    `share_publicly` value: `true` for a ride finished while sharing is on, otherwise `false`.
+14. WHEN the user turns the global sharing setting OFF while one or more rides are already
+    shared THEN the system SHALL ask whether to also stop sharing the already-shared rides
+    (unshare them remotely, retrying, and showing each as pending until the remote value
+    matches) or to keep them shared. Turning sharing off SHALL NOT change the sharing state of
+    earlier rides without this explicit choice.
+15. Each ride SHALL show its own sharing state with an icon and text, not color alone —
+    Private, Shared, or Sharing pending — on the ride summary and in history.
+16. WHEN the user turns cloud sync OFF while any ride is still shared THEN the system SHALL
+    tell the user those rides remain public and SHALL offer to stop sharing them before sync
+    is disabled (the disable-sync prompt). This prompt is in scope for the hackathon build.
+17. An unshare requested by the user (Requirement 12.14) is user-initiated and MAY run while
+    cloud sync is disabled under the same exception as a user-initiated delete (Requirement
+    9.2 / 12.6): only at the moment the user asks, never in the background, with a retryable
+    error if offline.
+
+### Upload limits (enforced by the backend; pre-checked by the app)
+
+The backend contract (`.kiro/team/supabase-contract.md`) and the applied migrations enforce
+hard limits; an upload that breaks any of them fails with a `23514` check violation. The app
+SHALL pre-check every limit client-side so a doomed ride is marked failed **without** making a
+request, and SHALL treat a `23514` from the server as a **permanent** error for that ride.
+
+18. Before upload the system SHALL thin the (already privacy-trimmed) route to at most 10,000
+    points. IF a ride has fewer than 2 points after trimming THEN the system SHALL NOT upload
+    it; it SHALL remain local and be shown as "local only".
+19. The uploaded route SHALL be a GeoJSON `LineString` whose coordinates are in
+    `[longitude, latitude]` order, longitude within −180..180 and latitude within −90..90.
+20. The system SHALL NOT upload a ride whose values exceed the contract limits:
+    `distance_m` ≤ 1,000,000 (1,000 km); `active_duration_s` ≤ 172,800 (48 h) and ≤
+    `(ended_at − started_at)` + 1 s; `avg_speed_mps` ≤ 40; `ended_at` ≤ 48 h after
+    `started_at`; `app_version` ≤ 32 characters. A ride that violates any limit SHALL be
+    marked failed locally (no request, no infinite retry) and logged without PII.
+21. Every upload (insert or update) SHALL set **every** column of the `rides` row in its
+    `on conflict (id) do update`, so a partial update can never combine new and old values and
+    trip the backend's `rides_active_within_elapsed` constraint.
+22. A `23514` check violation from the server SHALL be treated as a permanent failure for that
+    ride (mark it failed, do not retry forever, log without PII). A `42501` / permission or
+    auth error SHALL be treated as retryable after a session refresh.
+23. Demo rides (a ride flagged `isDemo`, from the demo-mode spec; the flag may not yet exist
+    on this branch) SHALL never be uploaded, shared, or counted toward public sharing.
 
 ---
 
@@ -445,7 +517,10 @@ manage my data.
    until the sync tasks ship: a "Sync rides to Whoosh map" toggle (with a plain-language
    explanation of exactly what is uploaded and that camera video is never uploaded), a
    "Privacy zone · 0.1 mi" row, and an "Identity · Anonymous" row. WHEN the sync tasks are
-   complete THEN the toggle SHALL become enabled (`Future-seam` until then).
+   complete THEN the "Sync rides to Whoosh map" toggle SHALL become enabled, and a global
+   "Share new rides on the Whoosh website" toggle SHALL appear directly beneath it — OFF by
+   default, available only while cloud sync is on, with the confirmation and prompts of
+   Requirement 12.11–12.16 (`Future-seam` until then).
 6. Settings SHALL show a disabled "Rear vehicle detection · Soon" row framed as experimental
    that does not request camera permission (`Future-seam`).
 7. All Settings rows SHALL convey state with icon + text, not color alone, and use the design

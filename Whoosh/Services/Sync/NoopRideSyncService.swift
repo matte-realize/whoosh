@@ -21,4 +21,12 @@ struct NoopRideSyncService: RideSyncService {
     func deleteRemote(id: UUID) async throws {
         // Intentionally does nothing: sync is disabled in the MVP.
     }
+
+    func setSharing(id: UUID, shared: Bool) async throws {
+        // Intentionally does nothing: sync is disabled in the MVP.
+    }
+
+    func uploadNearMisses(_ payloads: [NearMissUploadMapper.Payload]) async throws {
+        // Intentionally does nothing: sync is disabled in the MVP.
+    }
 }

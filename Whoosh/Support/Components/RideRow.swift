@@ -10,15 +10,24 @@ import SwiftUI
 struct RideRow: View {
     let ride: Ride
     var showSpeed: Bool = true
+    /// Count of near-miss events recorded during this ride (rear-camera Req 15,
+    /// task 28). Shown as a small amber badge when non-zero. 0 by default so
+    /// existing callers are unaffected.
+    var nearMissCount: Int = 0
 
     var body: some View {
         HStack(spacing: Theme.Spacing.md) {
             RouteGlyph(points: ride.points)
 
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                Text(Self.titleText(for: ride.startedAt))
-                    .font(Theme.Typography.rowTitle)
-                    .foregroundStyle(Theme.Colors.textPrimary)
+                HStack(spacing: Theme.Spacing.sm) {
+                    Text(Self.titleText(for: ride.startedAt))
+                        .font(Theme.Typography.rowTitle)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+                    if ride.isDemo {
+                        demoTag
+                    }
+                }
                 Text(subtitle)
                     .font(Theme.Typography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
@@ -26,10 +35,21 @@ struct RideRow: View {
 
             Spacer(minLength: Theme.Spacing.sm)
 
-            Image(systemName: syncVariant.systemImage)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(syncIconColor)
-                .accessibilityHidden(true)
+            HStack(spacing: Theme.Spacing.sm) {
+                if nearMissCount > 0 {
+                    nearMissBadge
+                }
+                if showsSharing {
+                    Image(systemName: sharingVariant.systemImage)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                        .accessibilityHidden(true)
+                }
+                Image(systemName: syncVariant.systemImage)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(syncIconColor)
+                    .accessibilityHidden(true)
+            }
         }
         .padding(Theme.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -40,11 +60,70 @@ struct RideRow: View {
 
     // MARK: - Content
 
-    /// Until cloud sync exists every ride reads "On device" (Requirement 6.6 /
-    /// 7.2). Once sync ships this can map from the ride's stored sync status.
-    private var syncVariant: StateChip.Variant { .onDevice }
+    /// Maps the ride's stored `syncStatus` to the chip variant (icon + text).
+    private var syncVariant: StateChip.Variant {
+        switch ride.syncStatus {
+        case .localOnly: return .onDevice
+        case .pending: return .pending
+        case .synced: return .synced
+        case .failed: return .failed
+        }
+    }
 
-    private var syncIconColor: Color { Theme.Colors.textSecondary }
+    private var sharingState: SharingState {
+        SharingState.forRide(sharePublicly: ride.sharePublicly, syncStatus: ride.syncStatus)
+    }
+
+    /// Only surface a sharing icon when the ride is (or wants to be) public;
+    /// a `.private` ride just shows its sync status.
+    private var showsSharing: Bool { sharingState != .private }
+
+    private var sharingVariant: StateChip.Variant {
+        switch sharingState {
+        case .private: return .privateRide
+        case .shared: return .shared
+        case .sharingPending: return .sharingPending
+        }
+    }
+
+    private var syncIconColor: Color {
+        switch ride.syncStatus {
+        case .failed: return Theme.Palette.alert
+        default: return Theme.Colors.textSecondary
+        }
+    }
+
+    /// A small "Demo ride" tag (icon + text) so a simulated/seeded ride is never
+    /// confused with a real one (demo-mode Requirement 2.3).
+    private var demoTag: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "wrench.and.screwdriver.fill")
+                .font(.system(size: 9, weight: .bold))
+            Text("Demo ride")
+                .font(.system(size: 10, weight: .semibold))
+        }
+        .foregroundStyle(Theme.Palette.ink)
+        .padding(.horizontal, Theme.Spacing.sm)
+        .padding(.vertical, 2)
+        .background(Theme.Palette.amber)
+        .clipShape(Capsule())
+    }
+
+    /// A small amber near-miss count badge (experimental logged events, task 28).
+    private var nearMissBadge: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 9, weight: .bold))
+            Text("\(nearMissCount)")
+                .font(.system(size: 10, weight: .semibold))
+        }
+        .foregroundStyle(Theme.Palette.ink)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(Theme.Palette.amber)
+        .clipShape(Capsule())
+        .accessibilityHidden(true)
+    }
 
     private var subtitle: String {
         var parts = [
@@ -58,7 +137,16 @@ struct RideRow: View {
     }
 
     private var accessibilityText: String {
-        "\(Self.titleText(for: ride.startedAt)), \(subtitle), \(syncVariant.title)"
+        let demo = ride.isDemo ? "Demo ride, " : ""
+        var text = "\(demo)\(Self.titleText(for: ride.startedAt)), \(subtitle), \(syncVariant.title)"
+        if showsSharing {
+            text += ", \(sharingState.title)"
+        }
+        if nearMissCount > 0 {
+            let label = nearMissCount == 1 ? "1 near miss" : "\(nearMissCount) near misses"
+            text += ", \(label)"
+        }
+        return text
     }
 
     /// e.g. "Thu, Oct 22 · 5:48 PM" — fixed en_US so it matches the mockup and
