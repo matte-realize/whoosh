@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FeatureExplorer } from "@/components/FeatureExplorer";
 import { HeroVisual } from "@/components/HeroVisual";
 import { Icon, type IconName } from "@/components/Icon";
+import IntroFilm from "@/components/IntroFilm";
 import { LogoMark } from "@/components/Logo";
 import { Reveal } from "@/components/Reveal";
 import StatsPanel from "@/components/StatsPanel";
@@ -85,12 +86,12 @@ export default function HomePage() {
               ahead.
             </p>
             <div className="hero__actions">
-              <Link className="button button--primary" href="/simulation">
-                See it in action
-                <span aria-hidden="true"> →</span>
-              </Link>
-              <Link className="button button--ghost" href="/dashboard">
-                Explore the ride map
+              <a className="button button--primary" href="#film">
+                <span aria-hidden="true">▶ </span>
+                Watch the film
+              </a>
+              <Link className="button button--ghost" href="/simulation">
+                Try the simulation
               </Link>
             </div>
             <p className="hero__fine">
@@ -102,7 +103,15 @@ export default function HomePage() {
       </section>
 
       <div className="page">
-        <Reveal className="section section--first">
+        <section id="film" className="film-section" aria-labelledby="film-heading">
+          <div className="film-section__head">
+            <p className="eyebrow">Watch</p>
+            <h2 id="film-heading">16 seconds with Whoosh</h2>
+          </div>
+          <IntroFilm />
+        </section>
+
+        <Reveal className="section">
           <section id="how-it-works" aria-labelledby="how-heading" className="center">
             <p className="eyebrow">How it works</p>
             <h2 id="how-heading">Three steps. No new gear.</h2>

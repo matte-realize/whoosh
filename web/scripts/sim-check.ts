@@ -1,6 +1,7 @@
 // Checks for src/lib/sim/engine.ts. Run from web/:  node scripts/sim-check.ts
 // (Node 23.6+ runs TypeScript directly by stripping types.)
 import {
+  FILM_SCENARIO,
   createSim,
   nearestBehind,
   positionHint,
@@ -99,6 +100,23 @@ check(SCENARIOS.every((s) => s.spawns.every((sp, i, all) => i === 0 || all[i - 1
   const sim = createSim("light");
   step(sim, 5);
   check(sim.t <= 0.1 + 1e-9, "a single huge time step is capped at 0.1 s");
+}
+
+// The home page film is cut to these moments; if they move, the captions and shots must move too.
+{
+  const sim = createSim(FILM_SCENARIO);
+  let passAt: number | null = null;
+  for (let i = 0; i < 16.5 * 60; i += 1) {
+    step(sim, 1 / 60);
+    const car = sim.vehicles.find((v) => v.direction === 1);
+    if (passAt === null && car !== undefined && car.state === "passed") passAt = sim.t;
+  }
+  const cues = sim.events.filter((e) => e.type === "cue");
+  check(cues.length === 1, `film: exactly one cue (${cues.length})`);
+  const cue = cues[0];
+  check(cue !== undefined && cue.t > 8.6 && cue.t < 9.5, `film: cue lands during the phone shot (${cue?.t.toFixed(2)} s)`);
+  check(cue?.hint === "left", "film: the cue says 'on your left'");
+  check(passAt !== null && passAt < 14, `film: the car is past the rider before the end card (${passAt?.toFixed(2)} s)`);
 }
 
 console.log(failures === 0 ? "ALL PASS" : `${failures} FAILED`);

@@ -18,7 +18,7 @@
 export type VehicleKind = "car" | "truck" | "bus";
 export type PositionHint = "left" | "center" | "right";
 export type VehicleState = "far" | "tracking" | "cued" | "passed";
-export type ScenarioKey = "light" | "close" | "busy" | "oncoming";
+export type ScenarioKey = "light" | "close" | "busy" | "oncoming" | "film";
 
 export interface Vehicle {
   id: number;
@@ -119,6 +119,23 @@ export const SCENARIOS: Scenario[] = [
   },
 ];
 
+/**
+ * The fixed ride used by the home page film: one car overtakes close on the rider's left, and an
+ * oncoming truck passes on the other side. Not in SCENARIOS, so it is not offered on /simulation.
+ * scripts/sim-check.ts pins its timing (cue around 9 s, car past before 14 s), which the film's
+ * shots and captions are cut to.
+ */
+export const FILM_SCENARIO: Scenario = {
+  key: "film",
+  label: "Intro film",
+  description: "A car overtakes close on the left while an oncoming truck passes.",
+  loopSeconds: 1000,
+  spawns: [
+    { at: 0.2, lane: "close", kind: "car", speed: 17 },
+    { at: 2, lane: "oncoming", kind: "truck", speed: 12 },
+  ],
+};
+
 /** Road layout, meters. */
 export const ROAD = {
   bikeLaneLeft: 0,
@@ -181,8 +198,11 @@ function random(state: SimState): number {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
-export function createSim(scenarioKey: ScenarioKey = "light", mistakes = false, seed = 7): SimState {
-  const scenario = SCENARIOS.find((item) => item.key === scenarioKey) ?? SCENARIOS[0];
+export function createSim(scenarioOrKey: ScenarioKey | Scenario = "light", mistakes = false, seed = 7): SimState {
+  const scenario =
+    typeof scenarioOrKey === "string"
+      ? [...SCENARIOS, FILM_SCENARIO].find((item) => item.key === scenarioOrKey) ?? SCENARIOS[0]
+      : scenarioOrKey;
   return {
     t: 0,
     riderDistance: 0,

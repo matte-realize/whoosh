@@ -24,6 +24,8 @@ export interface Orbit {
   elevation: number;
   /** Meters from the target. */
   radius: number;
+  /** Point the camera circles and looks at. Defaults to the road just behind the rider. */
+  target?: { x: number; y: number; z: number };
 }
 
 export const DEFAULT_ORBIT: Orbit = { azimuth: (35 * Math.PI) / 180, elevation: (24 * Math.PI) / 180, radius: 38 };
@@ -393,7 +395,7 @@ export function cameraFor(view: ViewMode, orbit: Orbit, width: number, height: n
     // From above and slightly behind, so the rider rides up the screen and traffic comes from below.
     return makeCamera(v(-2.5, 78, -66), v(-2.5, 0, -24), 48, width, height);
   }
-  const target = v(RIDER_X - 1.5, 0.8, -14);
+  const target = orbit.target ? v(orbit.target.x, orbit.target.y, orbit.target.z) : v(RIDER_X - 1.5, 0.8, -14);
   const pos = v(
     target.x + orbit.radius * Math.sin(orbit.azimuth) * Math.cos(orbit.elevation),
     target.y + orbit.radius * Math.sin(orbit.elevation),

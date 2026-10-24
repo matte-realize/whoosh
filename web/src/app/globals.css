@@ -2059,3 +2059,244 @@ p {
 .project .stats-panel {
   margin-top: 20px;
 }
+
+/* ---------- Intro film ---------- */
+
+.film-section {
+  margin-top: 40px;
+  scroll-margin-top: 80px;
+}
+
+.film-section__head {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.film-section__head .eyebrow {
+  justify-content: center;
+}
+
+.film {
+  margin: 0;
+}
+
+.film__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #060708;
+  box-shadow: 0 30px 80px rgb(0 0 0 / 55%), 0 0 0 1px rgb(45 245 168 / 6%);
+}
+
+.film__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.film__title,
+.film__end {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+  animation: film-in 0.6s var(--ease) both;
+}
+
+.film__title p {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.film__end-line {
+  margin: 0;
+  font-size: clamp(1.4rem, 3.6vw, 2.5rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.film__caption {
+  position: absolute;
+  left: 50%;
+  bottom: 64px;
+  max-width: min(86%, 720px);
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 12px;
+  background: rgb(6 7 8 / 78%);
+  backdrop-filter: blur(6px);
+  font-size: clamp(0.95rem, 2vw, 1.375rem);
+  font-weight: 800;
+  text-align: center;
+  transform: translateX(-50%);
+  animation: caption-in 0.45s var(--ease) both;
+}
+
+.film__caption--alert {
+  border: 1px solid var(--signal-red);
+  color: var(--text);
+  background: rgb(60 12 10 / 82%);
+  box-shadow: 0 0 30px rgb(255 90 79 / 35%);
+}
+
+.film__watch {
+  position: absolute;
+  right: 22px;
+  top: 22px;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 74px;
+  border: 2px solid #2a2f35;
+  border-radius: 20px;
+  background: #0d0f11;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.3s, transform 0.3s var(--ease);
+}
+
+.film__watch.is-on {
+  opacity: 1;
+  transform: none;
+  border-color: var(--signal-red);
+  color: var(--signal-red);
+  animation: tap 0.28s ease-in-out 6;
+}
+
+.film__start {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  background: rgb(6 7 8 / 55%);
+}
+
+.film__start p {
+  margin: 0;
+  font-weight: 800;
+}
+
+.film__big-play {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #04110b;
+  font-size: 1.75rem;
+  cursor: pointer;
+  box-shadow: 0 0 40px rgb(45 245 168 / 45%);
+  transition: transform 0.2s var(--ease);
+}
+
+.film__big-play:hover {
+  transform: scale(1.06);
+}
+
+.film__bar {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.film__control {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: rgb(6 7 8 / 75%);
+  color: var(--text);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.film__control:hover {
+  border-color: var(--accent);
+}
+
+.film__progress {
+  flex: 1;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 14%);
+}
+
+.film__progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.film__tag {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgb(6 7 8 / 75%);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.film__description {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .film__caption {
+    bottom: 58px;
+  }
+
+  .film__watch {
+    width: 48px;
+    height: 56px;
+    right: 12px;
+    top: 12px;
+  }
+
+  .film__tag {
+    display: none;
+  }
+}
+
+@keyframes film-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes caption-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
