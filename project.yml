@@ -48,6 +48,7 @@ targets:
         PRODUCT_NAME: Whoosh
         DEVELOPMENT_TEAM: Z87CXCTTK6
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: Config/Whoosh.entitlements   # Time Sensitive Notifications (crash-response 13.3)
         TARGETED_DEVICE_FAMILY: "1"                      # iPhone only
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES

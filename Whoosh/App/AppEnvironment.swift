@@ -28,6 +28,12 @@ final class AppEnvironment {
     let detector: HazardDetector
     let alertManager: AlertManager
 
+    /// The opt-in crash-response sub-environment (crash-response task 26). Owns
+    /// the coordinator, stores, and seams; always Tier 0 (Noop notifier, no
+    /// network) here. With crash alerts off, nothing in it touches the network,
+    /// so the app behaves exactly as the MVP (Requirement 1.5).
+    let crash: CrashResponseEnvironment
+
     /// A calm, non-fatal notice to show the user when local storage had to fall
     /// back to a non-persistent store (Requirement 11.4). `nil` in the normal
     /// case. App-written copy only — never raw framework error text.
@@ -53,6 +59,7 @@ final class AppEnvironment {
         clock: Clock,
         detector: HazardDetector,
         alertManager: AlertManager,
+        crash: CrashResponseEnvironment,
         calendar: Calendar,
         defaults: UserDefaults,
         storageNotice: String? = nil,
@@ -63,6 +70,7 @@ final class AppEnvironment {
         self.clock = clock
         self.detector = detector
         self.alertManager = alertManager
+        self.crash = crash
         self.storageNotice = storageNotice
         self.makeRideTracker = makeRideTracker
         self.settingsViewModel = SettingsViewModel(repository: repository, defaults: defaults)
@@ -112,18 +120,32 @@ final class AppEnvironment {
     /// With demo mode off (or no simulated ride requested) this returns exactly
     /// today's `CoreLocationTracker`-backed session, so the off path is the
     /// identity path (Requirement 9.1).
+    ///
+    /// Also attaches the crash-response bridge to the session so detection can
+    /// arm while recording (no-op unless the rider enabled crash alerts); the
+    /// bridge is detached when the ride is cleared (`clearRideSession()`).
     func makeRideSession() -> RideSessionViewModel {
         if let simulated = demo.simulatedSession {
+            // Demo rides get the bridge too, so a crash drill can arm during one.
+            crash.attachRide(simulated)
             return simulated
         }
         var tuning = RideTuning()
         tuning.accuracy = settingsViewModel.trackingAccuracy
-        return RideSessionViewModel(
+        let session = RideSessionViewModel(
             tracker: makeRideTracker(),
             clock: clock,
             repository: repository,
             tuning: tuning
         )
+        crash.attachRide(session)
+        return session
+    }
+
+    /// Detach the crash bridge when a ride session is cleared (ride finished or
+    /// an interrupted-ride probe is thrown away). Safe to call repeatedly.
+    func clearRideSession() {
+        crash.detachRide()
     }
 
     /// A fresh History view model over the shared repository.
@@ -137,8 +159,38 @@ final class AppEnvironment {
     /// if an on-disk store cannot be created, so the app still launches (history
     /// simply won't persist across launches in that degraded case).
     static func live() -> AppEnvironment {
-        let (repository, storageNotice) = Self.makeLiveRepository()
+        let (repository, crashRepository, storageNotice) = Self.makeLiveRepositories()
         let clock = SystemClock()
+
+        // Crash-response stores (device-local only; no network). Contacts live
+        // only in the Keychain; orphaned items are purged on a fresh install.
+        let markerStore = UserDefaultsFreshInstallMarkerStore()
+        let contactStore = KeychainEmergencyContactStore(markerStore: markerStore)
+        try? contactStore.purgeOrphansIfFreshInstall()
+        let settingsStore = UserDefaultsCrashAlertSettingsStore()
+
+        // Detector source: the demo simulator when developer tools are on, else
+        // the no-op. Either way detection is only armed by the bridge while a
+        // ride is recording with consent, a label, and a reachable contact.
+        let developerToolsOn = settingsStore.current().developerToolsEnabled
+        let simulator: DebugCrashSimulator? = developerToolsOn ? DebugCrashSimulator(clock: clock) : nil
+        let detector: CrashDetector = simulator ?? NoopCrashDetector()
+
+        let crash = CrashResponseEnvironment(
+            contactStore: contactStore,
+            consentStore: UserDefaultsConsentStore(),
+            settingsStore: settingsStore,
+            repository: crashRepository,
+            connectivity: NWPathConnectivityMonitor(),
+            scheduler: UserNotificationsCrashNotificationScheduler(),
+            notifier: NoopCrashNotifier(),           // Tier 0: no network (task 25 blocked)
+            feedback: SystemCountdownFeedback(),
+            footageBuffer: NoopFootageBuffer(),
+            detector: detector,
+            simulator: simulator,
+            clock: clock
+        )
+
         return AppEnvironment(
             repository: repository,
             clock: clock,
@@ -148,6 +200,7 @@ final class AppEnvironment {
             // gate won't call it until a real detector exists), and the demo's
             // forced-alert path produces real haptics/audio.
             alertManager: HapticAudioAlertManager(clock: clock),
+            crash: crash,
             calendar: .current,
             defaults: .standard,
             storageNotice: storageNotice,
@@ -156,10 +209,22 @@ final class AppEnvironment {
         )
     }
 
-    private static func makeLiveRepository() -> (RideRepository, String?) {
+    /// Builds the ride repository and the crash-alert repository over a **single
+    /// shared `ModelContainer`** holding both `RideRecord` and
+    /// `CrashAlertRecordEntity` (crash-response task 26: the crash record entity
+    /// is added to the same live container as rides, keeping the container-
+    /// retention rule and the in-memory fallback). Existing ride data is
+    /// untouched by adding the new `@Model`.
+    private static func makeLiveRepositories() -> (RideRepository, CrashAlertRepository, String?) {
+        let schema: [any PersistentModel.Type] = [RideRecord.self, CrashAlertRecordEntity.self]
         do {
-            let container = try ModelContainer(for: RideRecord.self)
-            return (SwiftDataRideRepository(context: container.mainContext), nil)
+            let container = try ModelContainer(for: Schema(schema))
+            let context = container.mainContext
+            return (
+                SwiftDataRideRepository(context: context),
+                SwiftDataCrashAlertRepository(context: context),
+                nil
+            )
         } catch {
             // Degrade gracefully: an in-memory store keeps the app usable. Never
             // surface the raw framework error — a calm, app-written notice only
@@ -167,12 +232,17 @@ final class AppEnvironment {
             // non-fatal notice, not a crash).
             let notice = "Saved rides are unavailable right now, so new rides won't be kept after you close the app. Everything else works."
             if let inMemory = try? ModelContainer(
-                for: RideRecord.self,
+                for: Schema(schema),
                 configurations: ModelConfiguration(isStoredInMemoryOnly: true)
             ) {
-                return (SwiftDataRideRepository(context: inMemory.mainContext), notice)
+                let context = inMemory.mainContext
+                return (
+                    SwiftDataRideRepository(context: context),
+                    SwiftDataCrashAlertRepository(context: context),
+                    notice
+                )
             }
-            return (InMemoryRideRepository(), notice)
+            return (InMemoryRideRepository(), InMemoryCrashAlertRepository(), notice)
         }
     }
 
@@ -188,11 +258,26 @@ final class AppEnvironment {
     ) -> AppEnvironment {
         let rides = seeded ? PreviewSeed.rides(now: Date()) : []
         let repository = InMemoryRideRepository(rides: rides)
+        let crash = CrashResponseEnvironment(
+            contactStore: InMemoryEmergencyContactStore(),
+            consentStore: InMemoryConsentStore(),
+            settingsStore: InMemoryCrashAlertSettingsStore(),
+            repository: InMemoryCrashAlertRepository(),
+            connectivity: FakeConnectivityMonitor(isOnline: true),
+            scheduler: FakeCrashNotificationScheduler(),
+            notifier: NoopCrashNotifier(),
+            feedback: NoopCountdownFeedback(),
+            footageBuffer: NoopFootageBuffer(),
+            detector: NoopCrashDetector(),
+            simulator: nil,
+            clock: clock
+        )
         return AppEnvironment(
             repository: repository,
             clock: clock,
             detector: NoopDetector(),
             alertManager: StubAlertManager(),
+            crash: crash,
             calendar: calendar,
             defaults: defaults,
             makeHomeTracker: { FakeLocationTracker(authorizationStatus: .authorizedWhenInUse) },

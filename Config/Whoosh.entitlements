@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Time Sensitive Notifications capability (crash-response spec Requirement
+	  13.3, design "Permissions, capabilities, and configuration").
+
+	  This lets the crash-countdown BACKUP local notification use
+	  interruptionLevel = .timeSensitive so it can break through Focus /
+	  scheduled summaries. It is a backup prompt only: a notification can never
+	  send or cancel an alert by itself, and the rider can still disable
+	  notifications. Whoosh cannot guarantee detection or delivery.
+
+	  No background modes, no Critical Alerts (a separate Apple approval,
+	  follow-up task 35), and no other entitlements are added.
+	-->
+	<key>com.apple.developer.usernotifications.time-sensitive</key>
+	<true/>
+</dict>
+</plist>
