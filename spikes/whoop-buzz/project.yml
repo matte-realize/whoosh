@@ -1,0 +1,25 @@
+# XcodeGen spec for the WHOOP buzz spike. Throwaway; lives outside the main Whoosh project.
+#   xcodegen generate && open WhoopBuzzSpike.xcodeproj
+name: WhoopBuzzSpike
+options:
+  bundleIdPrefix: com.alexmcgreevy
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  WhoopBuzzSpike:
+    type: application
+    platform: iOS
+    sources:
+      - iPhone
+      - Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alexmcgreevy.whoopbuzzspike
+        DEVELOPMENT_TEAM: Z87CXCTTK6
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: WHOOP Buzz
+        INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription: Finds your WHOOP strap and sends it a test buzz.
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait

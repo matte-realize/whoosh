@@ -1,0 +1,318 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		17F64460763FF6046782599D /* WhoopBuzzApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880C6BBFCE65A5B2747DE191 /* WhoopBuzzApp.swift */; };
+		5C484D685B1A662A0358B7D0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9ED86A3E9B771E11C95A639 /* ContentView.swift */; };
+		AE21FBA143A8227733AE5CE0 /* WhoopBLE.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAE43848ADAD1E3D7229A44E /* WhoopBLE.swift */; };
+		E6EB213E90DA6D4D03DF5065 /* WhoopFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75A099570BD8892188D07686 /* WhoopFrame.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		50E4F9243A14BCD67AC62D67 /* WhoopBuzzSpike.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WhoopBuzzSpike.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		75A099570BD8892188D07686 /* WhoopFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoopFrame.swift; sourceTree = "<group>"; };
+		880C6BBFCE65A5B2747DE191 /* WhoopBuzzApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoopBuzzApp.swift; sourceTree = "<group>"; };
+		BAE43848ADAD1E3D7229A44E /* WhoopBLE.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoopBLE.swift; sourceTree = "<group>"; };
+		C9ED86A3E9B771E11C95A639 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		1C6715236918C0ABC7F2E139 /* iPhone */ = {
+			isa = PBXGroup;
+			children = (
+				C9ED86A3E9B771E11C95A639 /* ContentView.swift */,
+				BAE43848ADAD1E3D7229A44E /* WhoopBLE.swift */,
+				880C6BBFCE65A5B2747DE191 /* WhoopBuzzApp.swift */,
+			);
+			path = iPhone;
+			sourceTree = "<group>";
+		};
+		6856F9D45B71E22140FA170A = {
+			isa = PBXGroup;
+			children = (
+				1C6715236918C0ABC7F2E139 /* iPhone */,
+				D43CF20F59EDE9AB92DF4987 /* Shared */,
+				B3CE9B97E8EC20641B38DBFF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B3CE9B97E8EC20641B38DBFF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				50E4F9243A14BCD67AC62D67 /* WhoopBuzzSpike.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D43CF20F59EDE9AB92DF4987 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				75A099570BD8892188D07686 /* WhoopFrame.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		13BFA39639BB0263D2508E54 /* WhoopBuzzSpike */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3D1A42BB8288AD942B07AE20 /* Build configuration list for PBXNativeTarget "WhoopBuzzSpike" */;
+			buildPhases = (
+				EBA203654CAC4812F5E2AEBA /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WhoopBuzzSpike;
+			packageProductDependencies = (
+			);
+			productName = WhoopBuzzSpike;
+			productReference = 50E4F9243A14BCD67AC62D67 /* WhoopBuzzSpike.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		336F074FD2FEDF0ADD9E050E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					13BFA39639BB0263D2508E54 = {
+						DevelopmentTeam = Z87CXCTTK6;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = AFA8F7C3ACFCA8B5C13421E8 /* Build configuration list for PBXProject "WhoopBuzzSpike" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 6856F9D45B71E22140FA170A;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B3CE9B97E8EC20641B38DBFF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				13BFA39639BB0263D2508E54 /* WhoopBuzzSpike */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		EBA203654CAC4812F5E2AEBA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5C484D685B1A662A0358B7D0 /* ContentView.swift in Sources */,
+				AE21FBA143A8227733AE5CE0 /* WhoopBLE.swift in Sources */,
+				17F64460763FF6046782599D /* WhoopBuzzApp.swift in Sources */,
+				E6EB213E90DA6D4D03DF5065 /* WhoopFrame.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		02832F50BC968A668DC2C1DD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		28D548DE4EB186D10E83BFEF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		3F9F50550B546FFB091C4B76 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Z87CXCTTK6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "WHOOP Buzz";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Finds your WHOOP strap and sends it a test buzz.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alexmcgreevy.whoopbuzzspike;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BBDDCA806116F41CCBB5B063 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Z87CXCTTK6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "WHOOP Buzz";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Finds your WHOOP strap and sends it a test buzz.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alexmcgreevy.whoopbuzzspike;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3D1A42BB8288AD942B07AE20 /* Build configuration list for PBXNativeTarget "WhoopBuzzSpike" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BBDDCA806116F41CCBB5B063 /* Debug */,
+				3F9F50550B546FFB091C4B76 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AFA8F7C3ACFCA8B5C13421E8 /* Build configuration list for PBXProject "WhoopBuzzSpike" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				28D548DE4EB186D10E83BFEF /* Debug */,
+				02832F50BC968A668DC2C1DD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 336F074FD2FEDF0ADD9E050E /* Project object */;
+}
