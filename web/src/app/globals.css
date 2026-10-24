@@ -435,6 +435,63 @@ p {
   border: 1.5px solid var(--signal-amber);
 }
 
+.swatch--lane {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+.swatch--counter,
+.counter-pin {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--text);
+  border: 2px solid #000;
+  box-shadow: 0 0 0 1px var(--text);
+}
+
+/* Leaflet sets the divIcon's size; keep the box model from adding to it. */
+.counter-pin {
+  box-sizing: border-box;
+}
+
+.lane-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.lane-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lane-swatch {
+  display: inline-block;
+  width: 26px;
+  height: 0;
+  border-top: 4px solid var(--accent);
+}
+
+.lane-swatch--partly {
+  border-top-style: dashed;
+}
+
+.lane-swatch--painted {
+  border-top-color: #b48cff;
+}
+
+.lane-swatch--shared {
+  border-top: 3px dashed var(--muted);
+}
+
 .source-note a {
   color: inherit;
   text-decoration: underline;
@@ -2011,6 +2068,85 @@ p {
 .insights-skeleton {
   margin-top: 32px;
   min-height: 260px;
+}
+
+/* City data section */
+
+.city-data__numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 8px 0 20px;
+}
+
+.city-data__numbers > div,
+.before-after > div {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #070809;
+}
+
+.city-data__numbers dt,
+.before-after dt {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.city-data__numbers dd,
+.before-after dd {
+  margin: 8px 0 4px;
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.city-data__unit {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.city-data__caption {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.city-data__callout {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+}
+
+.city-data__callout h3 {
+  margin: 0 0 14px;
+  font-size: 1rem;
+}
+
+.before-after {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.chips--small {
+  margin-bottom: 14px;
+}
+
+.chips--small .chip {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+}
+
+.chips--small .chip[aria-pressed="true"] {
+  padding: 3px 9px;
 }
 
 .insights__grid {

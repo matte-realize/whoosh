@@ -92,3 +92,57 @@ export interface CityDataSource {
   /** ISO date: the last day the source covers, if it says. */
   data_through: string | null;
 }
+
+export type LaneProtection = "separated" | "partly_separated" | "painted" | "shared" | "path";
+
+/** One row of the `public_bike_facilities` view: a published bike lane segment. */
+export interface BikeFacility {
+  source_record_id: string;
+  street: string | null;
+  facility_code: string;
+  facility_label: string;
+  protection: LaneProtection;
+  install_year: number | null;
+  route: RouteLineString;
+}
+
+/** One row of the `public_bike_count_years` view. Averages over full count days only. */
+export interface BikeCountYear {
+  location_id: string;
+  year: number;
+  days_counted: number;
+  avg_daily_bikes: number;
+  min_daily_bikes: number;
+  max_daily_bikes: number;
+  avg_daily_motor_vehicles: number | null;
+}
+
+/** One row of the `public_bike_count_locations` view: a city counter and its latest year. */
+export interface BikeCountLocation {
+  location_id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  days_counted: number;
+  first_year: number;
+  last_year: number;
+  latest_year_days: number;
+  latest_avg_daily_bikes: number;
+  latest_avg_daily_motor_vehicles: number | null;
+  /** 0 to 1, or null if nothing was counted. */
+  latest_bike_share: number | null;
+}
+
+export type FacilityStatus = "in_place" | "before_install" | "install_year";
+
+/** One row of the `public_crash_facility_context` view: a city bike crash and its nearest lane. */
+export interface CrashFacilityContext {
+  source_record_id: string;
+  occurred_at: string;
+  facility_source_record_id: string | null;
+  facility_code: string | null;
+  protection: LaneProtection | null;
+  install_year: number | null;
+  distance_m: number | null;
+  facility_status: FacilityStatus | null;
+}

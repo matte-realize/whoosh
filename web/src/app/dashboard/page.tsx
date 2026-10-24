@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import CityDataSection from "@/components/CityDataSection";
 import CommunityInsights from "@/components/CommunityInsights";
 import CommunityMapSection from "@/components/CommunityMapSection";
 import Dashboard from "@/components/Dashboard";
@@ -17,13 +18,14 @@ export default function DashboardPage() {
         <h1>Shared by Whoosh riders</h1>
         <p className="subtitle">
           Rides and close calls that riders chose to share along Massachusetts Avenue in Boston,
-          next to the bike crashes the City of Boston has published for the same street. Only what
+          next to what the City of Boston publishes for the same street: bike crashes, bike lanes, and bike counts. Only what
           riders share is shown.
         </p>
       </header>
       <StatsPanel />
       <CommunityMapSection />
       <CommunityInsights />
+      <CityDataSection />
       <section className="rides-section card" aria-labelledby="rides-heading">
         <div className="section-head">
           <h2 id="rides-heading">Shared rides</h2>

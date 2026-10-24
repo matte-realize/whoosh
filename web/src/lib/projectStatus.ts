@@ -81,6 +81,12 @@ export const FEATURES: Feature[] = [
     statusNote: "On the ride map: 65 city-reported bike crashes on Mass Ave since 2015, public data.",
   },
   {
+    name: "Bike lanes and bike counts",
+    summary: "Which kind of lane is on each block, and how many people ride past the city's counters.",
+    status: "preview",
+    statusNote: "On the ride map: 5.7 km of Mass Ave lanes and 4 city counters, with a before-and-after look at the 2023 separated lanes.",
+  },
+  {
     name: "See it in action",
     summary: "A 3D simulation of a ride, showing when and how the heads-up works.",
     status: "preview",
