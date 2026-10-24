@@ -116,7 +116,7 @@ Conventions:
     first-party warnings; the full `xcodebuild test` run is left to the orchestrator.
     (`TrackingAccuracy` already existed in Models from task 3 and is reused, not redefined.)
 
-- [ ] 10. RideSessionViewModel state machine (test-first) — core of the MVP
+- [x] 10. RideSessionViewModel state machine (test-first) — core of the MVP
   - Implement the `@Observable` view model owning `RideState`, injected `LocationTracking`,
     `Clock`, and `RideTuning`. Handle start/pause/resume/stop, acceptable-fix filtering
     (accuracy + plausible-speed/jump), the signal-loss timer, authorization-revoked-mid-ride,
@@ -128,8 +128,10 @@ Conventions:
     zeroed summary.
   - _Requirements: 3.1–3.9, 4.1–4.7, 2.4, 11.1, 11.3_
   - _Depends on: 4, 6, 7, 9_
+  - _Pending device check:_ code + unit tests written and `build-for-testing` succeeds with no
+    first-party warnings; the full `xcodebuild test` run is left to the orchestrator.
 
-- [ ] 11. CoreLocationTracker implementation
+- [x] 11. CoreLocationTracker implementation
   - Implement `CoreLocationTracker` wrapping `CLLocationManager`: map `CLLocation`→`RoutePoint`,
     `CLAuthorizationStatus`→our enum, `didFailWithError`→`LocationFailure`; request
     When-In-Use; apply `TrackingAccuracy` to desiredAccuracy + distanceFilter; `stopUpdating`
@@ -138,6 +140,13 @@ Conventions:
     updates flow; stopping ends updates (no leaked tracking).
   - _Requirements: 2.1, 4.1, 11.3_
   - _Depends on: 9_
+  - _Pending device check:_ code written and `build-for-testing` succeeds with no first-party
+    warnings. The pure mapping layer (`CoreLocationMapping`: status/accuracy/failure/CLLocation
+    mapping) is unit-tested in `CoreLocationMappingTests`; the live `CLLocationManager` wrapper
+    (auth prompt, real updates, stop releases tracking) is verified on device by the
+    orchestrator. Delegate methods are `nonisolated` and hop to the main actor; no background
+    modes / `allowsBackgroundLocationUpdates`; `activityType = .fitness`,
+    `pausesLocationUpdatesAutomatically = false`.
 
 - [x] 12. Formatters and unit policy (test-first)
   - Centralize formatting in US customary units: miles (2 decimals under 10 mi, 1 above),
@@ -239,14 +248,23 @@ Conventions:
   - _Requirements: 7.2, 7.3, 7.4, 7.7, 1.2_
   - _Depends on: 8, 19_
 
-- [ ] 21. Mid-ride persistence safeguard
+- [x] 21. Mid-ride persistence safeguard
   - Persist collected points incrementally and/or on background/termination lifecycle events
     so an interrupted ride's data is recoverable.
   - _Verify (device/sim):_ background/relaunch mid-ride; collected points are not lost.
   - _Requirements: 3.6_
   - _Depends on: 8, 10_
+  - _Pending device check:_ implemented in `RideSessionViewModel`: incremental snapshots every
+    `snapshotEveryPoints` accepted points and every `snapshotEverySeconds` (via `Clock`), plus a
+    `persistSnapshot()` the View layer calls on `scenePhase` background. In-progress rides are
+    saved through the existing `RideRepository` with `endedAt == nil`; `recoverInterruptedRide()`
+    finds one on launch and `finalizeRecoveredRide(_:)` finalizes it. History uses the
+    `finishedRides()` helper (filters `endedAt != nil`) so unfinished snapshots never show as
+    completed — the `RideRepository` protocol is left unchanged. Unit-tested
+    (`RideSessionViewModelTests`); the real background/relaunch flow is verified on device by the
+    orchestrator.
 
-- [ ] 22. Future-feature seams (abstractions only, no implementation)
+- [x] 22. Future-feature seams (abstractions only, no implementation)
   - Define `HazardDetection`, `HazardDetector` (+ `NoopDetector`) and `AlertManager`
     (+ `StubAlertManager`) with the on-device, non-blocking contract documented. Inject the
     no-ops at the composition root. Confirm the MVP never requests camera permission (the Home
@@ -256,6 +274,13 @@ Conventions:
     points, and note `HazardDetection` is shaped to support later near-miss logging.
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7_
   - _Depends on: 3_
+  - _Pending device check:_ abstractions only — `Services/Detection/HazardDetection.swift`
+    (`HazardDetection` (Sendable) + `HazardDetector` + `NoopDetector`) and
+    `Services/Alerts/AlertManager.swift` (`AlertKind` + `AlertManager` + `StubAlertManager`),
+    each with the on-device / non-blocking / never-stops-recording contract documented and
+    teammate integration pointers. No AVFoundation, no camera permission anywhere
+    (privacy-check passes). Composition-root injection of the no-ops is task 23; the inert UI
+    placeholders are tasks 14/16/18.
 
 - [ ] 23. Composition root and dependency injection
   - Wire concrete services (`CoreLocationTracker`, `SwiftDataRideRepository`, `SystemClock`,
