@@ -15,7 +15,11 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. `npm run typecheck` runs `tsc --noEmit`.
+Open http://localhost:3000 for the project page and http://localhost:3000/dashboard for the live
+dashboard. `npm run typecheck` runs `tsc --noEmit`.
+
+The project page's feature statuses come from `src/lib/projectStatus.ts`. Update that file
+before a demo so the page never claims more than has been tested.
 
 The first `npm install` creates `package-lock.json`. Commit it so everyone gets the same
 dependency versions. It is not included yet because it was not possible to generate one here.
