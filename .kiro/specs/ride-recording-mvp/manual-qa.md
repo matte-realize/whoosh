@@ -137,8 +137,12 @@ Legend: `[ ]` not yet verified · `[x]` verified on device.
 
 - [ ] **Airplane mode full flow:** with Wi-Fi/cellular off, the complete
       record → summary → history → delete flow works end to end.
-- [ ] No network activity while sync is off (sync is not built; verify no
-      unexpected connections, e.g., via Console/Instruments if convenient).
+- [ ] No background or automatic network activity while sync is off. The one
+      allowed exception is a **user-initiated** remote delete or unshare of a
+      previously uploaded ride, which runs only on the user's action and shows a
+      retryable error if offline (Requirements 9.2 / 12.6 / 12.17). Until task 28
+      ships, no sync code runs at all; verify no unexpected connections (e.g., via
+      Console/Instruments if convenient).
 - [ ] No camera permission prompt anywhere in the app.
 - [ ] Delete and Delete-all are real, permanent local deletions (confirmed after
       relaunch).

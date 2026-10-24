@@ -10,6 +10,12 @@ dashboard.
   (record, summary, history, delete) works with no network and no account.
 - **Cloud sync is opt-in.** Uploading rides to Supabase (for the web dashboard) is off by
   default and enabled by an explicit user toggle with a plain explanation of what is sent.
+- **Public sharing is a separate opt-in.** Making synced rides visible on the public Whoosh
+  website is controlled by a separate global setting ("Share new rides on the Whoosh website"),
+  off by default and available only while cloud sync is on. It applies only to rides finished
+  while it is on (not retroactive), shows a plain-language confirmation of what becomes visible
+  (trimmed route, distance, time, average speed; no name or account), and each ride shows its
+  own sharing state. Sync and sharing are different promises and keep separate consent.
 - **What may be uploaded:** finished-ride summaries, the (privacy-trimmed) route, and later
   near-miss events. Never raw camera video or frames. Separately, and only under the independent
   crash-alert consent, the transient request needed to send a crash alert or test message (see
@@ -20,7 +26,11 @@ dashboard.
   network is the pinned Supabase client, and only for opt-in ride sync or opt-in crash alerts
   (see "Emergency contacts and crash alerts").
 - **Network invariant:** while neither ride sync nor crash alerts is enabled, the app makes no
-  network requests. Network code lives only in `Services/Sync` and `Services/Notification`.
+  background or automatic network requests. The one exception is a **user-initiated** remote
+  delete or unshare of a ride that was uploaded earlier: it runs only at the moment the user
+  asks, never in the background, and shows a retryable error if offline (so a ride the user
+  asked to remove or stop sharing does not silently stay in the cloud or public). Network code
+  lives only in `Services/Sync` and `Services/Notification`.
 - **Minimal identity.** Supabase anonymous sign-in is the default. No email, name, or
   other PII is collected for the hackathon build.
 - **User owns their data.** Users can view and delete any ride. Local deletion is real
