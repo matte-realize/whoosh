@@ -37,6 +37,12 @@ struct ActiveRideView: View {
     /// chip, icon + text.
     var cameraState: CameraRecordingState?
 
+    /// The rear-vehicle **detection** state, when the detector is composed for
+    /// this ride (on / model loading / unavailable / off). `nil` or `.off` keeps
+    /// the existing recording/"off" chip. Honest: detection is experimental and
+    /// cannot guarantee detection or delivery — this only reports readiness.
+    var detectionState: DetectionState?
+
     /// Save a clip on an explicit rider action (rear-camera task 23). `nil` when
     /// the camera is off for this ride, which hides the control.
     var onSaveClip: (() -> ClipSaveOutcome)?
@@ -140,13 +146,14 @@ struct ActiveRideView: View {
 
     /// The real camera/recording chip when recording this ride; otherwise the
     /// existing inert "Rear detection off" chip (Requirement 18.3). Icon + text,
-    /// never colour alone; a trouble state shows a calm amber chip.
+    /// never colour alone; a trouble state shows a calm amber chip. While
+    /// recording, the detector's state (on / model loading / unavailable) is
+    /// surfaced so the rider knows whether experimental detection is running.
     @ViewBuilder private var cameraOrDetectionChip: some View {
         if let cameraState {
             switch cameraState {
             case .recording, .degraded:
-                StateChip(variant: .recording, scheme: .dark)
-                    .accessibilityLabel("Recording video")
+                detectionChip
             case .off:
                 StateChip(variant: .rearDetectionOff, scheme: .dark)
             case .preparing, .interrupted, .stopped, .stopping, .failed:
@@ -155,6 +162,26 @@ struct ActiveRideView: View {
             }
         } else {
             StateChip(variant: .rearDetectionOff, scheme: .dark)
+        }
+    }
+
+    /// The detection chip shown while recording: reflects the detector's
+    /// readiness. Falls back to the "Recording video" chip when no detector is
+    /// composed for this ride (e.g. the model is off).
+    @ViewBuilder private var detectionChip: some View {
+        switch detectionState {
+        case .on:
+            StateChip(variant: .rearDetectionOn, scheme: .dark)
+                .accessibilityLabel("Rear detection on, experimental")
+        case .loading:
+            StateChip(variant: .rearDetectionLoading, scheme: .dark)
+                .accessibilityLabel("Rear detection loading")
+        case .unavailable:
+            StateChip(variant: .rearDetectionUnavailable, scheme: .dark)
+                .accessibilityLabel("Rear detection unavailable")
+        case .off, .none:
+            StateChip(variant: .recording, scheme: .dark)
+                .accessibilityLabel("Recording video")
         }
     }
 

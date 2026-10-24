@@ -50,6 +50,28 @@ nonisolated final class VisionVehicleConsumer: FrameConsumer, HazardDetector, @u
         set { queue.sync { _onDetection = newValue } }
     }
 
+    /// Reports the model's one-time load progress so the ride-screen camera chip
+    /// can show "model loading" / "on" / "unavailable" (rear-camera Req 18.3 —
+    /// detection trouble is never silent). Delivered on the **main actor**, like
+    /// `onDetection`. Set by the composition (`RideDetectionCoordinator`).
+    /// Guarded by `queue` for writes/reads off the detection path.
+    var onModelStateChange: ((ModelLoadState) -> Void)? {
+        get { queue.sync { _onModelStateChange } }
+        set { queue.sync { _onModelStateChange = newValue } }
+    }
+
+    /// The one-time model-load outcome the consumer reports. Not a claim about
+    /// detection quality — detection is experimental and cannot guarantee
+    /// detection or delivery.
+    enum ModelLoadState: Equatable, Sendable {
+        /// The model is being compiled/loaded (first `start()`).
+        case loading
+        /// The model loaded and the consumer is processing frames.
+        case ready
+        /// The model could not be loaded; recording is unaffected.
+        case unavailable
+    }
+
     private let tuning: VisionTuning
     /// The consumer's own serial queue (high QoS; off the main actor). All model
     /// and estimator access happens here, one frame at a time.
@@ -58,10 +80,14 @@ nonisolated final class VisionVehicleConsumer: FrameConsumer, HazardDetector, @u
     // All of the following are touched only on `queue` (except `onDetection`,
     // which is also set via the `queue.sync` accessor above).
     private var _onDetection: ((HazardDetection) -> Void)?
+    private var _onModelStateChange: ((ModelLoadState) -> Void)?
     private var detector: VehicleDetector?
     private var isLoading = false
     private var active = false
     private var estimator: ApproachEstimator
+    /// The last reported model-load state, readable synchronously so a freshly
+    /// built observer can seed its chip state when the model loaded earlier.
+    private var _modelState: ModelLoadState?
 
     /// A factory for the detector so tests can inject a fake loader; defaults to
     /// loading Teammate B's bundled model once (~1 s).
@@ -193,6 +219,7 @@ nonisolated final class VisionVehicleConsumer: FrameConsumer, HazardDetector, @u
     private func loadIfNeededLocked() {
         guard active, detector == nil, !isLoading else { return }
         isLoading = true
+        reportModelStateLocked(.loading)
         let load = loadDetector
         let queue = self.queue
         Task { [weak self] in
@@ -201,9 +228,27 @@ nonisolated final class VisionVehicleConsumer: FrameConsumer, HazardDetector, @u
             queue.async {
                 self.isLoading = false
                 // Only keep it if we're still active (stop() may have raced).
-                if self.active { self.detector = loaded }
+                guard self.active else { return }
+                self.detector = loaded
+                self.reportModelStateLocked(loaded == nil ? .unavailable : .ready)
             }
         }
+    }
+
+    /// Deliver a model-load state change on the main actor (by contract, like
+    /// `onDetection`). Must be called on `queue`.
+    private func reportModelStateLocked(_ state: ModelLoadState) {
+        _modelState = state
+        let callback = _onModelStateChange
+        if let callback {
+            DispatchQueue.main.async { callback(state) }
+        }
+    }
+
+    /// The last reported model-load state, or `nil` if loading has not started.
+    /// Read synchronously (e.g. by a newly built observer to seed its state).
+    var currentModelState: ModelLoadState? {
+        queue.sync { _modelState }
     }
 
     /// Map the framework-free `VideoFrame.DisplayOrientation` to Vision's
