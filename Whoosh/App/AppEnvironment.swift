@@ -368,6 +368,23 @@ final class AppEnvironment {
         )
     }
 
+    /// Build the camera-preview view model for the active ride screen so the
+    /// rider can see the live rear camera with the experimental vision
+    /// detections drawn on top (owner device-testing feedback). It holds the
+    /// same preview host Mount & frame uses and subscribes to the detector's
+    /// **view-only** overlay-box seam. Display only: it never captures, records,
+    /// or uploads; footage and frames stay on the device. Returns `nil` when the
+    /// camera is off for this ride, which hides the camera view on the ride
+    /// screen.
+    func makeCameraPreviewViewModel(detection: RideDetectionCoordinator?) -> CameraPreviewViewModel? {
+        guard isRearCameraRecordingEnabled else { return nil }
+        let viewModel = CameraPreviewViewModel(previewHost: cameraServices.previewHost)
+        detection?.onOverlayBoxes = { [weak viewModel] boxes in
+            viewModel?.update(boxes: boxes)
+        }
+        return viewModel
+    }
+
     /// The one shared rear-vehicle detector, built on first use so its CoreML
     /// model loads **once** for the whole app session.
     private func sharedRearDetector() -> VisionVehicleConsumer {
@@ -408,6 +425,7 @@ final class AppEnvironment {
             dimGuardStore: UserDefaultsDimGuardStore(),
             clock: clock,
             tuning: cameraServices.tuning,
+            pickupSensor: cameraServices.makeLevelSensor(),
             isRideActive: isRideActive,
             isRideModeEnabled: { [weak self] in
                 self?.rearCameraSettingsViewModel.settings.rideModeEnabled ?? false

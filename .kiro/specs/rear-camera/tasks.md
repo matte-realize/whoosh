@@ -328,6 +328,12 @@ path is unchanged.
   - _Verify (device):_ brightness restored on every exit (unlock, stop, lock button, app switch,
     force-quit then relaunch); Auto-Brightness behavior; wet/gloved two-finger unlock reliability;
     OLED look in a dark room; no hidden system indicators.
+  - _Owner device-testing follow-up (October 24, 2026):_ an **always-visible faint "Press and hold
+    to unlock" hint**, a **one-finger press-and-hold (~1 s) unlock anywhere** (`RideModeUnlockLock`
+    recognises both one and two fingers; the two-finger hold still works), and, while temporarily
+    unlocked, the **big in-ride controls** (press-and-hold Stop via `HoldToStopButton`, Pause/Resume,
+    Save clip) rendered in the overlay (`RideModeControls`) so a ride can always be stopped from ride
+    mode. Device re-verification of gloved/wet reliability still pending.
   - _Requirements:_ 10.1–10.8, 16.6, 19.1
   - _Depends on:_ 8, 12
   - _Parallel:_ Group P3
@@ -351,6 +357,14 @@ path is unchanged.
     for camera state changes. Preserve the three-numbers rule; the existing "Rear detection off"
     chip stays until a real detector exists.
   - Update the Home placeholder area with the "Rear camera recording" entry (Requirement 18.2).
+  - _Owner device-testing follow-up (October 24, 2026):_ the active ride screen can now **show the
+    live rear-camera preview** (via the existing `CameraPreviewHost`; views import no AVFoundation)
+    as a full-bleed background with a small **map/camera toggle** button, and draws the experimental
+    **vision detections on top** (`DetectionOverlay` over `CameraPreviewViewModel.boxes`, approaching
+    box in the alert color) while keeping the three numbers readable over a scrim. The preview is
+    **off by default** (battery) and is view-only — the overlay seam (`VisionVehicleConsumer
+    .onOverlayBoxes`) is additive and never touches the frozen `HazardDetection` / alert path. Tests:
+    `CameraPreviewViewModelTests`.
   - _Requirements:_ 18.2–18.4, 10.8, 19.1
   - _Depends on:_ 19, 21
   - _Parallel:_ Group P4
@@ -498,9 +512,17 @@ path is unchanged.
   - _Requirements:_ 5.7, 8.7
   - _Depends on:_ 16, 26
 
-- [ ] 38. `[iOS]` `[STRETCH]` Pick-up auto-unlock for ride mode
+- [x] 38. `[iOS]` `[STRETCH]` Pick-up auto-unlock for ride mode
   - Core Motion detects the phone leaving the mount (large orientation change while slow) and raises
     the `pickedUp` event to unlock ride mode.
+  - _Done (owner device-testing feedback, October 24, 2026):_ pure `PickupDetector` (Metrics;
+    attitude-change angle from the mount sensor's gravity stream, debounced, re-baselines on a steady
+    pose) feeds `RideModeController`, which borrows the existing `MountLevelSensor`
+    (`Services/Camera`, the only Core Motion owner). While `dimLocked`, a detected pickup
+    **temporarily raises brightness (0.6) and shows the enlarged "Press and hold to unlock" prompt**,
+    then auto-reverts (re-dims) after ~6 s if the rider does not unlock — a conservative variant of a
+    silent auto-unlock, so a false lift never leaves the phone bright or unlocked. Tests:
+    `PickupDetectorTests`, `RideModeControllerPickupTests`.
   - _Requirements:_ 10.3
   - _Depends on:_ 21
 
