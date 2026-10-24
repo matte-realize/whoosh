@@ -1,0 +1,43 @@
+# Whoosh vision: keep private footage, labels that point at it, and large binaries out of Git.
+# Rear-camera video shows faces and license plates (see ../.kiro/steering/privacy.md).
+
+# Raw clips and anything else under data/ is private.
+# Use "data/*" (not "data/") so the negation below can re-include one file.
+# Ignoring the directory itself would stop Git from looking inside it.
+data/*
+!data/MANIFEST.example.csv
+
+# Video and image files: frames and clips can show faces and plates.
+*.mp4
+*.mov
+*.m4v
+*.avi
+*.jpg
+*.jpeg
+*.png
+*.heic
+
+# Extracted frames
+frames/
+
+# Model files: large, license-sensitive, and not source.
+*.mlmodel
+*.mlpackage
+*.onnx
+*.pt
+*.pth
+*.weights
+*.tflite
+*.safetensors
+
+# Python environments and caches
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Real manifests and labels reference private clips (paths, ids, locations), at any depth.
+# Only MANIFEST.example.csv (fake rows) is committed.
+MANIFEST.csv
+events.csv
+boxes.jsonl
