@@ -85,9 +85,12 @@ final class HomeViewModel {
 
     /// The weekly stats for the week containing "now", computed from finished
     /// rides (Requirement 13.2/13.4). Empty week yields zeros (Requirement 13.6).
+    /// Demo rides are excluded so the This-Week numbers stay honest (demo-mode
+    /// spec O-DM2); the pure `WeeklyStatsCalculator` stays demo-unaware and the
+    /// caller does the filtering here.
     var weeklyStats: WeeklyStats {
         WeeklyStatsCalculator.compute(
-            rides: rides,
+            rides: rides.filter { !$0.isDemo },
             now: clock.now(),
             calendar: calendar
         )

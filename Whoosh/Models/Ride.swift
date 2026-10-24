@@ -18,6 +18,13 @@ struct Ride: Identifiable, Equatable, Hashable, Codable, Sendable {
     /// until opt-in sync runs; the `SyncCoordinator` advances it to `.pending`
     /// or `.synced`.
     var syncStatus: SyncStatus
+    /// Whether this ride was produced by demo mode (a simulated ride or seeded
+    /// sample data). Defaults to `false` so every existing caller and stored
+    /// ride is unaffected. Demo rides are **never uploaded** by the
+    /// `SyncCoordinator` and are **excluded from the Home This-Week stats**
+    /// (O-DM2), keeping real numbers honest (demo-mode spec, Requirements 5.5,
+    /// 7.4, 9.3).
+    var isDemo: Bool
 
     init(
         id: UUID = UUID(),
@@ -25,7 +32,8 @@ struct Ride: Identifiable, Equatable, Hashable, Codable, Sendable {
         endedAt: Date? = nil,
         points: [RoutePoint] = [],
         summary: RideSummary = .zero,
-        syncStatus: SyncStatus = .localOnly
+        syncStatus: SyncStatus = .localOnly,
+        isDemo: Bool = false
     ) {
         self.id = id
         self.startedAt = startedAt
@@ -33,5 +41,6 @@ struct Ride: Identifiable, Equatable, Hashable, Codable, Sendable {
         self.points = points
         self.summary = summary
         self.syncStatus = syncStatus
+        self.isDemo = isDemo
     }
 }
