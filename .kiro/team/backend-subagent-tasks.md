@@ -11,8 +11,8 @@ Each task below is a self-contained brief that can be handed to one subagent
 Local database: all five migrations apply with `supabase db reset` (seed included), and
 `supabase test db` passes all 81 assertions across `rls_rides.test.sql` (34),
 `incident_cells.test.sql` (20) and `input_limits_and_stats.test.sql` (27). Run by the user,
-October 24, 2026. All work is committed on
-branch `backend/supabase-web` (not pushed). The agent sandbox cannot run the Supabase CLI,
+October 24, 2026. All work is merged into the local `main` (18 commits ahead of
+`origin/main`, not pushed yet). The agent sandbox cannot run the Supabase CLI,
 Docker, or Node, so runs happen in the user's own terminal.
 
 **Done** means built and verified by a run. **Not done** says what is missing.

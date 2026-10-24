@@ -88,6 +88,15 @@
         "kind": "vehicle",
         "confidence": 0.62,
         "position_hint": null
+      },
+      {
+        "id": "20000000-0000-4000-8000-000000000007",
+        "occurred_at": "2026-10-22T22:34:30Z",
+        "latitude": 30.2673,
+        "longitude": -97.7432,
+        "kind": "truck",
+        "confidence": 0.77,
+        "position_hint": "right"
       }
     ]
   },
@@ -150,6 +159,15 @@
         "kind": "vehicle",
         "confidence": 0.91,
         "position_hint": "center"
+      },
+      {
+        "id": "20000000-0000-4000-8000-000000000010",
+        "occurred_at": "2026-10-19T13:17:00Z",
+        "latitude": 30.2772,
+        "longitude": -97.7428,
+        "kind": "car",
+        "confidence": 0.69,
+        "position_hint": "left"
       }
     ]
   },
@@ -268,5 +286,89 @@
     "share_publicly": false,
     "app_version": "0.1.0",
     "near_misses": []
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000005",
+    "started_at": "2026-10-20T14:00:00Z",
+    "ended_at": "2026-10-20T14:08:00Z",
+    "distance_m": 1500,
+    "active_duration_s": 450,
+    "avg_speed_mps": 3.333,
+    "route": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -97.7465,
+          30.2668
+        ],
+        [
+          -97.743,
+          30.2672
+        ],
+        [
+          -97.7395,
+          30.2679
+        ],
+        [
+          -97.736,
+          30.2688
+        ]
+      ]
+    },
+    "share_publicly": true,
+    "app_version": "0.1.0",
+    "near_misses": [
+      {
+        "id": "20000000-0000-4000-8000-000000000005",
+        "occurred_at": "2026-10-20T14:03:00Z",
+        "latitude": 30.2671,
+        "longitude": -97.7431,
+        "kind": "vehicle",
+        "confidence": 0.81,
+        "position_hint": "left"
+      }
+    ]
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000006",
+    "started_at": "2026-10-18T15:00:00Z",
+    "ended_at": "2026-10-18T15:07:00Z",
+    "distance_m": 1500,
+    "active_duration_s": 400,
+    "avg_speed_mps": 3.75,
+    "route": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -97.7429,
+          30.2705
+        ],
+        [
+          -97.7428,
+          30.2738
+        ],
+        [
+          -97.7427,
+          30.2771
+        ],
+        [
+          -97.7426,
+          30.2804
+        ]
+      ]
+    },
+    "share_publicly": true,
+    "app_version": "0.1.0",
+    "near_misses": [
+      {
+        "id": "20000000-0000-4000-8000-000000000008",
+        "occurred_at": "2026-10-18T15:03:00Z",
+        "latitude": 30.2771,
+        "longitude": -97.7427,
+        "kind": "vehicle",
+        "confidence": 0.88,
+        "position_hint": "center"
+      }
+    ]
   }
 ]

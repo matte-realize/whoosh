@@ -24,6 +24,25 @@ before a demo so the page never claims more than has been tested.
 The first `npm install` creates `package-lock.json`. Commit it so everyone gets the same
 dependency versions. It is not included yet because it was not possible to generate one here.
 
+## See the whole thing against your local database
+
+With `supabase start` running and `supabase db reset` done, the seed gives the site three
+riders, three shared rides, and two incident areas:
+
+```sh
+supabase status          # copy the API URL and the publishable (or anon) key it prints
+cd web
+cp .env.example .env.local
+# in .env.local:
+#   NEXT_PUBLIC_DATA_SOURCE=supabase
+#   NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+#   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<the key from supabase status>
+npm install
+npm run dev
+```
+
+The keys `supabase status` prints are fixed local development keys, not your hosted project's.
+
 ## Data modes
 
 Set `NEXT_PUBLIC_DATA_SOURCE` in `.env.local`:

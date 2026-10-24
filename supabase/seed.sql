@@ -4,8 +4,9 @@
 -- It must NEVER be applied to the real (remote) Supabase project. Do not run `supabase db push`
 -- with this data, and do not paste it into the remote SQL editor.
 --
--- Contents: one fake seed user, 4 rides in Austin, TX (one shared, three private), and
--- 4 near_misses (3 on the shared ride, 1 on a private ride).
+-- Contents: three fake seed users and 6 rides in Austin, TX (3 shared, one per user; 3 private),
+-- 10 near_misses. The first 4 are private; the last 6 are shared and form two incident areas
+-- that pass the public_incident_cells thresholds.
 --
 -- Conventions (see .kiro/team/supabase-contract.md):
 --   * SI units: meters, seconds, meters/second. Timestamps are UTC.
@@ -14,7 +15,9 @@
 --   * distance_m is the full-ride distance before trimming, so it is about 320 m longer than the
 --     stored route polyline. All distances are approximate (hand-placed points, haversine).
 --   * avg_speed_mps = distance_m / active_duration_s, rounded to 3 decimals.
---   * The same data lives in web/fixtures/rides.json. Keep the two files in sync.
+--   * The same data lives in web/fixtures/rides.json. Keep the two files in sync. The two
+--     rider-reported near misses (no confidence score) are left out of that file, because the
+--     website's per-ride markers need a score.
 
 -- Fake user so rides.user_id and near_misses.user_id have a valid auth.users parent.
 insert into auth.users (id, aud, role, email, created_at, updated_at)
@@ -110,4 +113,45 @@ values
   ('20000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000001', '2026-10-22T22:37:40Z', 30.2694, -97.7325, 'vehicle', 0.74, 'right'),
   ('20000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000001', '2026-10-22T22:41:15Z', 30.272, -97.722, 'vehicle', 0.62, null),
   ('20000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000001', '2026-10-19T13:16:30Z', 30.2771, -97.7427, 'vehicle', 0.91, 'center')
+on conflict do nothing;
+
+-- ---------------------------------------------------------------------------
+-- More local riders, so the website's live mode has something to show locally.
+-- With three riders sharing, the stats panel shows the rider count, and the two incident areas
+-- below each have 3 shared reports from 2 riders, older than 24 hours, so they pass the
+-- public_incident_cells thresholds. Still LOCAL/DEV ONLY.
+-- ---------------------------------------------------------------------------
+
+insert into auth.users (id, aud, role, email, created_at, updated_at)
+values
+  ('00000000-0000-0000-0000-000000000002', 'authenticated', 'authenticated', 'seed2@example.test',
+   '2026-10-10T00:00:00Z', '2026-10-10T00:00:00Z'),
+  ('00000000-0000-0000-0000-000000000003', 'authenticated', 'authenticated', 'seed3@example.test',
+   '2026-10-10T00:00:00Z', '2026-10-10T00:00:00Z')
+on conflict do nothing;
+
+-- Short shared rides along Lady Bird Lake (rider 2) and Congress Ave (rider 3).
+-- Active time stays within each ride's start-to-end span, as the upload limits require.
+insert into rides (id, user_id, started_at, ended_at, distance_m, active_duration_s, avg_speed_mps, route, app_version, share_publicly)
+values
+  ('10000000-0000-4000-8000-000000000005', '00000000-0000-0000-0000-000000000002',
+   '2026-10-20T14:00:00Z', '2026-10-20T14:08:00Z', 1500, 450, 3.333,
+   '{"type":"LineString","coordinates":[[-97.7465,30.2668],[-97.743,30.2672],[-97.7395,30.2679],[-97.736,30.2688]]}'::jsonb,
+   '0.1.0', true),
+  ('10000000-0000-4000-8000-000000000006', '00000000-0000-0000-0000-000000000003',
+   '2026-10-18T15:00:00Z', '2026-10-18T15:07:00Z', 1500, 400, 3.75,
+   '{"type":"LineString","coordinates":[[-97.7429,30.2705],[-97.7428,30.2738],[-97.7427,30.2771],[-97.7426,30.2804]]}'::jsonb,
+   '0.1.0', true)
+on conflict do nothing;
+
+-- Shared incidents. Area A rounds to (30.267, -97.743): riders 1 and 2.
+-- Area B rounds to (30.277, -97.743): riders 1 and 3. Each near miss sits inside its ride's window.
+insert into near_misses (id, ride_id, user_id, occurred_at, latitude, longitude, kind, confidence, position_hint, source, share_publicly)
+values
+  ('20000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000005', '00000000-0000-0000-0000-000000000002', '2026-10-20T14:03:00Z', 30.2671, -97.7431, 'vehicle', 0.81, 'left',   'detected',       true),
+  ('20000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000005', '00000000-0000-0000-0000-000000000002', '2026-10-20T14:04:00Z', 30.2669, -97.7428, 'vehicle', null, null,     'rider_reported', true),
+  ('20000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000001', '2026-10-22T22:34:30Z', 30.2673, -97.7432, 'truck',   0.77, 'right',  'detected',       true),
+  ('20000000-0000-4000-8000-000000000008', '10000000-0000-4000-8000-000000000006', '00000000-0000-0000-0000-000000000003', '2026-10-18T15:03:00Z', 30.2771, -97.7427, 'vehicle', 0.88, 'center', 'detected',       true),
+  ('20000000-0000-4000-8000-000000000009', '10000000-0000-4000-8000-000000000006', '00000000-0000-0000-0000-000000000003', '2026-10-18T15:04:00Z', 30.2768, -97.7426, 'car',     null, null,     'rider_reported', true),
+  ('20000000-0000-4000-8000-000000000010', '10000000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000001', '2026-10-19T13:17:00Z', 30.2772, -97.7428, 'car',     0.69, 'left',   'detected',       true)
 on conflict do nothing;
