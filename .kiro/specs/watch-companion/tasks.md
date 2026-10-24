@@ -210,7 +210,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 4
   - _Parallel:_ Group P1
 
-- [ ] 8. `[iOS]` `[DEMO]` Haptic catalog, selector, limiter, and freshness (package, test-first)
+- [x] 8. `[iOS]` `[DEMO]` Haptic catalog, selector, limiter, and freshness (package, test-first)
   - `HapticCue` (the `WKHapticType` names), `HapticPattern` (cue + delay steps), `HapticPatternSelector`
     (the catalog table, level-2 selection rule, no navigation cues), `WristHapticLimiter` (minimum gap,
     tier preemption, per-kind cooldowns, storm backoff 3→6→12 s with 30 s reset, duplicate ids, demo and
@@ -245,7 +245,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 4; rear-camera 2 (mapper)
   - _Parallel:_ Group P1
 
-- [ ] 11. `[iOS]` `[DEMO]` Watch-side reducers (package, test-first)
+- [x] 11. `[iOS]` `[DEMO]` Watch-side reducers (package, test-first)
   - `WatchRideReducer` (phases, seq/epoch handling, stale transitions, control enablement with reasons),
     `WatchCommandTracker` (spacing, pending, same-id retries at 0/2.5/5 s, TTL → "Not confirmed" and
     reconcile, link loss, the crash exception), `CrashCountdownModel` (relative remaining time,
