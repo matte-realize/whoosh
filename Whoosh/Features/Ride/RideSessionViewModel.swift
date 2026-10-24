@@ -282,6 +282,10 @@ final class RideSessionViewModel {
             return   // paused ignores (row 7); idle/finished ignore
         }
 
+        // Row 11: once authorization is revoked mid-ride, the ride is frozen
+        // until the user stops it; a stray fix must not trigger row 9 recovery.
+        guard !authorizationRevoked else { return }
+
         // Re-arm the loss timer on EVERY callback while active (rows 3/4):
         // accepted or not, a callback means the subsystem is alive.
         armLossTimer()
