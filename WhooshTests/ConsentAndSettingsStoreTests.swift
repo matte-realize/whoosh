@@ -112,9 +112,10 @@ struct ConsentAndSettingsStoreTests {
 
     // MARK: CrashAlertSettingsStore
 
-    @Test func settingsDefaultIsFeatureOff() {
+    @Test func settingsDefaultIsFeatureOn() {
+        // Hackathon build default; arming still needs consent and a contact.
         let store = InMemoryCrashAlertSettingsStore()
-        #expect(store.current().enabled == false)
+        #expect(store.current().enabled == true)
         #expect(store.current().riderLabel == nil)
     }
 

@@ -44,12 +44,10 @@ final class CoreLocationTracker: NSObject, LocationTracking {
     }
 
     func startUpdating(accuracy: TrackingAccuracy) {
-        // A device-wide services-off condition is a non-blocking failure the
-        // view model surfaces like a denial (design error table / Req 2.6).
-        guard CLLocationManager.locationServicesEnabled() else {
-            onFailure?(.servicesDisabled)
-            return
-        }
+        // No synchronous `locationServicesEnabled()` check here: it blocks the
+        // main thread (Apple warns about it). With services off device-wide the
+        // authorization reads as denied and `didFailWithError` reports it, which
+        // the existing denial path surfaces (design error table / Req 2.6).
         manager.desiredAccuracy = CoreLocationMapping.desiredAccuracy(for: accuracy)
         manager.distanceFilter = CoreLocationMapping.distanceFilter(for: accuracy)
         manager.startUpdatingLocation()
