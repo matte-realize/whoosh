@@ -142,8 +142,10 @@ struct SupabaseRideSyncServiceTests {
         let transport = FakeRideSyncTransport()
         let service = makeService(transport: transport)
 
+        // The caller (SyncCoordinator) privacy-trims before upload, per the
+        // RideSyncService contract; a route left with < 2 points stays local.
         await #expect(throws: RideSyncTerminalOutcome.localOnly) {
-            try await service.upload(Self.ride(points: 2)) // trimmed away
+            try await service.upload(Self.ride(points: 1))
         }
         let rows = await transport.upsertedRows
         #expect(rows.isEmpty)
