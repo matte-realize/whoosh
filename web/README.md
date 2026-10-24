@@ -38,6 +38,14 @@ share at least one ride, put the URL and publishable key in `.env.local`, and se
 Never put the secret or `service_role` key in `web/`. `NEXT_PUBLIC_` values are sent to every
 browser.
 
+## Incident map
+
+Below the rides, the page shows an incident map from the `public_incident_cells` view (or
+`fixtures/incident_cells.json` in fixtures mode, labeled as sample data). Each circle is a
+grid cell of about 100 m that has at least 3 reports from at least 2 riders, delayed by a day.
+Individual incidents are never sent to the browser. With only a few real riders, expect the
+live map to be empty.
+
 ## Data and privacy
 
 - The site reads only the `public_rides` view, as role `anon`. It never signs in.

@@ -1,4 +1,5 @@
 import Dashboard from "@/components/Dashboard";
+import IncidentSection from "@/components/IncidentSection";
 
 export default function Page() {
   return (
@@ -8,6 +9,7 @@ export default function Page() {
         <p className="subtitle">Rides that riders chose to share.</p>
       </header>
       <Dashboard />
+      <IncidentSection />
     </main>
   );
 }

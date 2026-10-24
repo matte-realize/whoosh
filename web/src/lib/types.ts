@@ -34,3 +34,19 @@ export interface RideWithNearMisses extends Ride {
 }
 
 export type DataSource = "fixtures" | "supabase";
+
+/**
+ * One row of the `public_incident_cells` view: a grid cell (about 100 m) that passed the
+ * privacy thresholds. The point is the snapped cell, never an original incident location.
+ */
+export interface IncidentCell {
+  latitude: number;
+  longitude: number;
+  incident_count: number;
+  rider_reported_count: number;
+  detected_count: number;
+  vehicle_kinds: string[];
+  /** ISO date of the first day of the month (YYYY-MM-DD). */
+  first_month: string;
+  last_month: string;
+}

@@ -193,3 +193,18 @@ button:focus-visible,
   margin: 8px 0 0;
   padding-left: 20px;
 }
+
+.incidents {
+  margin-top: 40px;
+}
+
+.incidents .note {
+  margin-bottom: 12px;
+}
+
+.incident-list {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
