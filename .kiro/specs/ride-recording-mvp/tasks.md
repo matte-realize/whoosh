@@ -579,3 +579,4 @@ Schema: Kiro IDE 1.x `v1` hook JSON. Scripts live in `scripts/`.
 5. Privacy invariants intact (no network unless sync is on, honest copy, no secrets in Git).
 
 See also: the post-MVP opt-in emergency-contact and crash-response plan in `../crash-response/tasks.md`.
+See also: the opt-in developer/demo plan (simulated ride, forced rear-vehicle alert, crash drill, seed data, state previews) in `../demo-mode/tasks.md` — off by default; it reuses these MVP seams and never changes behavior when off.

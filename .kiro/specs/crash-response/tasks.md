@@ -309,11 +309,16 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
   - _Depends on:_ 10, 16
 
 - [ ] 23. `[iOS]` `[DEMO]` Simulate crash (drill) and developer tools
-  - `DebugCrashSimulator`; Settings → Crash alerts → "Developer / demo tools" toggle revealing
-    **Simulate crash**; drills run the real coordinator and notifier with the `drill` template,
-    hide Call 911, are labeled in the log, do not consume the real-alert cap, and obey the
-    test/drill quota.
-  - Tests: DRILL-1; toggle gating; drill template selected; real-alert counters unaffected.
+  - `DebugCrashSimulator`; **Simulate crash** runs the real coordinator and notifier with the
+    `drill` template, hides Call 911, is labeled in the log, does not consume the real-alert cap,
+    and obeys the test/drill quota.
+  - **The "Developer / demo tools" toggle and the Simulate-crash entry point are now owned by
+    the global Demo mode spec (`../demo-mode/`, Demo Req 6 / 10; design D31), not a separate
+    Crash-alerts toggle.** This task builds `DebugCrashSimulator` and the drill coordinator path;
+    the demo-tools UI, the single toggle, and the arming-bypass-for-drills wiring live in Demo
+    mode (Demo task 12). When Demo mode is not present/enabled, keep a minimal in-spec dev-tools
+    entry only if needed for standalone crash testing.
+  - Tests: DRILL-1; drill template selected; real-alert counters unaffected.
   - _Requirements:_ 5.3, 17.3, 19.9
   - _Depends on:_ 12, 20
 
@@ -430,6 +435,44 @@ safety workflow and the composer fallback (rehearse the kill switch, C10).
 - [ ] 36. `[iOS]` + `[Role C]` `[FUTURE]` Server-side countdown design (v2) and hardening
   - Write a v2 design for option (d), App Attest/DeviceCheck, additional regions.
   - _Requirements:_ 21.3, 21.4, 21.6, 15.7
+
+- [ ] 37. `[iOS]` `[FUTURE]` `SafetyKitCrashDetector` adapter + Simulator test (test-first)
+  - **Blocked until** the SafetyKit entitlement is granted (task 38). Add
+    `Services/Crash/SafetyKitCrashDetector.swift` behind the existing `CrashDetector` protocol —
+    the only file importing SafetyKit. Gate it on `SACrashDetectionManager.isAvailable` and the
+    user's `authorizationStatus` / `requestAuthorization` (requested only when crash alerts are
+    enabled, honest purpose string). Map each `SACrashDetectionEvent` to a `CrashDetector` signal
+    (`source = "safetykit"`, `isDrill = false`) into the existing coordinator/reducer; **dedupe**
+    events the OS re-reports across **background launches** by event date/identity (funnel into
+    the existing `crashEventId` idempotency, reducer rows 2–6/30); handle the launch where the
+    system wakes the app in the background after an event. Do **not** use
+    `SAEmergencyResponseManager` (Req 17). When the entitlement/availability/authorization is
+    absent, the app behaves exactly as today (no change). Add the entitlement to `project.yml`
+    and regenerate once.
+  - Tests: Apple's **iOS Simulator** crash-event test path; a fake SafetyKit source driving the
+    adapter; dedupe across a simulated relaunch/background-launch; availability/authorization
+    gating produces no signal; coordinator path unchanged. Mark all SafetyKit behavior
+    **"verify against current Apple docs"** in comments.
+  - _Verify (device/Simulator):_ Simulator-triggered crash event reaches the countdown with the
+    `drill`-free real path; on an unentitled build the detector is inert.
+  - _Requirements:_ 5.9, 13.2 (partial mitigation), 6.2, 6.3
+  - _Depends on:_ 7, 12, 26, 38
+  - _Note:_ SafetyKit targets **severe vehicular** crashes and may not fire for a bicycle fall
+    (verify); it is an additional *source*, not a replacement for the countdown-and-cancel UX,
+    the simulator drill, or the experimental motion heuristic.
+
+- [ ] 38. `[Owner]` `[FUTURE]` Apply for the SafetyKit crash-detection entitlement
+  - Apply to Apple for `com.apple.developer.severe-vehicular-crash-event` (the request form for
+    SafetyKit crash detection; verify the current process and criteria against Apple's docs).
+    Record the justification (opt-in rider-safety crash alerts), the single-app-per-device
+    implication, and that the separate `SAEmergencyResponseManager` entitlement is **not**
+    requested (Whoosh never auto-contacts emergency services, Req 17). Configure the capability
+    in the provisioning profile once granted. This has Apple-side lead time and is a follow-up,
+    not demo-blocking; the demo uses the `DebugCrashSimulator` drill (Demo mode) with no
+    entitlement.
+  - _Verify:_ entitlement granted and present in the signed build's capabilities; `isAvailable`
+    returns true on a supported device.
+  - _Requirements:_ 5.9, 21 (follow-ups)
 
 ---
 
@@ -564,7 +607,7 @@ Critical path to a safe Tier 0 demo: 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 15, 16, 
 | 2 Contacts | 1, 3, 9, 11, 16, 29 |
 | 3 Consent | 9, 17, 25, C4 |
 | 4 Intro/test | 13, 18, C5 |
-| 5 Detection | 7, 15, 23, 32, 33 |
+| 5 Detection | 7, 15, 23, 32, 33, 37, 38 |
 | 6 Lifecycle | 1, 6, 12, 14 |
 | 7 Evidence | 5, 7, 12, 22, 34 |
 | 8 Countdown | 12, 19, 20, 21, 31 |
@@ -580,4 +623,4 @@ Critical path to a safe Tier 0 demo: 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 15, 16, 
 | 18 Accessibility | 16, 20, 22, 29 |
 | 19 Testing/demo | 6, 7, 8, 12, 13, 14, 23, 27, 28, C8, C10 |
 | 20 All-clear | 30, C11 |
-| 21 Future | 0, 33, 34, 35, 36, C12 |
+| 21 Future | 0, 33, 34, 35, 36, 37, 38, C12 |
