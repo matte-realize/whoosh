@@ -1,0 +1,1813 @@
+{
+  "source": "boston_bike_counts",
+  "dataset": "Streets Hourly Bike Counts",
+  "publisher": "City of Boston, Boston Transportation Department",
+  "url": "https://data.boston.gov/dataset/streets-hourly-bike-counts",
+  "resource_id": "c97f6d9a-aee1-4f95-aea1-a47b74608506",
+  "license": "Open Data Commons Public Domain Dedication and License (PDDL)",
+  "query_sql": "SELECT count_id, location_name, lat, long, date, count(distinct time) AS hours, sum(bike::numeric) AS bikes, sum(mv_total::numeric) AS motor_vehicles FROM \"c97f6d9a-aee1-4f95-aea1-a47b74608506\" WHERE location_name ILIKE 'Massachusetts Avenue%' GROUP BY 1,2,3,4,5 ORDER BY 1,5",
+  "retrieved_on": "2026-10-24",
+  "notes": "Automated counts at about 90 city locations a few times a year, hourly, by direction. This snapshot sums both directions per local day (the source's date field). bikes counts bicycles; motor_vehicles is the source's mv_total.",
+  "records": [
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "10/29/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "1451",
+      "motor_vehicles": "20465"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "10/30/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "1639",
+      "motor_vehicles": "21004"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "10/4/2017 4:00:00.000",
+      "hours": 24,
+      "bikes": "1194",
+      "motor_vehicles": "26015"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "10/5/2017 4:00:00.000",
+      "hours": 24,
+      "bikes": "966",
+      "motor_vehicles": "26622"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "6/25/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "1371",
+      "motor_vehicles": "21691"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "6/26/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "1206",
+      "motor_vehicles": "22552"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/16/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "1583",
+      "motor_vehicles": "21386"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/17/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "1417",
+      "motor_vehicles": "22163"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/17/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "1558",
+      "motor_vehicles": "22259"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/18/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "1437",
+      "motor_vehicles": "23198"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/20/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "1430",
+      "motor_vehicles": "22206"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/21/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "1293",
+      "motor_vehicles": "22379"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/23/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "1115",
+      "motor_vehicles": "18719"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/24/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "1141",
+      "motor_vehicles": "19297"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/27/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "709",
+      "motor_vehicles": "29729"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/27/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "1000",
+      "motor_vehicles": "24651"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/28/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "816",
+      "motor_vehicles": "30215"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/28/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "536",
+      "motor_vehicles": "26347"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/28/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "1331",
+      "motor_vehicles": "20902"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/29/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "865",
+      "motor_vehicles": "31081"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/29/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "1306",
+      "motor_vehicles": "20462"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/29/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "1222",
+      "motor_vehicles": "21432"
+    },
+    {
+      "count_id": "41",
+      "location_name": "Massachusetts Avenue south of Columbus Avenue",
+      "lat": "42.339799999999997",
+      "long": "-71.080900000000000",
+      "date": "9/30/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "1190",
+      "motor_vehicles": "21091"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "10/29/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "701",
+      "motor_vehicles": "18651"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "10/30/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "842",
+      "motor_vehicles": "19644"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "10/4/2017 4:00:00.000",
+      "hours": 24,
+      "bikes": "355",
+      "motor_vehicles": "23870"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "10/5/2017 4:00:00.000",
+      "hours": 24,
+      "bikes": "324",
+      "motor_vehicles": "24128"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "10/7/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "666",
+      "motor_vehicles": "18844"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "10/8/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "554",
+      "motor_vehicles": "19610"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/10/2024 5:00:00.000",
+      "hours": 24,
+      "bikes": "265",
+      "motor_vehicles": "14900"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/10/2025 5:00:00.000",
+      "hours": 24,
+      "bikes": "361",
+      "motor_vehicles": "19310"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/1/2021 5:00:00.000",
+      "hours": 24,
+      "bikes": "122",
+      "motor_vehicles": "23043"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/12/2024 5:00:00.000",
+      "hours": 24,
+      "bikes": "255",
+      "motor_vehicles": "14314"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/2/2021 5:00:00.000",
+      "hours": 24,
+      "bikes": "111",
+      "motor_vehicles": "23854"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/5/2023 5:00:00.000",
+      "hours": 24,
+      "bikes": "359",
+      "motor_vehicles": "21459"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/6/2022 5:00:00.000",
+      "hours": 24,
+      "bikes": "188",
+      "motor_vehicles": "22174"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/6/2023 5:00:00.000",
+      "hours": 24,
+      "bikes": "360",
+      "motor_vehicles": "21666"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/8/2020 5:00:00.000",
+      "hours": 24,
+      "bikes": "95",
+      "motor_vehicles": "19719"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/8/2022 5:00:00.000",
+      "hours": 24,
+      "bikes": "172",
+      "motor_vehicles": "23794"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/9/2020 5:00:00.000",
+      "hours": 24,
+      "bikes": "101",
+      "motor_vehicles": "19795"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "12/9/2025 5:00:00.000",
+      "hours": 24,
+      "bikes": "254",
+      "motor_vehicles": "18975"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/10/2026 4:00:00.000",
+      "hours": 24,
+      "bikes": "472",
+      "motor_vehicles": "18977"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/11/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "454",
+      "motor_vehicles": "18112"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/11/2026 4:00:00.000",
+      "hours": 24,
+      "bikes": "369",
+      "motor_vehicles": "18878"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/12/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "368",
+      "motor_vehicles": "18476"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/13/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "329",
+      "motor_vehicles": "20766"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/14/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "392",
+      "motor_vehicles": "20646"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/15/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "80",
+      "motor_vehicles": "22238"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/16/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "111",
+      "motor_vehicles": "24083"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/17/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "69",
+      "motor_vehicles": "18050"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/17/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "134",
+      "motor_vehicles": "21928"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/18/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "128",
+      "motor_vehicles": "17994"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/18/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "68",
+      "motor_vehicles": "20709"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/22/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "156",
+      "motor_vehicles": "22055"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "3/23/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "121",
+      "motor_vehicles": "22080"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/10/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "274",
+      "motor_vehicles": "19280"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/10/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "232",
+      "motor_vehicles": "23719"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/11/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "710",
+      "motor_vehicles": "20338"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/11/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "695",
+      "motor_vehicles": "19650"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/12/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "398",
+      "motor_vehicles": "23997"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/12/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "757",
+      "motor_vehicles": "20719"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/12/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "627",
+      "motor_vehicles": "19859"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/13/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "343",
+      "motor_vehicles": "24190"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/15/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "288",
+      "motor_vehicles": "25566"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/16/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "210",
+      "motor_vehicles": "24879"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/16/2026 4:00:00.000",
+      "hours": 24,
+      "bikes": "710",
+      "motor_vehicles": "19360"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/17/2026 4:00:00.000",
+      "hours": 24,
+      "bikes": "682",
+      "motor_vehicles": "20062"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/21/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "372",
+      "motor_vehicles": "23983"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/4/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "341",
+      "motor_vehicles": "25238"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/5/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "310",
+      "motor_vehicles": "25347"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/6/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "281",
+      "motor_vehicles": "25741"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/6/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "346",
+      "motor_vehicles": "22630"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/7/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "370",
+      "motor_vehicles": "22938"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/9/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "255",
+      "motor_vehicles": "18801"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "6/9/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "276",
+      "motor_vehicles": "24027"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/17/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "403",
+      "motor_vehicles": "24339"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/18/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "435",
+      "motor_vehicles": "24805"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/20/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "597",
+      "motor_vehicles": "22555"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/21/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "622",
+      "motor_vehicles": "22915"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/23/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "295",
+      "motor_vehicles": "20822"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/24/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "299",
+      "motor_vehicles": "20970"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/27/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "265",
+      "motor_vehicles": "23756"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/27/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "391",
+      "motor_vehicles": "24492"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/28/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "310",
+      "motor_vehicles": "24369"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/28/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "179",
+      "motor_vehicles": "26140"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/28/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "650",
+      "motor_vehicles": "23872"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/29/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "338",
+      "motor_vehicles": "25209"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/29/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "302",
+      "motor_vehicles": "24306"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/29/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "509",
+      "motor_vehicles": "24178"
+    },
+    {
+      "count_id": "42",
+      "location_name": "Massachusetts Avenue south of Newmarket Square",
+      "lat": "42.326099999999997",
+      "long": "-71.066199999999995",
+      "date": "9/30/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "265",
+      "motor_vehicles": "24358"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "10/1/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "1163",
+      "motor_vehicles": "22535"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "10/29/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "1096",
+      "motor_vehicles": "20896"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "10/30/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "1227",
+      "motor_vehicles": "21767"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "10/4/2017 4:00:00.000",
+      "hours": 24,
+      "bikes": "915",
+      "motor_vehicles": "26002"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "10/5/2017 4:00:00.000",
+      "hours": 24,
+      "bikes": "847",
+      "motor_vehicles": "26543"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/17/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "1156",
+      "motor_vehicles": "23787"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/18/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "1216",
+      "motor_vehicles": "24963"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/23/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "924",
+      "motor_vehicles": "19758"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/24/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "923",
+      "motor_vehicles": "19327"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/26/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "1050",
+      "motor_vehicles": "23147"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/27/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "535",
+      "motor_vehicles": "30722"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/27/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "838",
+      "motor_vehicles": "25968"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/27/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "1127",
+      "motor_vehicles": "23283"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/28/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "649",
+      "motor_vehicles": "30993"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/28/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "465",
+      "motor_vehicles": "27242"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/28/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "1079",
+      "motor_vehicles": "22702"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/29/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "624",
+      "motor_vehicles": "32072"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/29/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "1115",
+      "motor_vehicles": "21753"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/29/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "930",
+      "motor_vehicles": "23117"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/30/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "1003",
+      "motor_vehicles": "22472"
+    },
+    {
+      "count_id": "43",
+      "location_name": "Massachusetts Avenue south of Shawmut Avenue",
+      "lat": "42.336900000000000",
+      "long": "-71.077500000000001",
+      "date": "9/30/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "1209",
+      "motor_vehicles": "22230"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "10/29/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "5642",
+      "motor_vehicles": "20842"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "10/30/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "6305",
+      "motor_vehicles": "21388"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/10/2024 5:00:00.000",
+      "hours": 24,
+      "bikes": "3628",
+      "motor_vehicles": "21436"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/1/2021 5:00:00.000",
+      "hours": 24,
+      "bikes": "2018",
+      "motor_vehicles": "20608"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/12/2024 5:00:00.000",
+      "hours": 24,
+      "bikes": "3825",
+      "motor_vehicles": "23637"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/13/2022 5:00:00.000",
+      "hours": 24,
+      "bikes": "2322",
+      "motor_vehicles": "20604"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/15/2022 5:00:00.000",
+      "hours": 24,
+      "bikes": "1729",
+      "motor_vehicles": "22734"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/2/2021 5:00:00.000",
+      "hours": 24,
+      "bikes": "2445",
+      "motor_vehicles": "21320"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/3/2025 5:00:00.000",
+      "hours": 24,
+      "bikes": "2924",
+      "motor_vehicles": "22205"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/4/2025 5:00:00.000",
+      "hours": 24,
+      "bikes": "2900",
+      "motor_vehicles": "22910"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/5/2023 5:00:00.000",
+      "hours": 24,
+      "bikes": "3701",
+      "motor_vehicles": "21535"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/6/2023 5:00:00.000",
+      "hours": 24,
+      "bikes": "3059",
+      "motor_vehicles": "22627"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/8/2020 5:00:00.000",
+      "hours": 24,
+      "bikes": "993",
+      "motor_vehicles": "15785"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "12/9/2020 5:00:00.000",
+      "hours": 24,
+      "bikes": "1026",
+      "motor_vehicles": "16334"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/10/2026 4:00:00.000",
+      "hours": 24,
+      "bikes": "4331",
+      "motor_vehicles": "19857"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/11/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "4526",
+      "motor_vehicles": "20294"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/11/2026 4:00:00.000",
+      "hours": 24,
+      "bikes": "2998",
+      "motor_vehicles": "20412"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/12/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "3677",
+      "motor_vehicles": "20692"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/13/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "4352",
+      "motor_vehicles": "21508"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/14/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "4322",
+      "motor_vehicles": "22070"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/15/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "1898",
+      "motor_vehicles": "20269"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/16/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "2883",
+      "motor_vehicles": "23209"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/17/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "623",
+      "motor_vehicles": "13836"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/17/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "1430",
+      "motor_vehicles": "18069"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/18/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "1257",
+      "motor_vehicles": "13224"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/18/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "671",
+      "motor_vehicles": "18105"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/22/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "2072",
+      "motor_vehicles": "20762"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "3/23/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "2017",
+      "motor_vehicles": "20741"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/10/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "3681",
+      "motor_vehicles": "27405"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/10/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "2125",
+      "motor_vehicles": "12985"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/10/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "3229",
+      "motor_vehicles": "21818"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/10/2026 4:00:00.000",
+      "hours": 24,
+      "bikes": "4590",
+      "motor_vehicles": "20745"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/11/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "1706",
+      "motor_vehicles": "22822"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/11/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "5679",
+      "motor_vehicles": "22682"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/12/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "4256",
+      "motor_vehicles": "25595"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/12/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "5055",
+      "motor_vehicles": "21795"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/13/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "3894",
+      "motor_vehicles": "26154"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/15/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "4095",
+      "motor_vehicles": "23329"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/16/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "3943",
+      "motor_vehicles": "22763"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/18/2024 4:00:00.000",
+      "hours": 24,
+      "bikes": "4364",
+      "motor_vehicles": "21316"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/4/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "4079",
+      "motor_vehicles": "24191"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/5/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "4070",
+      "motor_vehicles": "25430"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/6/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "3385",
+      "motor_vehicles": "27359"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/6/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "4352",
+      "motor_vehicles": "21508"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/7/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "4322",
+      "motor_vehicles": "22070"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/8/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "3492",
+      "motor_vehicles": "26935"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/9/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "3630",
+      "motor_vehicles": "27422"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/9/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "1910",
+      "motor_vehicles": "12802"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/9/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "2617",
+      "motor_vehicles": "21155"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "6/9/2026 4:00:00.000",
+      "hours": 24,
+      "bikes": "5049",
+      "motor_vehicles": "19906"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/16/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "5904",
+      "motor_vehicles": "20644"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/17/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "5217",
+      "motor_vehicles": "24151"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/17/2025 4:00:00.000",
+      "hours": 24,
+      "bikes": "6045",
+      "motor_vehicles": "20986"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/18/2019 4:00:00.000",
+      "hours": 24,
+      "bikes": "5033",
+      "motor_vehicles": "23735"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/20/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "6331",
+      "motor_vehicles": "22227"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/21/2023 4:00:00.000",
+      "hours": 24,
+      "bikes": "5988",
+      "motor_vehicles": "23113"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/23/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "2882",
+      "motor_vehicles": "16930"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/24/2020 4:00:00.000",
+      "hours": 24,
+      "bikes": "2945",
+      "motor_vehicles": "17041"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/26/2017 4:00:00.000",
+      "hours": 24,
+      "bikes": "4430",
+      "motor_vehicles": "31014"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/27/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "2667",
+      "motor_vehicles": "26594"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/27/2017 4:00:00.000",
+      "hours": 24,
+      "bikes": "4211",
+      "motor_vehicles": "31841"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/27/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "4246",
+      "motor_vehicles": "29764"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/28/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "3170",
+      "motor_vehicles": "25863"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/28/2018 4:00:00.000",
+      "hours": 24,
+      "bikes": "2057",
+      "motor_vehicles": "31442"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/28/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "5759",
+      "motor_vehicles": "22163"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/29/2016 4:00:00.000",
+      "hours": 24,
+      "bikes": "3406",
+      "motor_vehicles": "26630"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/29/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "4232",
+      "motor_vehicles": "21578"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/29/2022 4:00:00.000",
+      "hours": 24,
+      "bikes": "5744",
+      "motor_vehicles": "22497"
+    },
+    {
+      "count_id": "44",
+      "location_name": "Massachusetts Avenue north of Back Street",
+      "lat": "42.353200000000001",
+      "long": "-71.090599999999995",
+      "date": "9/30/2021 4:00:00.000",
+      "hours": 24,
+      "bikes": "3933",
+      "motor_vehicles": "22692"
+    }
+  ]
+}

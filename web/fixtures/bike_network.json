@@ -1,0 +1,1519 @@
+{
+  "source": {
+    "key": "boston_bike_network_2024",
+    "name": "Existing Bike Network (2024)",
+    "publisher": "City of Boston, Boston Transportation Department",
+    "url": "https://data.boston.gov/dataset/existing-bike-network-2024",
+    "license": "Open Data Commons Public Domain Dedication and License (PDDL)",
+    "retrieved_on": "2026-10-24",
+    "data_through": null
+  },
+  "facilities": [
+    {
+      "source_record_id": "131",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.087068,
+            42.345932
+          ],
+          [
+            -71.087345,
+            42.346494
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "155",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.089099,
+            42.350072
+          ],
+          [
+            -71.088925,
+            42.349713
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "157",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.088698,
+            42.349273
+          ],
+          [
+            -71.088533,
+            42.348907
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "202",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.081746,
+            42.34066
+          ],
+          [
+            -71.080948,
+            42.339819
+          ],
+          [
+            -71.080752,
+            42.339629
+          ],
+          [
+            -71.080408,
+            42.339298
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "215",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.078073,
+            42.337341
+          ],
+          [
+            -71.077653,
+            42.336989
+          ],
+          [
+            -71.077021,
+            42.33648
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "216",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.077021,
+            42.33648
+          ],
+          [
+            -71.076544,
+            42.336069
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "251",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.071255,
+            42.331913
+          ],
+          [
+            -71.071046,
+            42.3317
+          ],
+          [
+            -71.070531,
+            42.331129
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "252",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.069996,
+            42.330538
+          ],
+          [
+            -71.069829,
+            42.330334
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "266",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.071715,
+            42.332262
+          ],
+          [
+            -71.071451,
+            42.332083
+          ],
+          [
+            -71.071255,
+            42.331913
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "338",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.061481,
+            42.320508
+          ],
+          [
+            -71.06159,
+            42.32059
+          ],
+          [
+            -71.061732,
+            42.320718
+          ],
+          [
+            -71.062086,
+            42.321137
+          ],
+          [
+            -71.062345,
+            42.321452
+          ],
+          [
+            -71.06286,
+            42.322086
+          ],
+          [
+            -71.063701,
+            42.323087
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "558",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.086597,
+            42.34496
+          ],
+          [
+            -71.086842,
+            42.345461
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "559",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLSL",
+      "facility_label": "Separated bike lane one side, shared lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2024,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.087758,
+            42.347308
+          ],
+          [
+            -71.088142,
+            42.348127
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "560",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.087345,
+            42.346494
+          ],
+          [
+            -71.087428,
+            42.346654
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "591",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.07981,
+            42.338756
+          ],
+          [
+            -71.079645,
+            42.338611
+          ],
+          [
+            -71.078821,
+            42.337922
+          ],
+          [
+            -71.07869,
+            42.33782
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "592",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.084097,
+            42.342201
+          ],
+          [
+            -71.083256,
+            42.341633
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "599",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.072475,
+            42.332957
+          ],
+          [
+            -71.072872,
+            42.333247
+          ],
+          [
+            -71.07302,
+            42.333312
+          ],
+          [
+            -71.073387,
+            42.333624
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "928",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.088316,
+            42.348487
+          ],
+          [
+            -71.088521,
+            42.348873
+          ],
+          [
+            -71.088533,
+            42.348907
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "929",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.088142,
+            42.348127
+          ],
+          [
+            -71.088316,
+            42.348487
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "931",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.087549,
+            42.346922
+          ],
+          [
+            -71.087758,
+            42.347308
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "933",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.080319,
+            42.339343
+          ],
+          [
+            -71.080416,
+            42.339435
+          ],
+          [
+            -71.080938,
+            42.339945
+          ],
+          [
+            -71.0813,
+            42.34031
+          ],
+          [
+            -71.081479,
+            42.340458
+          ],
+          [
+            -71.081746,
+            42.34066
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "934",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.078592,
+            42.337882
+          ],
+          [
+            -71.079237,
+            42.338417
+          ],
+          [
+            -71.079716,
+            42.338817
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "948",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.075067,
+            42.335031
+          ],
+          [
+            -71.076517,
+            42.336191
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1227",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.085797,
+            42.34334
+          ],
+          [
+            -71.085852,
+            42.343396
+          ],
+          [
+            -71.085907,
+            42.343495
+          ],
+          [
+            -71.086548,
+            42.344869
+          ],
+          [
+            -71.086597,
+            42.34496
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1290",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2022,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.08994,
+            42.351788
+          ],
+          [
+            -71.089498,
+            42.350857
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1304",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.083256,
+            42.341633
+          ],
+          [
+            -71.083205,
+            42.341599
+          ],
+          [
+            -71.083171,
+            42.341582
+          ],
+          [
+            -71.08312,
+            42.341547
+          ],
+          [
+            -71.083024,
+            42.34148
+          ],
+          [
+            -71.082025,
+            42.340823
+          ],
+          [
+            -71.081746,
+            42.34066
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1305",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2022,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.084853,
+            42.342711
+          ],
+          [
+            -71.084525,
+            42.342487
+          ],
+          [
+            -71.084097,
+            42.342201
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1350",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.06662,
+            42.326472
+          ],
+          [
+            -71.066451,
+            42.32629
+          ],
+          [
+            -71.066114,
+            42.325845
+          ],
+          [
+            -71.065738,
+            42.32537
+          ],
+          [
+            -71.065265,
+            42.324827
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1351",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.069829,
+            42.330334
+          ],
+          [
+            -71.069602,
+            42.330097
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1352",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.067565,
+            42.327545
+          ],
+          [
+            -71.067204,
+            42.327126
+          ],
+          [
+            -71.067174,
+            42.327087
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1661",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.086842,
+            42.345461
+          ],
+          [
+            -71.087068,
+            42.345932
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1666",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.089498,
+            42.350857
+          ],
+          [
+            -71.089327,
+            42.350525
+          ],
+          [
+            -71.089292,
+            42.350466
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1667",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.089292,
+            42.350466
+          ],
+          [
+            -71.089099,
+            42.350072
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1668",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.087428,
+            42.346654
+          ],
+          [
+            -71.087549,
+            42.346922
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1705",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2020,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.075171,
+            42.334952
+          ],
+          [
+            -71.073514,
+            42.333517
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1706",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2020,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.073387,
+            42.333624
+          ],
+          [
+            -71.075067,
+            42.335031
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1727",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.068246,
+            42.328451
+          ],
+          [
+            -71.068794,
+            42.329105
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1728",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.068246,
+            42.328451
+          ],
+          [
+            -71.067937,
+            42.328029
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1729",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.067937,
+            42.328029
+          ],
+          [
+            -71.067872,
+            42.327949
+          ],
+          [
+            -71.067565,
+            42.327545
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1965",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.07869,
+            42.33782
+          ],
+          [
+            -71.078191,
+            42.337432
+          ],
+          [
+            -71.078073,
+            42.337341
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "1966",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.078003,
+            42.337397
+          ],
+          [
+            -71.078289,
+            42.337631
+          ],
+          [
+            -71.078592,
+            42.337882
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2018",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2016,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.088925,
+            42.349713
+          ],
+          [
+            -71.088698,
+            42.349273
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2021",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2008,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.091201,
+            42.354352
+          ],
+          [
+            -71.08994,
+            42.351788
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2046",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.080408,
+            42.339298
+          ],
+          [
+            -71.0803,
+            42.339186
+          ],
+          [
+            -71.07981,
+            42.338756
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2052",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.076544,
+            42.336069
+          ],
+          [
+            -71.075171,
+            42.334952
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2053",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.076937,
+            42.336539
+          ],
+          [
+            -71.077583,
+            42.337061
+          ],
+          [
+            -71.078003,
+            42.337397
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2085",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.070531,
+            42.331129
+          ],
+          [
+            -71.069996,
+            42.330538
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2086",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.069147,
+            42.329545
+          ],
+          [
+            -71.069292,
+            42.329723
+          ],
+          [
+            -71.069602,
+            42.330097
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2383",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.079716,
+            42.338817
+          ],
+          [
+            -71.080129,
+            42.339162
+          ],
+          [
+            -71.080319,
+            42.339343
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2403",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.076517,
+            42.336191
+          ],
+          [
+            -71.076937,
+            42.336539
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2404",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2020,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.073514,
+            42.333517
+          ],
+          [
+            -71.072836,
+            42.333015
+          ],
+          [
+            -71.072375,
+            42.332684
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2418",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.072241,
+            42.332796
+          ],
+          [
+            -71.072475,
+            42.332957
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2435",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.067174,
+            42.327087
+          ],
+          [
+            -71.066986,
+            42.326842
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2436",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.072087,
+            42.332572
+          ],
+          [
+            -71.071715,
+            42.332262
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2717",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBLBL",
+      "facility_label": "Separated bike lane one side, bike lane on the other side",
+      "protection": "partly_separated",
+      "install_year": 2022,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.085797,
+            42.34334
+          ],
+          [
+            -71.085259,
+            42.342977
+          ],
+          [
+            -71.085046,
+            42.342834
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2746",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2022,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.085046,
+            42.342834
+          ],
+          [
+            -71.084926,
+            42.342757
+          ],
+          [
+            -71.084901,
+            42.342742
+          ],
+          [
+            -71.084853,
+            42.342711
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2786",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.072291,
+            42.332623
+          ],
+          [
+            -71.072087,
+            42.332572
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2792",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.066986,
+            42.326842
+          ],
+          [
+            -71.06662,
+            42.326472
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2793",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.068794,
+            42.329105
+          ],
+          [
+            -71.069047,
+            42.329419
+          ],
+          [
+            -71.069147,
+            42.329545
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2859",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.065265,
+            42.324827
+          ],
+          [
+            -71.065201,
+            42.324763
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "2860",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2023,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.065201,
+            42.324763
+          ],
+          [
+            -71.064965,
+            42.32447
+          ],
+          [
+            -71.064521,
+            42.323928
+          ],
+          [
+            -71.06438,
+            42.323764
+          ],
+          [
+            -71.064171,
+            42.323549
+          ],
+          [
+            -71.064141,
+            42.323519
+          ],
+          [
+            -71.063701,
+            42.323087
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "3195",
+      "street": "Massachusetts Avenue",
+      "facility_code": "BL",
+      "facility_label": "Bike lane",
+      "protection": "painted",
+      "install_year": 2011,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.072153,
+            42.332736
+          ],
+          [
+            -71.072241,
+            42.332796
+          ]
+        ]
+      }
+    },
+    {
+      "source_record_id": "3196",
+      "street": "Massachusetts Avenue",
+      "facility_code": "SBL",
+      "facility_label": "Separated bike lane",
+      "protection": "separated",
+      "install_year": 2020,
+      "route": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.072375,
+            42.332684
+          ],
+          [
+            -71.072291,
+            42.332623
+          ]
+        ]
+      }
+    }
+  ]
+}

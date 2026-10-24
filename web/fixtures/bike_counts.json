@@ -1,0 +1,445 @@
+{
+  "source": {
+    "key": "boston_bike_counts",
+    "name": "Streets Hourly Bike Counts",
+    "publisher": "City of Boston, Boston Transportation Department",
+    "url": "https://data.boston.gov/dataset/streets-hourly-bike-counts",
+    "license": "Open Data Commons Public Domain Dedication and License (PDDL)",
+    "retrieved_on": "2026-10-24",
+    "data_through": "2026-06-17"
+  },
+  "locations": [
+    {
+      "location_id": "41",
+      "name": "Massachusetts Avenue south of Columbus Avenue",
+      "latitude": 42.3398,
+      "longitude": -71.0809,
+      "days_counted": 23,
+      "first_year": 2016,
+      "last_year": 2025,
+      "latest_year_days": 2,
+      "latest_avg_daily_bikes": 1571,
+      "latest_avg_daily_motor_vehicles": 21823,
+      "latest_bike_share": 0.067
+    },
+    {
+      "location_id": "42",
+      "name": "Massachusetts Avenue south of Newmarket Square",
+      "latitude": 42.3261,
+      "longitude": -71.0662,
+      "days_counted": 67,
+      "first_year": 2016,
+      "last_year": 2026,
+      "latest_year_days": 4,
+      "latest_avg_daily_bikes": 558,
+      "latest_avg_daily_motor_vehicles": 19319,
+      "latest_bike_share": 0.028
+    },
+    {
+      "location_id": "43",
+      "name": "Massachusetts Avenue south of Shawmut Avenue",
+      "latitude": 42.3369,
+      "longitude": -71.0775,
+      "days_counted": 21,
+      "first_year": 2016,
+      "last_year": 2025,
+      "latest_year_days": 2,
+      "latest_avg_daily_bikes": 1186,
+      "latest_avg_daily_motor_vehicles": 22383,
+      "latest_bike_share": 0.05
+    },
+    {
+      "location_id": "44",
+      "name": "Massachusetts Avenue north of Back Street",
+      "latitude": 42.3532,
+      "longitude": -71.0906,
+      "days_counted": 69,
+      "first_year": 2016,
+      "last_year": 2026,
+      "latest_year_days": 4,
+      "latest_avg_daily_bikes": 4242,
+      "latest_avg_daily_motor_vehicles": 20230,
+      "latest_bike_share": 0.173
+    }
+  ],
+  "years": [
+    {
+      "location_id": "41",
+      "year": 2016,
+      "days_counted": 3,
+      "avg_daily_bikes": 797,
+      "min_daily_bikes": 709,
+      "max_daily_bikes": 865,
+      "avg_daily_motor_vehicles": 30342
+    },
+    {
+      "location_id": "41",
+      "year": 2017,
+      "days_counted": 2,
+      "avg_daily_bikes": 1080,
+      "min_daily_bikes": 966,
+      "max_daily_bikes": 1194,
+      "avg_daily_motor_vehicles": 26319
+    },
+    {
+      "location_id": "41",
+      "year": 2018,
+      "days_counted": 2,
+      "avg_daily_bikes": 768,
+      "min_daily_bikes": 536,
+      "max_daily_bikes": 1000,
+      "avg_daily_motor_vehicles": 25499
+    },
+    {
+      "location_id": "41",
+      "year": 2019,
+      "days_counted": 2,
+      "avg_daily_bikes": 1427,
+      "min_daily_bikes": 1417,
+      "max_daily_bikes": 1437,
+      "avg_daily_motor_vehicles": 22681
+    },
+    {
+      "location_id": "41",
+      "year": 2020,
+      "days_counted": 2,
+      "avg_daily_bikes": 1128,
+      "min_daily_bikes": 1115,
+      "max_daily_bikes": 1141,
+      "avg_daily_motor_vehicles": 19008
+    },
+    {
+      "location_id": "41",
+      "year": 2021,
+      "days_counted": 2,
+      "avg_daily_bikes": 1248,
+      "min_daily_bikes": 1190,
+      "max_daily_bikes": 1306,
+      "avg_daily_motor_vehicles": 20777
+    },
+    {
+      "location_id": "41",
+      "year": 2022,
+      "days_counted": 2,
+      "avg_daily_bikes": 1277,
+      "min_daily_bikes": 1222,
+      "max_daily_bikes": 1331,
+      "avg_daily_motor_vehicles": 21167
+    },
+    {
+      "location_id": "41",
+      "year": 2023,
+      "days_counted": 2,
+      "avg_daily_bikes": 1362,
+      "min_daily_bikes": 1293,
+      "max_daily_bikes": 1430,
+      "avg_daily_motor_vehicles": 22293
+    },
+    {
+      "location_id": "41",
+      "year": 2024,
+      "days_counted": 4,
+      "avg_daily_bikes": 1417,
+      "min_daily_bikes": 1206,
+      "max_daily_bikes": 1639,
+      "avg_daily_motor_vehicles": 21428
+    },
+    {
+      "location_id": "41",
+      "year": 2025,
+      "days_counted": 2,
+      "avg_daily_bikes": 1571,
+      "min_daily_bikes": 1558,
+      "max_daily_bikes": 1583,
+      "avg_daily_motor_vehicles": 21823
+    },
+    {
+      "location_id": "42",
+      "year": 2016,
+      "days_counted": 4,
+      "avg_daily_bikes": 321,
+      "min_daily_bikes": 265,
+      "max_daily_bikes": 372,
+      "avg_daily_motor_vehicles": 24329
+    },
+    {
+      "location_id": "42",
+      "year": 2017,
+      "days_counted": 2,
+      "avg_daily_bikes": 340,
+      "min_daily_bikes": 324,
+      "max_daily_bikes": 355,
+      "avg_daily_motor_vehicles": 23999
+    },
+    {
+      "location_id": "42",
+      "year": 2018,
+      "days_counted": 4,
+      "avg_daily_bikes": 328,
+      "min_daily_bikes": 179,
+      "max_daily_bikes": 398,
+      "avg_daily_motor_vehicles": 24705
+    },
+    {
+      "location_id": "42",
+      "year": 2019,
+      "days_counted": 5,
+      "avg_daily_bikes": 354,
+      "min_daily_bikes": 281,
+      "max_daily_bikes": 435,
+      "avg_daily_motor_vehicles": 25094
+    },
+    {
+      "location_id": "42",
+      "year": 2020,
+      "days_counted": 8,
+      "avg_daily_bikes": 190,
+      "min_daily_bikes": 69,
+      "max_daily_bikes": 299,
+      "avg_daily_motor_vehicles": 19429
+    },
+    {
+      "location_id": "42",
+      "year": 2021,
+      "days_counted": 8,
+      "avg_daily_bikes": 189,
+      "min_daily_bikes": 68,
+      "max_daily_bikes": 302,
+      "avg_daily_motor_vehicles": 23243
+    },
+    {
+      "location_id": "42",
+      "year": 2022,
+      "days_counted": 8,
+      "avg_daily_bikes": 287,
+      "min_daily_bikes": 121,
+      "max_daily_bikes": 650,
+      "avg_daily_motor_vehicles": 23575
+    },
+    {
+      "location_id": "42",
+      "year": 2023,
+      "days_counted": 8,
+      "avg_daily_bikes": 356,
+      "min_daily_bikes": 80,
+      "max_daily_bikes": 622,
+      "avg_daily_motor_vehicles": 22561
+    },
+    {
+      "location_id": "42",
+      "year": 2024,
+      "days_counted": 8,
+      "avg_daily_bikes": 531,
+      "min_daily_bikes": 255,
+      "max_daily_bikes": 842,
+      "avg_daily_motor_vehicles": 18747
+    },
+    {
+      "location_id": "42",
+      "year": 2025,
+      "days_counted": 8,
+      "avg_daily_bikes": 497,
+      "min_daily_bikes": 254,
+      "max_daily_bikes": 695,
+      "avg_daily_motor_vehicles": 19105
+    },
+    {
+      "location_id": "42",
+      "year": 2026,
+      "days_counted": 4,
+      "avg_daily_bikes": 558,
+      "min_daily_bikes": 369,
+      "max_daily_bikes": 710,
+      "avg_daily_motor_vehicles": 19319
+    },
+    {
+      "location_id": "43",
+      "year": 2016,
+      "days_counted": 3,
+      "avg_daily_bikes": 603,
+      "min_daily_bikes": 535,
+      "max_daily_bikes": 649,
+      "avg_daily_motor_vehicles": 31262
+    },
+    {
+      "location_id": "43",
+      "year": 2017,
+      "days_counted": 2,
+      "avg_daily_bikes": 881,
+      "min_daily_bikes": 847,
+      "max_daily_bikes": 915,
+      "avg_daily_motor_vehicles": 26273
+    },
+    {
+      "location_id": "43",
+      "year": 2018,
+      "days_counted": 2,
+      "avg_daily_bikes": 652,
+      "min_daily_bikes": 465,
+      "max_daily_bikes": 838,
+      "avg_daily_motor_vehicles": 26605
+    },
+    {
+      "location_id": "43",
+      "year": 2019,
+      "days_counted": 2,
+      "avg_daily_bikes": 1186,
+      "min_daily_bikes": 1156,
+      "max_daily_bikes": 1216,
+      "avg_daily_motor_vehicles": 24375
+    },
+    {
+      "location_id": "43",
+      "year": 2020,
+      "days_counted": 2,
+      "avg_daily_bikes": 924,
+      "min_daily_bikes": 923,
+      "max_daily_bikes": 924,
+      "avg_daily_motor_vehicles": 19543
+    },
+    {
+      "location_id": "43",
+      "year": 2021,
+      "days_counted": 2,
+      "avg_daily_bikes": 1059,
+      "min_daily_bikes": 1003,
+      "max_daily_bikes": 1115,
+      "avg_daily_motor_vehicles": 22113
+    },
+    {
+      "location_id": "43",
+      "year": 2022,
+      "days_counted": 2,
+      "avg_daily_bikes": 1005,
+      "min_daily_bikes": 930,
+      "max_daily_bikes": 1079,
+      "avg_daily_motor_vehicles": 22910
+    },
+    {
+      "location_id": "43",
+      "year": 2023,
+      "days_counted": 2,
+      "avg_daily_bikes": 1089,
+      "min_daily_bikes": 1050,
+      "max_daily_bikes": 1127,
+      "avg_daily_motor_vehicles": 23215
+    },
+    {
+      "location_id": "43",
+      "year": 2024,
+      "days_counted": 2,
+      "avg_daily_bikes": 1162,
+      "min_daily_bikes": 1096,
+      "max_daily_bikes": 1227,
+      "avg_daily_motor_vehicles": 21332
+    },
+    {
+      "location_id": "43",
+      "year": 2025,
+      "days_counted": 2,
+      "avg_daily_bikes": 1186,
+      "min_daily_bikes": 1163,
+      "max_daily_bikes": 1209,
+      "avg_daily_motor_vehicles": 22383
+    },
+    {
+      "location_id": "44",
+      "year": 2016,
+      "days_counted": 7,
+      "avg_daily_bikes": 3107,
+      "min_daily_bikes": 1706,
+      "max_daily_bikes": 3681,
+      "avg_daily_motor_vehicles": 26239
+    },
+    {
+      "location_id": "44",
+      "year": 2017,
+      "days_counted": 2,
+      "avg_daily_bikes": 4321,
+      "min_daily_bikes": 4211,
+      "max_daily_bikes": 4430,
+      "avg_daily_motor_vehicles": 31428
+    },
+    {
+      "location_id": "44",
+      "year": 2018,
+      "days_counted": 4,
+      "avg_daily_bikes": 3613,
+      "min_daily_bikes": 2057,
+      "max_daily_bikes": 4256,
+      "avg_daily_motor_vehicles": 28239
+    },
+    {
+      "location_id": "44",
+      "year": 2019,
+      "days_counted": 5,
+      "avg_daily_bikes": 4357,
+      "min_daily_bikes": 3385,
+      "max_daily_bikes": 5217,
+      "avg_daily_motor_vehicles": 24973
+    },
+    {
+      "location_id": "44",
+      "year": 2020,
+      "days_counted": 8,
+      "avg_daily_bikes": 1720,
+      "min_daily_bikes": 623,
+      "max_daily_bikes": 2945,
+      "avg_daily_motor_vehicles": 14867
+    },
+    {
+      "location_id": "44",
+      "year": 2021,
+      "days_counted": 8,
+      "avg_daily_bikes": 2572,
+      "min_daily_bikes": 671,
+      "max_daily_bikes": 4232,
+      "avg_daily_motor_vehicles": 20668
+    },
+    {
+      "location_id": "44",
+      "year": 2022,
+      "days_counted": 8,
+      "avg_daily_bikes": 3460,
+      "min_daily_bikes": 1729,
+      "max_daily_bikes": 5759,
+      "avg_daily_motor_vehicles": 21949
+    },
+    {
+      "location_id": "44",
+      "year": 2023,
+      "days_counted": 8,
+      "avg_daily_bikes": 4067,
+      "min_daily_bikes": 1898,
+      "max_daily_bikes": 6331,
+      "avg_daily_motor_vehicles": 22070
+    },
+    {
+      "location_id": "44",
+      "year": 2024,
+      "days_counted": 7,
+      "avg_daily_bikes": 4634,
+      "min_daily_bikes": 3628,
+      "max_daily_bikes": 6305,
+      "avg_daily_motor_vehicles": 21742
+    },
+    {
+      "location_id": "44",
+      "year": 2025,
+      "days_counted": 8,
+      "avg_daily_bikes": 4589,
+      "min_daily_bikes": 2900,
+      "max_daily_bikes": 6045,
+      "avg_daily_motor_vehicles": 21526
+    },
+    {
+      "location_id": "44",
+      "year": 2026,
+      "days_counted": 4,
+      "avg_daily_bikes": 4242,
+      "min_daily_bikes": 2998,
+      "max_daily_bikes": 5049,
+      "avg_daily_motor_vehicles": 20230
+    }
+  ]
+}
