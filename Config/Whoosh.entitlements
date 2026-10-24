@@ -17,5 +17,14 @@
 	-->
 	<key>com.apple.developer.usernotifications.time-sensitive</key>
 	<true/>
+	<!--
+	  HealthKit: needed by WatchLauncher's HKHealthStore.startWatchApp, which
+	  wakes the watch app into its keep-alive cycling workout. The phone reads
+	  and writes no health data itself.
+	-->
+	<key>com.apple.developer.healthkit</key>
+	<true/>
+	<key>com.apple.developer.healthkit.access</key>
+	<array/>
 </dict>
 </plist>

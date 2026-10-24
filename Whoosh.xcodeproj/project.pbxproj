@@ -10,7 +10,7 @@
 		0D8CDB10DC1DAC6F88BE3AA0 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 65A39A397D575BB1CFDF69D4 /* Supabase */; };
 		5507B12F229B37A0650730C1 /* WhooshWire in Frameworks */ = {isa = PBXBuildFile; productRef = 8AEC97CD07B77142F1ED7A79 /* WhooshWire */; };
 		63239F8C6B1BA81E8BB881E1 /* WhooshWire in Frameworks */ = {isa = PBXBuildFile; productRef = 6088600822A3B7F4EA075369 /* WhooshWire */; };
-		860F1005D6F49972055A2BDD /* Whoosh.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 22E052C78F6925301E622835 /* Whoosh.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		860F1005D6F49972055A2BDD /* WhooshWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 22E052C78F6925301E622835 /* WhooshWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A63C31C1A199F559C072DA1C /* WhooshVision in Frameworks */ = {isa = PBXBuildFile; productRef = 763D334EB7B2665C4570D2F7 /* WhooshVision */; };
 /* End PBXBuildFile section */
 
@@ -38,7 +38,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				860F1005D6F49972055A2BDD /* Whoosh.app in Embed Watch Content */,
+				860F1005D6F49972055A2BDD /* WhooshWatch.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -47,15 +47,15 @@
 
 /* Begin PBXFileReference section */
 		1ED3E3C78DD70D553B209950 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
-		22E052C78F6925301E622835 /* Whoosh.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Whoosh.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		22E052C78F6925301E622835 /* WhooshWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhooshWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		28A310D5A6EC94F088D91686 /* WhooshVision */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WhooshVision; path = cv/ios/WhooshVision; sourceTree = SOURCE_ROOT; };
-		290A0FAE07F4F96B8B6ECC13 /* Whoosh.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Whoosh.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		290A0FAE07F4F96B8B6ECC13 /* Whoosh.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Whoosh.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8B64F0C7FBB8C7F3D4CB27A6 /* WhooshWire */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WhooshWire; path = Packages/WhooshWire; sourceTree = SOURCE_ROOT; };
-		F9E699B0BB11436716774F23 /* WhooshTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhooshTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F9E699B0BB11436716774F23 /* WhooshTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WhooshTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		F53B401EC804049925172FD7 /* Exceptions for "Whoosh" folder in "Whoosh" target */ = {
+		F53B401EC804049925172FD7 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Services/.gitkeep,
@@ -67,18 +67,30 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5C90BE33CFB06F74E990D792 /* WhooshWatch */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
 			path = WhooshWatch;
 			sourceTree = "<group>";
 		};
 		A2A498788EB34A9FD1520B7F /* WhooshTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
 			path = WhooshTests;
 			sourceTree = "<group>";
 		};
 		CEC63E9F48AE9CA24B59D85B /* Whoosh */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				F53B401EC804049925172FD7 /* Exceptions for "Whoosh" folder in "Whoosh" target */,
+				F53B401EC804049925172FD7 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
 			);
 			path = Whoosh;
 			sourceTree = "<group>";
@@ -141,7 +153,7 @@
 			children = (
 				290A0FAE07F4F96B8B6ECC13 /* Whoosh.app */,
 				F9E699B0BB11436716774F23 /* WhooshTests.xctest */,
-				22E052C78F6925301E622835 /* Whoosh.app */,
+				22E052C78F6925301E622835 /* WhooshWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -218,7 +230,7 @@
 				8AEC97CD07B77142F1ED7A79 /* WhooshWire */,
 			);
 			productName = WhooshWatch;
-			productReference = 22E052C78F6925301E622835 /* Whoosh.app */;
+			productReference = 22E052C78F6925301E622835 /* WhooshWatch.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -231,6 +243,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					36CA87AA39F4DA21168149E4 = {
+						DevelopmentTeam = Z87CXCTTK6;
 						ProvisioningStyle = Automatic;
 					};
 					ABD0B02D3AF224685924F670 = {
@@ -422,6 +435,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Whoosh;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Whoosh uses the rear camera to record video of the road behind you during rides. Video is saved on your device and is not uploaded.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Whoosh starts a cycling workout on your Apple Watch so wrist alerts keep working during your ride.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Whoosh starts a cycling workout on your Apple Watch so wrist alerts keep working during your ride.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Whoosh uses your location to record your cycling route and show your ride map.";
 				INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY = "$(SUPABASE_PUBLISHABLE_KEY)";
 				INFOPLIST_KEY_SUPABASE_URL = "$(SUPABASE_URL)";
@@ -514,6 +529,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Whoosh;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Whoosh uses the rear camera to record video of the road behind you during rides. Video is saved on your device and is not uploaded.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Whoosh starts a cycling workout on your Apple Watch so wrist alerts keep working during your ride.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Whoosh starts a cycling workout on your Apple Watch so wrist alerts keep working during your ride.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Whoosh uses your location to record your cycling route and show your ride map.";
 				INFOPLIST_KEY_SUPABASE_PUBLISHABLE_KEY = "$(SUPABASE_PUBLISHABLE_KEY)";
 				INFOPLIST_KEY_SUPABASE_URL = "$(SUPABASE_URL)";

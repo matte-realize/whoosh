@@ -95,6 +95,11 @@ targets:
         # statement — footage stays on the device and is never uploaded. No
         # microphone string: audio recording is off (O-CAM5).
         INFOPLIST_KEY_NSCameraUsageDescription: "Whoosh uses the rear camera to record video of the road behind you during rides. Video is saved on your device and is not uploaded."
+        # HealthKit (entitlement in Config/Whoosh.entitlements) is only for
+        # WatchLauncher's startWatchApp, which wakes the watch's keep-alive
+        # cycling workout. The strings are required once the capability exists.
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Whoosh starts a cycling workout on your Apple Watch so wrist alerts keep working during your ride."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Whoosh starts a cycling workout on your Apple Watch so wrist alerts keep working during your ride."
         # Opt-in Supabase sync (task 28b): the gitignored Secrets.xcconfig values
         # flow into the generated Info.plist so the app reads URL + publishable
         # key at runtime; no key is hard-coded in Swift. With no Secrets.xcconfig

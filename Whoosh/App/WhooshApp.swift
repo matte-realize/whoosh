@@ -422,6 +422,13 @@ struct WhooshApp: App {
         // Warm the rear-vehicle detection model once if the feature is on, so it
         // is ready before the first ride (no-op when rear camera is off).
         environment.preloadRearDetectionModelIfNeeded()
+        // Crash alerts are on by default, so ask for notification access up
+        // front rather than only inside the consent flow (the countdown's
+        // backup notification needs it). The system shows the prompt once.
+        if environment.crash.settingsStore.current().enabled {
+            let scheduler = environment.crash.scheduler
+            Task { _ = await scheduler.requestAuthorizationIfNeeded() }
+        }
     }
 
     private func handleScenePhase(_ phase: ScenePhase) {
