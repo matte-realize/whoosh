@@ -4,17 +4,20 @@ import Dashboard from "@/components/Dashboard";
 import StatsPanel from "@/components/StatsPanel";
 
 export const metadata: Metadata = {
-  title: "Whoosh live dashboard",
-  description: "Rides and reports that Whoosh riders chose to share.",
+  title: "Whoosh ride map",
+  description: "Rides and close calls that Whoosh riders chose to share.",
 };
 
 export default function DashboardPage() {
   return (
     <main className="page dashboard">
       <header className="page-header">
-        <p className="eyebrow">Live dashboard</p>
+        <p className="eyebrow">Ride map</p>
         <h1>Shared by Whoosh riders</h1>
-        <p className="subtitle">Rides and reports that riders chose to share. Nothing else is shown.</p>
+        <p className="subtitle">
+          Rides and close calls that riders chose to share, along Massachusetts Avenue. Only what riders
+          share is shown.
+        </p>
       </header>
       <StatsPanel />
       <CommunityMapSection />

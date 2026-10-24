@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Logo } from "./Logo";
 
 const LINKS = [
-  { href: "/", label: "Project" },
-  { href: "/simulation", label: "Simulation" },
-  { href: "/dashboard", label: "Live dashboard" },
+  { href: "/simulation", label: "See it in action" },
+  { href: "/dashboard", label: "Ride map" },
 ];
 
 /** Top navigation. Marks the current page for screen readers and visually. */
@@ -15,11 +15,8 @@ export function SiteNav() {
   return (
     <header className="site-header">
       <nav className="site-nav" aria-label="Site">
-        <Link href="/" className="site-nav__brand">
-          <span className="site-nav__logo" aria-hidden="true">
-            W
-          </span>
-          Whoosh
+        <Link href="/" className="site-nav__brand" aria-label="Whoosh home">
+          <Logo size={30} />
         </Link>
         <div className="site-nav__links">
           {LINKS.map((link) => {

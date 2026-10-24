@@ -1,134 +1,201 @@
 import Link from "next/link";
 import { FeatureExplorer } from "@/components/FeatureExplorer";
 import { HeroVisual } from "@/components/HeroVisual";
-import { HowItWorks } from "@/components/HowItWorks";
-import { Icon } from "@/components/Icon";
+import { Icon, type IconName } from "@/components/Icon";
+import { LogoMark } from "@/components/Logo";
 import { Reveal } from "@/components/Reveal";
 import StatsPanel from "@/components/StatsPanel";
 import { STATUS_CHECKED_ON } from "@/lib/projectStatus";
 
-const PRIVACY_POINTS = [
-  "Every core feature is designed to work offline, with no account.",
-  "Cloud backup is off by default. Sharing a ride publicly is a separate choice, per ride.",
-  "Each shared route is trimmed by 160 m at both ends before it leaves the phone.",
-  "Incidents appear only as areas of about 100 m, with at least 3 reports from at least 2 riders, after a 24-hour delay.",
-  "Rider counts stay hidden until at least 3 riders have shared.",
-  "Anonymous sign-in: no email, name, or phone number is collected.",
-  "Each rider can read and change only their own data. Automated tests check this.",
-  "No analytics or tracking code. Camera video is never uploaded.",
+const STEPS: { icon: IconName; title: string; body: string }[] = [
+  {
+    icon: "phone",
+    title: "Clip your phone to your bike",
+    body: "Mount it facing backward, under the seat. The phone you already have is all you need.",
+  },
+  {
+    icon: "bike",
+    title: "Ride like you always do",
+    body: "Whoosh keeps an eye on the road behind you and records your ride, even with no signal.",
+  },
+  {
+    icon: "alert",
+    title: "Get a heads-up",
+    body: "When a car is coming up behind you, feel a tap on your wrist or hear a short tone.",
+  },
+];
+
+const BENEFITS: { icon: IconName; title: string; body: string }[] = [
+  { icon: "bike", title: "No extra gear", body: "No radar to buy and no mirror to fit. Just your phone." },
+  { icon: "alert", title: "Eyes on the road", body: "A tap or a tone instead of a screen you have to look at." },
+  { icon: "cloud", title: "Works without signal", body: "Everything happens on your phone, so it keeps working in dead zones." },
+  { icon: "lock", title: "Private by default", body: "No account, no email. Your rides stay yours." },
+  { icon: "map", title: "Better streets, together", body: "Share close calls to show where riding needs to get safer." },
+  { icon: "clock", title: "Every ride, saved", body: "Distance, time and route for every ride, right on your phone." },
+];
+
+const PRIVACY: string[] = [
+  "Your rides stay on your phone unless you choose to back them up or share them.",
+  "Camera video never leaves your phone.",
+  "No account, email or phone number needed.",
+  "Shared routes hide where you start and stop.",
+  "A close call only shows on the map once several riders have reported the same spot.",
+  "No ads and no tracking.",
 ];
 
 const FAQ = [
   {
-    q: "Does camera video leave my phone?",
-    a: "No. Detection is designed to run on the phone, and video and frames are never uploaded. Only a detection's time, its place on your route, the vehicle type, the score, and the side can be saved, and only if you opt in to cloud backup.",
+    q: "Do I need any special equipment?",
+    a: "No. Whoosh is designed to use your iPhone and a simple bike mount. A watch is optional, for the wrist tap.",
+  },
+  {
+    q: "Does my camera video get uploaded?",
+    a: "Never. Whoosh is designed to look at the video on your phone and throw it away as it goes. Nothing from the camera is sent anywhere.",
   },
   {
     q: "Do I need an account?",
-    a: "No. Recording and history are designed to work with no account and no network. Cloud backup, if you turn it on, uses an anonymous account with no email or password.",
+    a: "No. Ride tracking works without one. If you choose to back up your rides, Whoosh does it without asking for your email or name.",
   },
   {
-    q: "What does this website show about me?",
-    a: "Only rides you chose to share, with the first and last 160 m removed, and never with who they belong to. Your incident reports count toward an area only if you opt in, and an area appears only once enough riders have reported there.",
+    q: "Will Whoosh stop a crash?",
+    a: "No. Whoosh gives you a heads-up; it can't see everything and it can be wrong. Keep looking, keep signaling, and ride the way you always would.",
   },
   {
-    q: "Can Whoosh prevent a crash?",
-    a: "No. Detection is experimental and has not been measured yet. It can miss vehicles and raise false alarms. Keep looking and riding carefully.",
-  },
-  {
-    q: "Is an area with no reports safe?",
-    a: "No. The map counts reports from a small number of riders. It cannot say how many people rode through a place, so it is not a safety rating.",
+    q: "When can I get it?",
+    a: "Whoosh is in development for iPhone. You can try the ride map and the 3D simulation on this site today.",
   },
 ];
 
-/** The project page: what Whoosh is, how it works, how it protects riders, and what is built. */
-export default function ProjectPage() {
+export default function HomePage() {
   return (
     <main className="project">
       <section className="hero">
         <div className="hero__inner">
           <div className="hero__text">
-            <p className="eyebrow">Hackachusetts project</p>
+            <p className="pill-badge">
+              <span className="pill-badge__dot" aria-hidden="true" />
+              In development for iPhone
+            </p>
             <h1>
-              More awareness of the road <span className="gradient-text">behind you.</span>
+              A heads-up for what&apos;s <span className="gradient-text">behind you.</span>
             </h1>
             <p className="hero__lead">
-              Whoosh is a cycling app designed to use the phone you already own to watch the road
-              behind you. No extra hardware, no account, and your rides stay on your phone unless
-              you choose to share them.
+              Whoosh turns the phone on your bike into a rear-view companion. When a car is coming up
+              behind you, you&apos;ll feel a tap or hear a tone, so you can keep your eyes on the road
+              ahead.
             </p>
             <div className="hero__actions">
               <Link className="button button--primary" href="/simulation">
-                Try the 3D simulation
+                See it in action
                 <span aria-hidden="true"> →</span>
               </Link>
               <Link className="button button--ghost" href="/dashboard">
-                Live dashboard
+                Explore the ride map
               </Link>
             </div>
-            <p className="hero__fine">Experimental prototype. Not a safety device.</p>
+            <p className="hero__fine">
+              A heads-up, not a guarantee. Always look and ride carefully.
+            </p>
           </div>
           <HeroVisual />
         </div>
       </section>
 
       <div className="page">
-        <Reveal>
-          <StatsPanel />
-        </Reveal>
-
-        <Reveal className="section">
-          <section aria-labelledby="problem-heading" className="split">
-            <div>
-              <p className="eyebrow">The problem</p>
-              <h2 id="problem-heading">The traffic you can&apos;t see</h2>
-            </div>
-            <div>
-              <p className="lead">
-                On a bike, traffic coming up behind you is hard to see without turning your head.
-                Mirrors and rear radar units help, but they cost money and need fitting.
-              </p>
-              <p>
-                Whoosh tries to give riders some of that awareness from a phone mounted on the bike,
-                with a cue they can feel or hear instead of a screen they have to look at.
-              </p>
-            </div>
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
-          <section aria-labelledby="features-heading">
-            <p className="eyebrow">What it does</p>
-            <h2 id="features-heading">Features and where each one stands</h2>
-            <p className="note">
-              Status as of {STATUS_CHECKED_ON}. A feature is marked tested only when an automated
-              test or a recorded run backs it.
-            </p>
-            <FeatureExplorer />
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
-          <section id="how-it-works" aria-labelledby="how-heading">
+        <Reveal className="section section--first">
+          <section id="how-it-works" aria-labelledby="how-heading" className="center">
             <p className="eyebrow">How it works</p>
-            <h2 id="how-heading">From the bike to this page</h2>
-            <p className="note">How Whoosh is designed to work. The feature list above shows what is built.</p>
-            <HowItWorks />
+            <h2 id="how-heading">Three steps. No new gear.</h2>
+            <ol className="steps-row">
+              {STEPS.map((stepItem, index) => (
+                <li key={stepItem.title} className="step-card">
+                  <span className="step-card__number" aria-hidden="true">
+                    {index + 1}
+                  </span>
+                  <span className="step-card__icon">
+                    <Icon name={stepItem.icon} size={30} />
+                  </span>
+                  <h3>{stepItem.title}</h3>
+                  <p>{stepItem.body}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </Reveal>
+
+        <Reveal className="section">
+          <section aria-labelledby="why-heading">
+            <p className="eyebrow">Why Whoosh</p>
+            <h2 id="why-heading">Made for everyday riders</h2>
+            <ul className="benefit-grid">
+              {BENEFITS.map((benefit) => (
+                <li key={benefit.title} className="benefit">
+                  <span className="benefit__icon">
+                    <Icon name={benefit.icon} />
+                  </span>
+                  <div>
+                    <h3>{benefit.title}</h3>
+                    <p>{benefit.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </Reveal>
+
+        <Reveal className="section">
+          <section className="showcase" aria-labelledby="showcase-heading">
+            <div>
+              <p className="eyebrow">See it in action</p>
+              <h2 id="showcase-heading">Watch a ride, in 3D</h2>
+              <p className="lead">
+                Spin around a rider on a city street, watch cars come up from behind, and see the
+                moment Whoosh gives its heads-up. You can even look through the phone&apos;s camera.
+              </p>
+              <Link className="button button--primary" href="/simulation">
+                Start the simulation
+                <span aria-hidden="true"> →</span>
+              </Link>
+            </div>
+            <div className="showcase__art" aria-hidden="true">
+              <div className="showcase__ring">
+                <LogoMark size={120} />
+              </div>
+              <span className="showcase__chip showcase__chip--amber">Car approaching · 24 m</span>
+              <span className="showcase__chip showcase__chip--red">Heads-up · on your left</span>
+            </div>
+          </section>
+        </Reveal>
+
+        <Reveal className="section">
+          <section aria-labelledby="community-heading">
+            <div className="split">
+              <div>
+                <p className="eyebrow">The ride map</p>
+                <h2 id="community-heading">Rides and close calls, shared by riders</h2>
+              </div>
+              <div>
+                <p className="lead">
+                  When riders choose to share, their rides and close calls come together on one map,
+                  so everyone can see where streets need work.
+                </p>
+                <p>
+                  <Link href="/dashboard">Open the ride map</Link>
+                </p>
+              </div>
+            </div>
+            <StatsPanel />
           </section>
         </Reveal>
 
         <Reveal className="section">
           <section aria-labelledby="privacy-heading" className="card card--accent">
-            <div className="section-head">
-              <div>
-                <p className="eyebrow">
-                  <Icon name="lock" size={16} /> Privacy
-                </p>
-                <h2 id="privacy-heading">Privacy, in specifics</h2>
-              </div>
-            </div>
+            <p className="eyebrow">
+              <Icon name="lock" size={16} /> Privacy
+            </p>
+            <h2 id="privacy-heading">Your rides are yours</h2>
             <ul className="checklist checklist--columns">
-              {PRIVACY_POINTS.map((point) => (
+              {PRIVACY.map((point) => (
                 <li key={point}>{point}</li>
               ))}
             </ul>
@@ -136,9 +203,18 @@ export default function ProjectPage() {
         </Reveal>
 
         <Reveal className="section">
+          <section aria-labelledby="today-heading">
+            <p className="eyebrow">Where Whoosh is today</p>
+            <h2 id="today-heading">What you can try, and what&apos;s coming</h2>
+            <p className="note">Updated {STATUS_CHECKED_ON}.</p>
+            <FeatureExplorer />
+          </section>
+        </Reveal>
+
+        <Reveal className="section">
           <section aria-labelledby="faq-heading">
             <p className="eyebrow">Questions</p>
-            <h2 id="faq-heading">Common questions</h2>
+            <h2 id="faq-heading">Good questions</h2>
             <div className="faq">
               {FAQ.map((item) => (
                 <details key={item.q}>
@@ -152,74 +228,29 @@ export default function ProjectPage() {
 
         <Reveal className="section">
           <section className="honesty" aria-labelledby="honesty-heading">
-            <h2 id="honesty-heading">What Whoosh is not</h2>
+            <h2 id="honesty-heading">A heads-up, not a guarantee</h2>
             <p>
-              Whoosh is a hackathon prototype. Vehicle detection is experimental and has not been
-              measured yet. It does not predict or prevent collisions, it can miss vehicles and raise
-              false alarms, and it is not a substitute for looking and riding carefully. The incident
-              map shows unverified reports: an area with no reports is not a safe area.
+              Whoosh is still being built, and the part that spots cars is experimental. It can miss
+              a car, and it can sometimes alert when nothing is there. It doesn&apos;t predict or
+              prevent crashes. Use it as an extra pair of eyes, never instead of your own.
             </p>
           </section>
         </Reveal>
 
         <Reveal className="section">
-          <section aria-labelledby="stack-heading" className="split">
-            <div>
-              <p className="eyebrow">Under the hood</p>
-              <h2 id="stack-heading">How it is built</h2>
-            </div>
-            <dl className="stack">
-              <div>
-                <dt>iPhone app</dt>
-                <dd>SwiftUI, Core Location, MapKit, SwiftData. Vision and Core ML for detection.</dd>
-              </div>
-              <div>
-                <dt>Backend</dt>
-                <dd>
-                  Supabase (Postgres) with row-level security, anonymous sign-in, privacy-filtered
-                  public views, and upload limits, covered by pgTAP tests.
-                </dd>
-              </div>
-              <div>
-                <dt>Website</dt>
-                <dd>Next.js, Leaflet, and OpenStreetMap. No map API keys, no tracking.</dd>
-              </div>
-            </dl>
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
-          <section aria-labelledby="team-heading">
-            <p className="eyebrow">Team</p>
-            <h2 id="team-heading">Three roles, one contract</h2>
-            <ul className="team-grid">
-              <li className="card">
-                <Icon name="phone" />
-                <h3>iOS app</h3>
-                <p>Ride recording, maps, on-phone storage, and alerts.</p>
-              </li>
-              <li className="card">
-                <Icon name="alert" />
-                <h3>Vision</h3>
-                <p>On-device vehicle detection and its measured performance.</p>
-              </li>
-              <li className="card">
-                <Icon name="cloud" />
-                <h3>Backend and website</h3>
-                <p>Database, privacy rules, this site, and the data contracts between the three.</p>
-              </li>
-            </ul>
-          </section>
-        </Reveal>
-
-        <Reveal className="section">
           <section className="cta" aria-labelledby="cta-heading">
-            <h2 id="cta-heading">See the community map</h2>
-            <p>Shared routes, incident areas, and every shared ride, live.</p>
-            <Link className="button button--primary" href="/dashboard">
-              Open the live dashboard
-              <span aria-hidden="true"> →</span>
-            </Link>
+            <LogoMark size={56} />
+            <h2 id="cta-heading">Ride with a little more awareness</h2>
+            <p>Try the simulation, or explore the ride map.</p>
+            <div className="cta__actions">
+              <Link className="button button--primary" href="/simulation">
+                See it in action
+                <span aria-hidden="true"> →</span>
+              </Link>
+              <Link className="button button--ghost" href="/dashboard">
+                Explore the ride map
+              </Link>
+            </div>
           </section>
         </Reveal>
       </div>

@@ -11,12 +11,11 @@ export default function SimulationPage() {
   return (
     <main className="page simulation">
       <header className="page-header">
-        <p className="eyebrow">Interactive demo</p>
-        <h1>Ride simulation</h1>
+        <p className="eyebrow">See it in action</p>
+        <h1>Take a ride with Whoosh</h1>
         <p className="subtitle">
-          A rider in a Massachusetts Avenue-style bike lane, cars coming up from behind, and the cue the
-          app is designed to give. Rotate the 3D view, switch to the phone&apos;s rear camera, and try
-          different traffic.
+          A rider in a city bike lane, cars coming up from behind, and the heads-up Whoosh is designed
+          to give. Drag to look around, look through the phone&apos;s camera, and try different traffic.
         </p>
       </header>
 
@@ -59,7 +58,7 @@ export default function SimulationPage() {
           illustrative values, not the app&apos;s tuning. Whoosh does not predict or prevent collisions.
         </p>
         <p>
-          <Link href="/">Back to the project</Link> · <Link href="/dashboard">Live dashboard</Link>
+          <Link href="/">Back to Whoosh</Link> · <Link href="/dashboard">Explore the ride map</Link>
         </p>
       </section>
     </main>

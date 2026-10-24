@@ -5,7 +5,7 @@ import { FEATURES, STATUS_LABEL, STATUS_SYMBOL, type Status } from "@/lib/projec
 
 type Filter = "all" | Status;
 
-const ORDER: Status[] = ["tested", "built", "prototype", "planned"];
+const ORDER: Status[] = ["preview", "testing", "development"];
 
 /** Feature cards with filter chips by build status. The chip count and the result line update together. */
 export function FeatureExplorer() {

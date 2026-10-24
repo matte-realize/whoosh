@@ -65,7 +65,7 @@ export default function Dashboard() {
   return (
     <>
       {result.source === "fixtures" ? (
-        <p className="banner">Showing bundled sample data, not live rides.</p>
+        <p className="banner">These are sample rides, so you can see how the ride map works.</p>
       ) : null}
 
       {selected === undefined ? (
