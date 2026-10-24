@@ -1,6 +1,6 @@
 # Requirements — Whoosh Demo Mode
 
-**Status: DRAFT for the iOS owner's review.** This spec adds an **opt-in developer/demo mode**
+**Status: APPROVED by the iOS owner (October 24, 2026)** with the recommended answers to O-DM1–O-DM8 (`design.md`, "Owner resolution"). This spec adds an **opt-in developer/demo mode**
 so the whole app can be shown — recording, the live map, metrics, the signal-lost banner, the
 rear-vehicle alert, and the crash-response countdown — **while standing still indoors, with no
 bike, no real GPS movement, and no real crash**. It produces documents only; no Swift code is

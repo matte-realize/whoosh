@@ -33,7 +33,7 @@ forced alert, seed, previews) depend **only** on the finished MVP.
 
 ## Phase 0 — Gate
 
-- [ ] 0. `[Owner]` `[DEMO]` Review and approve the spec; resolve the open decisions
+- [x] 0. `[Owner]` `[DEMO]` Review and approve the spec; resolve the open decisions
   - Read `requirements.md`, `design.md`, and this plan. Decide **O-DM1..O-DM8** (or accept the
     recommended defaults) and record the answers under `design.md` "Decisions".
   - Confirm the demo-ride/stats choice (O-DM2) and Release availability (O-DM1), since they shape

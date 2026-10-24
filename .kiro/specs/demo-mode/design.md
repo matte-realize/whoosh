@@ -1,6 +1,6 @@
 # Design — Whoosh Demo Mode
 
-**Status: DRAFT for the iOS owner's review.** This document contains **no source code** by
+**Status: APPROVED by the iOS owner (October 24, 2026)** with the recommended answers to O-DM1–O-DM8 (see "Owner resolution"). This document contains **no source code** by
 design: the owner required requirements, design, and tasks to be reviewed before any
 implementation. Types, protocols, and state are described in tables and diagrams; code is
 written later, task by task, test-first (`tasks.md`).
@@ -406,7 +406,22 @@ decision (mirrors the O-DM items in `requirements.md`).
 | D-DM15 | Re-seed behavior | Report count + offer remove-first | Avoid silent duplicates | **OPEN O-DM7** |
 | D-DM16 | Enable confirmation | Optional one-tap confirm | Harmless; off by default | **OPEN O-DM4** |
 
-### Open decisions for the owner (summary)
+### Owner resolution (October 24, 2026)
+
+The iOS owner approved this spec and accepted every recommendation; this table is binding.
+
+| # | Resolution |
+| - | ---------- |
+| O-DM1 | Demo mode is available in Release builds, behind the Settings toggle (off by default). |
+| O-DM2 | Demo rides are excluded from This-Week stats (and always from sync). |
+| O-DM3 | A launch argument that presets the toggle is allowed in Debug builds only (for UI tests). |
+| O-DM4 | Enabling demo mode shows an optional one-tap confirmation. |
+| O-DM5 | Tapping the DEMO MODE badge opens the demo tools. |
+| O-DM6 | Turning demo mode off during a simulated ride finalizes and keeps that (demo-flagged) ride. |
+| O-DM7 | Re-seeding reports the existing demo-ride count and offers to remove them first; never silent duplicates. |
+| O-DM8 | One scripted Boston loop for v1; more routes later. |
+
+### Open decisions for the owner (summary, now resolved above)
 
 - **O-DM1 (D-DM12)** Release-build availability (recommend: yes, behind the toggle).
 - **O-DM2 (D-DM13)** Demo rides in weekly stats (recommend: exclude).
