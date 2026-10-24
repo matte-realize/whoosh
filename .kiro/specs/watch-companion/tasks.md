@@ -234,7 +234,7 @@ unaffected (Never block a ride).
   - _Depends on:_ 4, 8; rear-camera 10
   - _Parallel:_ Group P1b
 
-- [ ] 10. `[iOS]` `[DEMO]` Channel, readiness, transport, freshness, projector, and mapper (test-first)
+- [x] 10. `[iOS]` `[DEMO]` Channel, readiness, transport, freshness, projector, and mapper (test-first)
   - `WatchChannelEvaluator` (link state + `WireWatchState` → channel state), `WatchReadinessEvaluator`
     (rows pass/warn/info), `StatusTransportPolicy` (live/context table), `StatusFreshness`,
     `ElapsedTimeProjector` (anchor + monotonic clock, frozen when paused, no wall-clock subtraction), and
@@ -258,7 +258,7 @@ unaffected (Never block a ride).
 
 ## Phase 2 — Seams, fakes, and integration without devices
 
-- [ ] 12. `[iOS]` `[DEMO]` `WireLink`, link state machine, fakes, and the loopback pair (package, test-first)
+- [x] 12. `[iOS]` `[DEMO]` `WireLink`, link state machine, fakes, and the loopback pair (package, test-first)
   - `WireLink` protocol (activate; reachability and state callbacks; live send with a typed result and
     reply; context update; queue transfer; receive callbacks), `WireLinkStateMachine` (17 rows),
     `FakeWireLink`, and `LoopbackWireLinkPair` connecting a phone-side and a watch-side fake with
